@@ -7097,4 +7097,18 @@ tar xvf mirror_seq1_000000.tar
 ln -sf `pwd`/blobs v2/openshift/release/
 oc image mirror -a ${LOCAL_SECRET_JSON} 'file://openshift/release:4.9.10*' ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
 
+# 安装 chrome on rhel8
+# https://www.tecmint.com/install-google-chrome-on-rhel-8/
+cat > /etc/yum.repos.d/google-chrome.repo <<'EOF'
+[google-chrome]
+name=google-chrome
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+EOF
+
+yum info google-chrome-stable
+yum install -y google-chrome-stable
+
 ```
