@@ -6862,6 +6862,7 @@ go version
 
 git clone https://github.com/openshift/oc-mirror
 cd oc-mirror
+git checkout release-4.10
 
 make 
 cp ./bin/oc-mirror /usr/local/bin
@@ -6877,6 +6878,7 @@ yum module -y install go-toolset
 
 git clone https://github.com/openshift/oc-mirror
 cd oc-mirror
+git checkout release-4.10
 
 make 
 cp ./bin/oc-mirror /usr/local/bin
