@@ -7116,5 +7116,8 @@ yum install -y google-chrome-stable
 # 可以检查 namespace openshift-machine-config-operator 的 machine-config-daemon 的日志
 oc1 -n openshift-machine-config-operator logs $(oc1 -n openshift-machine-config-operator get pods -l k8s-app="machine-config-daemon" -o name) -c machine-config-daemon
 
+# https://access.redhat.com/discussions/3536621
+# systemd version cannot handle too many sessions at once
+
 
 ```
