@@ -7111,4 +7111,10 @@ EOF
 yum info google-chrome-stable
 yum install -y google-chrome-stable
 
+# https://access.redhat.com/solutions/5244121
+# 当 mcp 状态处于 degrade 状态
+# 可以检查 namespace openshift-machine-config-operator 的 machine-config-daemon 的日志
+oc1 -n openshift-machine-config-operator logs $(oc1 -n openshift-machine-config-operator get pods -l k8s-app="machine-config-daemon" -o name) -c machine-config-daemon
+
+
 ```
