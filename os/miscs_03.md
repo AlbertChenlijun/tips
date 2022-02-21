@@ -7119,5 +7119,60 @@ oc1 -n openshift-machine-config-operator logs $(oc1 -n openshift-machine-config-
 # https://access.redhat.com/discussions/3536621
 # systemd version cannot handle too many sessions at once
 
+# 报错
+oc -n openshift-monitoring logs $(oc -n openshift-monitoring get pods -l app="cluster-monitoring-operator" -o name) -c cluster-monitoring-operator
+...
+W0220 08:40:00.868298       1 tasks.go:71] task 6 of 15: Updating Alertmanager failed: waiting for Alertmanager object changes failed: waiting for Alertmanager openshift-monitoring/main: expected 3 replicas, got 0 updated replicas                                                                                                      
+I0220 08:40:00.868362       1 operator.go:624] ClusterOperator reconciliation failed (attempt 1205), retrying.                                                        
+W0220 08:40:00.868366       1 operator.go:627] Updating ClusterOperator status to failed after 1205 attempts.                                                         
+E0220 08:40:00.879260       1 operator.go:502] Syncing "openshift-monitoring/cluster-monitoring-config" failed                                                        
+E0220 08:40:00.879361       1 operator.go:503] sync "openshift-monitoring/cluster-monitoring-config" failed: cluster monitoring update failed (reason: UpdatingAlertmanagerFailed)
+
+# Waiting for alertmanager openshift-monitoring/main during 4.6.34 to 4.7.16 upgrade
+# https://bugzilla.redhat.com/show_bug.cgi?id=1976364
+Bug 1976364 - Waiting for alertmanager openshift-monitoring/main during 4.6.34 to 4.7.16 upgrade
+
+ocp4 project openshift-monitoring
+ocp4 -n openshift-monitoring get pods
+ocp4 -n openshift-monitoring get deployments
+ocp4 -n openshift-monitoring get configmaps
+ocp4 -n openshift-monitoring get configmaps prometheus-k8s-rulefiles-0 -o yaml 
+
+# 参考 Bug 2021274 Comment 4
+# https://bugzilla.redhat.com/show_bug.cgi?id=2021274
+
+$ ocp4 -n openshift-monitoring get statefulsets
+NAME                READY   AGE
+alertmanager-main   0/0     8d
+prometheus-k8s      2/2     8d
+
+ocp4 -n openshift-monitoring get statefulsets prometheus-k8s -o yaml
+ocp4 patch statefulset/prometheus-k8s -p '{"metadata":{"finalizers":null}}' --type=merge -n openshift-monitoring
+ocp4 patch statefulset/alertmanager-main -p '{"metadata":{"finalizers":null}}' --type=merge -n openshift-monitoring
+
+查看了一下，感觉不是 finalizers 的问题
+# ocp4 -n openshift-monitoring logs $(ocp4 -n openshift-monitoring get po | grep prometheus-operator | awk '{print $1}') -c prometheus-operator | grep "tls: bad certificate"
+
+# 参考 Bug 1953264
+# https://bugzilla.redhat.com/show_bug.cgi?id=1953264
+
+# 报错
+# OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to console-openshift-console.apps.ocp4-1.example.com:443 
+# curl -k -v https://console-openshift-console.apps.ocp4-1.example.com 
+* Rebuilt URL to: https://console-openshift-console.apps.ocp4-1.example.com/
+*   Trying 192.168.122.12...
+* TCP_NODELAY set
+* Connected to console-openshift-console.apps.ocp4-1.example.com (192.168.122.12) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: /etc/pki/tls/certs/ca-bundle.crt
+  CApath: none
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to console-openshift-console.apps.ocp4-1.example.com:443 
+* Closing connection 0
+curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to console-openshift-console.apps.ocp4-1.example.com:443 
+
+
 
 ```
