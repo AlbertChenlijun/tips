@@ -7174,5 +7174,11 @@ ocp4 patch statefulset/alertmanager-main -p '{"metadata":{"finalizers":null}}' -
 curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to console-openshift-console.apps.ocp4-1.example.com:443 
 
 
-
+# oc2 get clusteroperators | grep -Ev " True        False         False" 
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+authentication                             4.9.9     False       False         True       15m     APIServerDeploymentAvailable: no apiserver.openshift-oauth-apiserver pods available on any node....
+console                                    4.9.9     False       False         True       20m     RouteHealthAvailable: console route is not admitted
+image-registry                             4.9.9     False       False         False      7m14s   NodeCADaemonAvailable: The daemon set node-ca does not have available replicas...
+openshift-apiserver                        4.9.9     False       False         True       7m15s   APIServerDeploymentAvailable: no apiserver.openshift-apiserver pods available on any node....
+operator-lifecycle-manager-packageserver   4.9.9     False       True          False      7m34s   ClusterServiceVersion openshift-operator-lifecycle-manager/packageserver observed in phase Failed with reason: InstallCheckFailed, message: install timeout
 ```
