@@ -7181,4 +7181,7 @@ console                                    4.9.9     False       False         T
 image-registry                             4.9.9     False       False         False      7m14s   NodeCADaemonAvailable: The daemon set node-ca does not have available replicas...
 openshift-apiserver                        4.9.9     False       False         True       7m15s   APIServerDeploymentAvailable: no apiserver.openshift-apiserver pods available on any node....
 operator-lifecycle-manager-packageserver   4.9.9     False       True          False      7m34s   ClusterServiceVersion openshift-operator-lifecycle-manager/packageserver observed in phase Failed with reason: InstallCheckFailed, message: install timeout
+
+# 查看 crictl 相关命令
+# https://kubernetes.io/zh/docs/tasks/debug-application-cluster/crictl/
 ```
