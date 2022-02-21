@@ -7182,6 +7182,25 @@ image-registry                             4.9.9     False       False         F
 openshift-apiserver                        4.9.9     False       False         True       7m15s   APIServerDeploymentAvailable: no apiserver.openshift-apiserver pods available on any node....
 operator-lifecycle-manager-packageserver   4.9.9     False       True          False      7m34s   ClusterServiceVersion openshift-operator-lifecycle-manager/packageserver observed in phase Failed with reason: InstallCheckFailed, message: install timeout
 
+# https://github.com/openshift-metal3/dev-scripts/issues/721
+查看 nodes
+oc1 get nodes
+
+查看 openshift-controller-manager 命名空间下的 pods 
+oc1 get pods -n openshift-controller-manager
+
+查看非 Running 和 Complete 状态的 pods
+oc1 get pods -A  |grep -vE 'Running|Complete'
+
+
 # 查看 crictl 相关命令
 # https://kubernetes.io/zh/docs/tasks/debug-application-cluster/crictl/
+
+
+I0221 07:44:29.958468       1 named_certificates.go:53] "Loaded SNI cert" index=0 certName="self-signed loopback" certDetail="\"
+apiserver-loopback-client@1645429462\" [serving] validServingFor=[apiserver-loopback-client] issuer=\"apiserver-loopback-client-
+ca@1645429461\" (2022-02-21 06:44:20 +0000 UTC to 2023-02-21 06:44:20 +0000 UTC (now=2022-02-21 07:44:29.958305661 +0000 UTC))"
+I0221 07:44:30.418384       1 healthz.go:257] poststarthook/authorization.openshift.io-bootstrapclusterroles,poststarthook/authorization.openshift.io-ensureopenshift-infra check failed: healthz
+[-]poststarthook/authorization.openshift.io-bootstrapclusterroles failed: not finished
+[-]poststarthook/authorization.openshift.io-ensureopenshift-infra failed: not finished
 ```
