@@ -7332,4 +7332,8 @@ oc get clusteroperators image-registry -o yaml
     reason: ImagePrunerJobFailed::Removed
     status: "True"
     type: Degraded
+# 解决方案
+# https://access.redhat.com/solutions/5370391
+# oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
+# oc -n openshift-image-registry delete jobs --all
 ```
