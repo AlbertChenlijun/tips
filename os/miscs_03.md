@@ -7336,4 +7336,6 @@ oc get clusteroperators image-registry -o yaml
 # https://access.redhat.com/solutions/5370391
 # oc patch imagepruner.imageregistry/cluster --patch '{"spec":{"suspend":true}}' --type=merge
 # oc -n openshift-image-registry delete jobs --all
+
+测试环境下的 SNO 的硬件配置是 12 vcpu 以及 64 GB 内存
 ```
