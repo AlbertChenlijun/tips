@@ -7153,6 +7153,14 @@ ocp4 patch statefulset/alertmanager-main -p '{"metadata":{"finalizers":null}}' -
 查看了一下，感觉不是 finalizers 的问题
 # ocp4 -n openshift-monitoring logs $(ocp4 -n openshift-monitoring get po | grep prometheus-operator | awk '{print $1}') -c prometheus-operator | grep "tls: bad certificate"
 
+# 查看 alertmanager.yaml 配置
+oc -n openshift-monitoring get secret alertmanager-main --template='{{ index .data "alertmanager.yaml" }}' |base64 -d
+
+# oc get co monitoring -oyaml
+# oc -n openshift-monitoring get pod -o wide | grep -Ev "Completed|Running"
+# oc -n openshift-monitoring describe pod ${not_running_pod}
+
+
 # 参考 Bug 1953264
 # https://bugzilla.redhat.com/show_bug.cgi?id=1953264
 
@@ -7189,7 +7197,7 @@ oc1 get nodes
 查看 openshift-controller-manager 命名空间下的 pods 
 oc1 get pods -n openshift-controller-manager
 
-查看非 Running 和 Complete 状态的 pods
+查看非 Running 和 Complete 状态的 pods，从中找无法启动的关键 pods
 oc1 get pods -A  |grep -vE 'Running|Complete'
 
 
@@ -7203,4 +7211,125 @@ ca@1645429461\" (2022-02-21 06:44:20 +0000 UTC to 2023-02-21 06:44:20 +0000 UTC 
 I0221 07:44:30.418384       1 healthz.go:257] poststarthook/authorization.openshift.io-bootstrapclusterroles,poststarthook/authorization.openshift.io-ensureopenshift-infra check failed: healthz
 [-]poststarthook/authorization.openshift.io-bootstrapclusterroles failed: not finished
 [-]poststarthook/authorization.openshift.io-ensureopenshift-infra failed: not finished
+
+
+
+oc -n openshift-kube-apiserver-operator logs kube-apiserver-operator-6b6548968f-tf94s -p 
+...
+I0221 06:44:08.729158       1 cmd.go:209] Using service-serving-cert provided certificates
+I0221 06:44:08.754227       1 observer_polling.go:159] Starting file observer
+W0221 06:44:08.876916       1 builder.go:220] unable to get owner reference (falling back to namespace): Get "https://172.30.0.1:443/api/v1/namespaces/op
+enshift-kube-apiserver-operator/pods/kube-apiserver-operator-6b6548968f-tf94s": dial tcp 172.30.0.1:443: connect: connection refused
+I0221 06:44:08.891150       1 builder.go:252] kube-apiserver-operator version 4.9.0-202111151318.p0.g3a02848.assembly.stream-3a02848-3a02848339e2e10e4522
+031c1deaec9a6d553063
+F0221 06:44:45.983306       1 cmd.go:138] unable to load configmap based request-header-client-ca-file: Get "https://172.30.0.1:443/api/v1/namespaces/kub
+e-system/configmaps/extension-apiserver-authentication": dial tcp 172.30.0.1:443: connect: connection refused
+goroutine 1 [running]:
+k8s.io/klog/v2.stacks(0xc00013c001, 0xc0000ea300, 0x107, 0x2da)
+        k8s.io/klog/v2@v2.9.0/klog.go:1026 +0xb9
+k8s.io/klog/v2.(*loggingT).output(0x3d60ce0, 0xc000000003, 0x0, 0x0, 0xc0003d6700, 0x1, 0x31c38ec, 0x6, 0x8a, 0x414a00)
+        k8s.io/klog/v2@v2.9.0/klog.go:975 +0x1e5
+k8s.io/klog/v2.(*loggingT).printDepth(0x3d60ce0, 0xc000000003, 0x0, 0x0, 0x0, 0x0, 0x1, 0xc000260020, 0x1, 0x1)
+        k8s.io/klog/v2@v2.9.0/klog.go:735 +0x185
+k8s.io/klog/v2.(*loggingT).print(...)
+        k8s.io/klog/v2@v2.9.0/klog.go:717
+k8s.io/klog/v2.Fatal(...)
+        k8s.io/klog/v2@v2.9.0/klog.go:1494
+github.com/openshift/library-go/pkg/controller/controllercmd.(*ControllerCommandConfig).NewCommandWithContext.func1(0xc000526280, 0xc0005123c0, 0x0, 0x1)
+        github.com/openshift/library-go@v0.0.0-20210915142033-188c3c82f817/pkg/controller/controllercmd/cmd.go:138 +0x7c5
+github.com/spf13/cobra.(*Command).execute(0xc000526280, 0xc0005123b0, 0x1, 0x1, 0xc000526280, 0xc0005123b0)
+        github.com/spf13/cobra@v1.1.3/command.go:856 +0x2c2
+github.com/spf13/cobra.(*Command).ExecuteC(0xc000526000, 0xc000128000, 0xc000526000, 0xc000000180)
+        github.com/spf13/cobra@v1.1.3/command.go:960 +0x375
+github.com/spf13/cobra.(*Command).Execute(...)
+        github.com/spf13/cobra@v1.1.3/command.go:897
+main.main()
+        github.com/openshift/cluster-kube-apiserver-operator/cmd/cluster-kube-apiserver-operator/main.go:45 +0x176
+
+
+sudo crictl ps -a | grep apiserver
+
+sudo crictl logs 76e2be6380138 2>&1 | grep -E "^E" 
+E0221 09:46:49.532219      19 controller.go:152] Unable to remove old endpoints from kubernetes service: StorageError: key not found, Code: 1, Key: /kubernetes.io/masterleases/192.168.122.201, ResourceVersion: 0, AdditionalErrorMsg
+...
+
+
+oc1 get clusteroperators | grep -Ev "4.9.9     True        False         False" 
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+authentication                             4.9.9     False       False         True       24h     APIServerDeploymentAvailable: no apiserver.openshift-oauth-apiserver pods available on any node....
+console                                    4.9.9     False       False         True       24h     DeploymentAvailable: 0 replicas available for console deployment...
+image-registry                             4.9.9     True        False         True       88m     Degraded: The registry is removed...
+ingress                                    4.9.9     True        False         True       8d      The "default" ingress controller reports Degraded=True: DegradedConditions: One or more other status conditions indicate a degraded state: DeploymentReplicasAllAvailable=False (DeploymentReplicasNotAvailable: 0/1 of replicas are available), CanaryChecksSucceeding=False (CanaryChecksRepetitiveFailures: Canary route checks for the default ingress controller are failing)
+monitoring                                 4.9.9     False       True          True       19h     Rollout of the monitoring stack failed and is degraded. Please investigate the degraded status error.
+openshift-apiserver                        4.9.9     False       False         True       19h     APIServerDeploymentAvailable: no apiserver.openshift-apiserver pods available on any node....
+openshift-controller-manager               4.9.9     False       True          False      22h     Available: no daemon pods available on any node.
+operator-lifecycle-manager-packageserver   4.9.9     False       True          False      151m    ClusterServiceVersion openshift-operator-lifecycle-manager/packageserver observed in phase Failed with reason: ComponentUnhealthy, message: APIServices not installed
+
+# oc1 get pods -A | grep -Ev "Running|Complete" 
+NAMESPACE                                          NAME                                                              READY   STATUS                 RESTARTS          AGE
+hive                                               hive-clustersync-0                                                0/1     CreateContainerError   26 (15h ago)      4d19h
+hive                                               hive-controllers-cbc6b85b7-5wltx                                  0/1     CreateContainerError   27 (15h ago)      4d19h
+open-cluster-management                            application-chart-8923c-applicationui-94c4dbbbb-277wd             0/1     CreateContainerError   26 (15h ago)      4d23h
+open-cluster-management                            assisted-service-56db4ff5c4-9xmlm                                 1/2     CreateContainerError   50 (6h39m ago)    25h
+open-cluster-management                            clusterlifecycle-state-metrics-v2-5c6977f476-7t8zd                0/1     CreateContainerError   22 (21h ago)      4d23h
+open-cluster-management                            console-chart-117b8-console-v2-8c54cbfc-lkwgk                     0/1     CrashLoopBackOff       250 (3m7s ago)    4d23h
+open-cluster-management                            console-chart-117b8-console-v2-8c54cbfc-xkbq7                     0/1     CreateContainerError   30 (19h ago)      25h
+open-cluster-management                            grc-09bbb-grcui-67756b9bcb-cgwnt                                  0/1     CreateContainerError   33 (10h ago)      4d23h
+open-cluster-management                            grc-09bbb-grcuiapi-659856968c-5v4bd                               0/1     CreateContainerError   54 (161m ago)     4d23h
+open-cluster-management                            infrastructure-operator-f9c86ccdd-8qp7r                           0/1     CreateContainerError   110 (10h ago)     4d23h
+open-cluster-management                            management-ingress-a6e14-668f558b58-h7hln                         1/2     CreateContainerError   64 (10h ago)      4d23h
+open-cluster-management                            multicluster-observability-operator-84955f78c5-5txxc              0/1     CreateContainerError   35 (15h ago)      8d
+open-cluster-management                            multicluster-operators-application-6544f7c456-jgmsq               3/4     CreateContainerError   131 (32m ago)     8d
+open-cluster-management                            multiclusterhub-operator-6c8f76c567-j6wj8                         0/1     CreateContainerError   35 (15h ago)      8d
+openshift-apiserver                                apiserver-6668746879-97cmz                                        1/2     CreateContainerError   35 (19h ago)      8d
+openshift-authentication                           oauth-openshift-76bcbd76d5-grsh5                                  0/1     CreateContainerError   49 (11h ago)      8d
+openshift-config-operator                          openshift-config-operator-64b5bfcfc5-kwdbf                        0/1     CreateContainerError   83 (149m ago)     8d
+openshift-console                                  console-5d6d74d7f5-s5b7f                                          0/1     CrashLoopBackOff       184 (94s ago)     8d
+openshift-console                                  downloads-6f79767b7d-w2blh                                        0/1     CreateContainerError   28 (21h ago)      8d
+openshift-controller-manager-operator              openshift-controller-manager-operator-586c7f66db-t4sk8            0/1     CreateContainerError   20 (21h ago)      8d
+openshift-image-registry                           image-pruner-27423360--1-gwffp                                    0/1     Error                  1                 28h
+openshift-image-registry                           image-pruner-27424800--1-bschh                                    0/1     Error                  0                 4h16m
+openshift-ingress                                  router-default-d49579f44-pjf6m                                    0/1     CreateContainerError   32 (21h ago)      8d
+openshift-kube-apiserver-operator                  kube-apiserver-operator-6b6548968f-tf94s                          0/1     CreateContainerError   21 (21h ago)      8d
+openshift-marketplace                              marketplace-operator-5b95dfc48c-h85xg                             0/1     CreateContainerError   47 (12h ago)      8d
+openshift-oauth-apiserver                          apiserver-6c7c6467c8-b6mmn                                        0/1     CreateContainerError   41 (10h ago)      8d
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-4m8g2                                0/1     Error                  0                 20h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-89f7d                                0/1     Error                  0                 20h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-f8cbm                                0/1     Error                  9                 24h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-nk9kg                                0/1     Error                  0                 25h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-sq9kt                                0/1     Error                  3                 24h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-whjs2                                0/1     Error                  0                 30h
+openshift-operator-lifecycle-manager               collect-profiles-27423240--1-zqwxb                                0/1     Error                  0                 20h
+openshift-operator-lifecycle-manager               olm-operator-5574b98d98-jbwst                                     0/1     CreateContainerError   75 (150m ago)     8d
+
+openshift-apiserver                                apiserver-6668746879-97cmz                                        1/2     CreateContainerError   35 (19h ago)      8d
+openshift-kube-apiserver-operator                   kube-apiserver-operator-6b6548968f-tf94s                          0/1     CreateContainerError   21 (21h ago)      8d
+
+oc1 -n openshift-kube-apiserver-operator describe pod kube-apiserver-operator-6b6548968f-tf94s 
+...
+Events:
+  Type     Reason       Age                  From     Message
+  ----     ------       ----                 ----     -------
+  Warning  Failed       157m                 kubelet  Error: Kubelet may be retrying requests that are timing out in CRI-O due to system load: context deadline exceeded: error reserving ctr name k8s_kube-apiserver-operator_kube-apiserver-operator-6b6548968f-tf94s_openshift-kube-apiserver-operator_9314bf7b-6a09-451b-9c3e-9037f4252638_22 for id 3
+0b38c9d5d1cf74325697bd33d50d4b9e99910d7abcf16f33e3517a799db8e5e: name is reserved
+  Warning  FailedMount  122m (x32 over 22h)  kubelet  MountVolume.SetUp failed for volume "config" : failed to sync configmap cache: timed out waiting for the condition
+  Warning  FailedMount  122m (x32 over 22h)  kubelet  MountVolume.SetUp failed for volume "serving-cert" : failed to sync secret cache: timed out waiting for the condition
+  Warning  Failed       96m                  kubelet  Error: Kubelet may be retrying requests that are timing out in CRI-O due to system load: context deadline exceeded: error reserving ctr name k8s_kube-apiserver-operator_kube-apiserver-operator-6b6548968f-tf94s_openshift-kube-apiserver-operator_9314bf7b-6a09-451b-9c3e-9037f4252638_22 for id 1
+625213ef89b3ad22acefb5e34f89e9a1d755dd9f0c900dd1e4befbaa4f34c18: name is reserved
+  Warning  Failed       61m                  kubelet  Error: Kubelet may be retrying requests that are timing out in CRI-O due to system load: context deadline exceeded: error reserving ctr name k8s_kube-apiserver-operator_kube-apiserver-operator-6b6548968f-tf94s_openshift-kube-apiserver-operator_9314bf7b-6a09-451b-9c3e-9037f4252638_22 for id 6
+2337fc7833640e086477388dd6aa97824c53286c65877827d9c48e76a2795a3: name is reserved
+  Warning  FailedMount  51m (x28 over 22h)   kubelet  MountVolume.SetUp failed for volume "kube-api-access" : failed to sync configmap cache: timed out waiting for the condition
+  Normal   Pulled       12m (x387 over 23h)  kubelet  Container image "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:a86e33138fff72f19ed4015823e586cafafc68029bb29e39
+e2cc93eb7f4eb21a" already present on machine
+  Warning  Failed       75s (x324 over 23h)  kubelet  Error: context deadline exceeded
+
+集群是在线集群，经过把 cpu 调大，集群终于恢复。image-registry operator 报 Degraded: The registry is removed...
+oc get clusteroperators image-registry -o yaml 
+  - lastTransitionTime: "2022-02-21T03:08:46Z"
+    message: |-
+      Degraded: The registry is removed
+      ImagePrunerDegraded: Job has reached the specified backoff limit
+    reason: ImagePrunerJobFailed::Removed
+    status: "True"
+    type: Degraded
 ```
