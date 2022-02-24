@@ -7338,4 +7338,45 @@ oc get clusteroperators image-registry -o yaml
 # oc -n openshift-image-registry delete jobs --all
 
 测试环境下的 SNO 的硬件配置是 12 vcpu 以及 64 GB 内存
+
+# brctl show 2>&1 | grep virbr0 -A4
+virbr0          8000.5254004e2e84       yes             virbr0-nic
+                                                        vnet0
+                                                        vnet1
+                                                        vnet2           # Hub interface
+                                                        vnet3           # Spoke interface
+
+# virsh domiflist jwang-ocp452-master0                                  # Hub cluster
+Interface  Type       Source     Model       MAC
+-------------------------------------------------------
+vnet2      network    default    virtio      52:54:00:1c:14:57          # Hub interface
+
+# virsh domiflist jwang-ocp452-master1                                  # Spoke cluster
+Interface  Type       Source     Model       MAC
+-------------------------------------------------------
+vnet3      network    default    virtio      52:54:00:92:b4:e6          # Spoke interface
+
+
+# vnet3 TX status / every minutes
+    8984161608 5444819  0       0       0       0       
+    8984267667 5445443  0       0       0       0       
+    8984393722 5446014  0       0       0       0       
+    8984511666 5446605  0       0       0       0       
+    8984590970 5447106  0       0       0       0       
+    8984656887 5447619  0       0       0       0       
+    8984724713 5448156  0       0       0       0       
+    8984832730 5448679  0       0       0       0       
+    8984956720 5449307  0       0       0       0       
+    8985036377 5449824  0       0       0       0 
+
+# vnet3 TX bytes / every minutes
+8984267667-8984161608 = 106059
+8984393722-8984267667 = 126055
+8984511666-8984393722 = 117944
+8984590970-8984511666 = 79304
+8984656887-8984590970 = 65917
+8984724713-8984656887 = 67826
+8984832730-8984724713 = 108017
+8984956720-8984832730 = 123990
+8985036377-8984956720 = 79657
 ```
