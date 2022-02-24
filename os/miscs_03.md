@@ -7379,4 +7379,7 @@ vnet3      network    default    virtio      52:54:00:92:b4:e6          # Spoke 
 8984832730-8984724713 = 108017
 8984956720-8984832730 = 123990
 8985036377-8984956720 = 79657
+
+# s3fs
+# https://devninja.net/install-s3fs-on-aws-s3/
 ```
