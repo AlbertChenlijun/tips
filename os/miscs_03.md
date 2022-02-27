@@ -7546,4 +7546,6 @@ git config --global core.excludesfile ~/.gitignore_global
 git rm --cached .DS_Store
 find . -name .DS_Store -print0 | xargs -0 git rm --ignore-unmatch
 
+# 安装中文语言包
+yum install -y langpacks-zh_CN
 ```
