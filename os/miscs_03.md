@@ -7382,4 +7382,155 @@ vnet3      network    default    virtio      52:54:00:92:b4:e6          # Spoke 
 
 # s3fs
 # https://devninja.net/install-s3fs-on-aws-s3/
+
+#!/bin/sh
+date +%Y%m%d%H%M%S >> /tmp/link-status
+echo '' >> /tmp/link-status
+/usr/sbin/ip -s link show ens5 >> /tmp/link-status
+echo '' >> /tmp/link-status
+
+cat /tmp/link-status | grep -E "2022|0       0       0       0" | awk 'NR % 3 == 0'
+
+# worker ens5 TX status / every minutes
+    1464862589 721628   0       0       0       0       
+    1511515340 735943   0       0       0       0       
+    1521342737 742315   0       0       0       0       
+    1525864993 747757   0       0       0       0       
+    1530409740 753152   0       0       0       0       
+    1543639053 759853   0       0       0       0       
+    1586923101 771013   0       0       0       0       
+    1616364195 780821   0       0       0       0       
+    1620918129 786211   0       0       0       0       
+    1625423670 791517   0       0       0       0       
+    1629995814 796889   0       0       0       0     
+
+# worker ens5 TX bytes / every minutes
+1629995814-1625423670 = 4572144
+1625423670-1620918129 = 4505541
+1620918129-1616364195 = 4553934
+1616364195-1586923101 = 29441094
+1586923101-1543639053 = 43284048
+1543639053-1530409740 = 13229313
+1530409740-1525864993 = 4544747
+1525864993-1521342737 = 4522256
+1521342737-1511515340 = 9827397
+1511515340-1464862589 = 46652751
+
+
+# https://access.redhat.com/solutions/6542281
+Invalid GPG signature for image certified-operator-index, redhat-marketplace-index, community-operator-index
+
+1. 保存 /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv 文件
+curl -s -o /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv https://www.redhat.com/security/data/55A34A82.txt
+2. 保存 /etc/containers/policy.json 文件
+cat > /etc/containers/policy.json <<EOF
+{
+  "default": [
+      {
+          "type": "insecureAcceptAnything"
+      }
+  ],
+  "transports":
+    {
+      "docker-daemon":
+          {
+              "": [{"type":"insecureAcceptAnything"}]
+          },
+      "docker":
+        {
+          "registry.redhat.io/redhat/certified-operator-index": [
+            {
+              "type": "signedBy",
+              "keyType": "GPGKeys",
+              "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv"
+            }
+          ],
+          "registry.redhat.io/redhat/community-operator-index": [
+            {
+              "type": "insecureAcceptAnything"
+            }
+          ],
+          "registry.redhat.io/redhat/redhat-marketplace-index": [
+            {
+              "type": "signedBy",
+              "keyType": "GPGKeys",
+              "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv"
+            }
+          ],
+          "registry.access.redhat.com": [
+            {
+              "type": "signedBy",
+              "keyType": "GPGKeys",
+              "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+            }
+          ],
+          "registry.redhat.io": [
+            {
+              "type": "signedBy",
+              "keyType": "GPGKeys",
+              "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+            }
+          ]
+        }
+    }
+}
+EOF
+
+
+# https://github.com/openshift-telco/ocp4-offline-operator-mirror/blob/main/redhat-operator-index.md
+# 修剪或者查找 index image 的内容
+# 了解哪些 operator 可以同步
+
+curl -L https://github.com/fullstorydev/grpcurl/releases/download/v1.8.6/grpcurl_1.8.6_linux_x86_64.tar.gz -o grpcurl_1.8.6_linux_x86_64.tar.gz
+tar -xvzf grpcurl_1.8.6_linux_x86_64.tar.gz -C /usr/local/bin
+podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/redhat-operator-index:v4.9
+podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/certified-operator-index:v4.9
+podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/community-operator-index:v4.9
+
+
+# Looking at the Index using grpcurl
+# 用 grpcurl 检查 index 内容
+mkdir -p redhat-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > redhat-operator-index/v4.9/packages.out
+cat redhat-operator-index/v4.9/packages.out
+mkdir -p certified-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > certified-operator-index/v4.9/packages.out
+cat certified-operator-index/v4.9/packages.out
+mkdir -p community-operator-index/v4.9
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > community-operator-index/v4.9/packages.out
+cat community-operator-index/v4.9/packages.out
+
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha1
+kind: ImageSetConfiguration
+mirror:
+  ocp:
+    channels:
+      - name: stable-4.9
+        versions:
+          - '4.9.9'
+          - '4.9.10'
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: local-storage-operator
+        - name: openshift-gitops-operator
+        - name: advanced-cluster-management
+        - name: redhat-oadp-operator
+        - name: kubevirt-hyperconverged
+        - name: odf-operator
+        - name: odf-multicluster-orchestrator
+    - catalog: registry.redhat.io/redhat/certified-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: elasticsearch-eck-operator-certified
+    - catalog: registry.redhat.io/redhat/community-operator-index:v4.9
+      headsOnly: false
+      packages:
+        - name: oadp-operator
+        - name: grafana-operator
+        - name: opendatahub-operator
+EOF
 ```
