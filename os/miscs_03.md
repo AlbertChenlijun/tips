@@ -7533,4 +7533,17 @@ mirror:
         - name: grafana-operator
         - name: opendatahub-operator
 EOF
+/usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
+
+# https://www.jianshu.com/p/e3d8eb2a4295
+# gitignore忽略.DS_Store文件
+cat > ~/.gitignore_global <<EOF
+.DS_Store 
+*/.DS_Store 
+EOF
+
+git config --global core.excludesfile ~/.gitignore_global
+git rm --cached .DS_Store
+find . -name .DS_Store -print0 | xargs -0 git rm --ignore-unmatch
+
 ```
