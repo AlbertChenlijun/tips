@@ -7553,4 +7553,38 @@ yum install -y langpacks-zh_CN
 # https://blogs.oracle.com/cloud-infrastructure/post/backing-up-your-oke-environment-with-velero
 kubectl -n testing annotate pod/oke-fsspod3 backup.velero.io/backup-volumes=oke-fsspv1
 
+
+# oc-mirror 信息
+error: unable to copy layer sha256:9e3fbf2caf74d81d9074643c3197ce375442f6fb9c57ee75b7b8e29c9bd6911a to file://container-native-virtualization/virt-operator: read 
+tcp 10.66.208.130:58372->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:5803df1297c41013b5b4e4d729036ed2c445e81a0a1f69f6a080cd81bb7f9da8 to file://container-native-virtualization/virt-operator: read 
+tcp 10.66.208.130:57848->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:36ed9651630573030fcb3301d7fe1f948e0407632cfa4c8ef3df7cf455e02b64 to file://container-native-virtualization/virt-operator: read 
+tcp 10.66.208.130:57850->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:718bff4216ccf3f9d7905b03b3cdf78ac9cb0c348e171379590d9e0f7755166c to file://container-native-virtualization/virt-operator: read 
+tcp 10.66.208.130:57796->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:1faceab815594ea7f9ef3545bd76321f5a30c97671240e6a7153dd93b50f06f9 to file://container-native-virtualization/virt-api: read tcp 1
+0.66.208.130:58374->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:f82e74503fcfb5afd5f1e9d71afaeb27ac722a639f276a6c48274c5f002c4b07 to file://container-native-virtualization/virt-api: read tcp 1
+0.66.208.130:58404->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:677bfa5b8f889cb60a34ce02911a4ee6882acc0f5b3101b24b93048de9ed8c80 to file://container-native-virtualization/virt-cdi-importer: r
+ead tcp 10.66.208.130:58406->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:c07a3a47d08a9b28cf68d144e97683e34e93c99dfc6ffc924fca76ab2366930e to file://container-native-virtualization/virt-cdi-importer: r
+ead tcp 10.66.208.130:58408->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:6d847cbbbd85fd693e28f7fedc117b290772d3bdde23f64b1de7dd2a414e674b to file://rhacm2/klusterlet-addon-rhel8-operator: read tcp 10.
+66.208.130:58514->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:6d4e9f31661faf7b4e04c946f636bf6ffe279df92c73cd115e4ecf245b28c273 to file://container-native-virtualization/virt-launcher: read 
+tcp 10.66.208.130:58512->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:bf7019a9259da8fde0f92524464fc25da5e960894409af345c9095eb6c376033 to file://rhacm2/klusterlet-addon-rhel8-operator: read tcp 10.
+66.208.130:58770->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:667732b0891171852364c1e66b98506c40a3722eaf60829da194e49532c9a737 to file://rhacm2/klusterlet-addon-rhel8-operator: read tcp 10.
+66.208.130:58520->104.74.144.107:443: read: connection reset by peer
+error: unable to copy layer sha256:6e621b3c653a64515956100f21a430a15cca8152d400e4f8367c5519a7784157 to file://rhacm2/klusterlet-addon-rhel8-operator: read tcp 10.
+66.208.130:58518->104.74.144.107:443: read: connection reset by peer
+info: Mirroring completed in 3h49m34.36s (7.178MB/s)
+error mirroring image: one or more errors occurred while uploading images
+error: image "registry.redhat.io/container-native-virtualization/hostpath-provisioner-rhel8@sha256:70e6ab6a4a35d2b45effd355b0a0d9b76f1a35cd67cf1cb2944f2b70540385a
+a" mapping "container-native-virtualization/hostpath-provisioner-rhel8": stat output-dir/oc-mirror-workspace/src/v2/container-native-virtualization/hostpath-provi
+sioner-rhel8: no such file or directory
+
 ```
