@@ -7627,4 +7627,33 @@ EOF
 
 minio 报错
 mc: <ERROR> Unable to initialize new alias from the provided credentials. The request signature we calculated does not match the signature you provided. Check your key and signing method.
+
+
+Minio example
+
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: minio-tenant-1
+  namespace: minio-tenant-1
+spec:
+  ## Specification for MinIO Pool(s) in this Tenant.
+  pools:
+    ## Servers specifies the number of MinIO Tenant Pods / Servers in this pool.
+    ## For standalone mode, supply 1. For distributed mode, supply 4 or more.
+    ## Note that the operator does not support upgrading from standalone to distributed mode.
+    - servers: 1
+      ## volumesPerServer specifies the number of volumes attached per MinIO Tenant Pod / Server.
+      volumesPerServer: 4
+      ## This VolumeClaimTemplate is used across all the volumes provisioned for MinIO Tenant in this
+      ## Pool.
+      volumeClaimTemplate:
+        metadata:
+          name: data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
 ```
