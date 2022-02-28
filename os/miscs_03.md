@@ -7712,5 +7712,8 @@ spec:
          bucket: velero
          prefix: velero
        provider: aws
-EOF       
+EOF
+
+# 报错
+# There is no existing backup storage location set as default
 ```
