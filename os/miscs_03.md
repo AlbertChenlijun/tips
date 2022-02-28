@@ -7670,4 +7670,47 @@ spec:
             requests:
               storage: 2Gi
 EOF
+
+# openshift wordpress + mysql template
+https://raw.githubusercontent.com/jaredhocutt/openshift-wordpress/master/wordpress-mysql-template.yaml
+oc project openshift
+oc apply -f https://raw.githubusercontent.com/jaredhocutt/openshift-wordpress/master/wordpress-mysql-template.yaml
+
+oc new-project wordrpess-test
+oc new-app wordpress-mysql 
+
+# OADP 与 Minio
+# https://github.com/openshift/oadp-operator/blob/master/docs/config/noobaa/install_oadp_noobaa.md
+
+创建 DataProtectionApplication velero-sample - 使用 minio 作为存储
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+name: velero-sample
+spec:
+configuration:
+  velero:
+    defaultPlugins:
+    - openshift
+    - aws
+  restic:
+    enable: true
+  backupLocations:
+    - name: default
+      velero:
+       config:
+         profile: "default"
+         region: minio
+         s3Url: http://minio-velero.apps.ocp1.rhcnsa.com
+         s3ForcePathStyle: "true"
+         insecureSkipTLSVerify: "true"
+       credential:
+         name: cloud-credentials
+         key: cloud
+       objectStorage:
+         bucket: velero
+         prefix: velero
+       provider: aws
+EOF       
 ```
