@@ -7757,6 +7757,8 @@ oc get secret cloud-credentials -o yaml -n openshift-adp
 oc get backupstoragelocation -o yaml -n openshift-adp
 oc get dpa -o yaml -n openshift-adp
 
+# https://docs.google.com/document/d/1YkEQLmTVu4lS88xmoyQLAxYVm-BvrDusemPJptclvjQ/edit#
+# 这个配置可以与 minio 工作在一起
 cat cloud-credentials
 [default]
 aws_access_key_id = minio
@@ -7797,5 +7799,39 @@ spec:
         - openshift
     featureFlags:
     - EnableCSI
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: gitea-persistent-1
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  hooks: {}
+  includedNamespaces:
+  - gitea
+  storageLocation: dpa-sample-1
+  ttl: 2h0m0s
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: gitea
+  namespace: openshift-adp
+spec:
+  backupName: gitea-persistent-1
+  excludedResources:
+  - nodes
+  - events
+  - events.events.k8s.io
+  - backups.velero.io
+  - restores.velero.io
+  - resticrepositories.velero.io
+  restorePVs: true
 EOF
 ```
