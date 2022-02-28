@@ -7536,7 +7536,7 @@ EOF
 /usr/local/bin/oc-mirror --config /root/image-config-realse-local.yaml file://output-dir
 
 # https://www.jianshu.com/p/e3d8eb2a4295
-# gitignore忽略.DS_Store文件
+# 设置 git ignore 忽略 .DS_Store 文件
 cat > ~/.gitignore_global <<EOF
 .DS_Store 
 */.DS_Store 
@@ -7548,4 +7548,9 @@ find . -name .DS_Store -print0 | xargs -0 git rm --ignore-unmatch
 
 # 安装中文语言包
 yum install -y langpacks-zh_CN
+
+# 通过 annotate 来设置 velero backup pods volumes
+# https://blogs.oracle.com/cloud-infrastructure/post/backing-up-your-oke-environment-with-velero
+kubectl -n testing annotate pod/oke-fsspod3 backup.velero.io/backup-volumes=oke-fsspv1
+
 ```
