@@ -7587,4 +7587,44 @@ error: image "registry.redhat.io/container-native-virtualization/hostpath-provis
 a" mapping "container-native-virtualization/hostpath-provisioner-rhel8": stat output-dir/oc-mirror-workspace/src/v2/container-native-virtualization/hostpath-provi
 sioner-rhel8: no such file or directory
 
+# Bypassing StackRox Admission Controller Enforcement in the CI/CD Pipeline
+In case of emergency, add the annotation {"admission.stackrox.io/break-glass": "ticket-1234"} to your deployment with an updated ticket number
+https://access.redhat.com/articles/5897721
+
+# minio tenant 
+oc new project minio-tenant-1
+oc get namespace minio-tenant-1 -o=jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}{"\n"}'
+1001010000/10000
+oc project openshift-operators
+oc get namespace minio-tenant-1 -o=jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}{"\n"}'
+1001010000/10000
+
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-creds-secret
+type: Opaque
+data:
+  accesskey: bWluaW8=
+  secretkey: cjNkaDR0ITIzCg==
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: console-secret
+type: Opaque
+data:
+  CONSOLE_PBKDF_PASSPHRASE: cmVkaGF0MTIzCg==
+  CONSOLE_PBKDF_SALT: cmVkaGF0MTIzCg==
+  CONSOLE_ACCESS_KEY: cmVkaGF0Cg==
+  CONSOLE_SECRET_KEY: cmVkaGF0ITIzCg==
+EOF
+
+
+minio 报错
+mc: <ERROR> Unable to initialize new alias from the provided credentials. The request signature we calculated does not match the signature you provided. Check your key and signing method.
 ```
