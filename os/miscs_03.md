@@ -7697,23 +7697,105 @@ spec:
   restic:
     enable: true
   backupLocations:
-    - name: default
-      velero:
-       config:
-         profile: "default"
-         region: minio
-         s3Url: http://minio-velero.apps.ocp1.rhcnsa.com
-         s3ForcePathStyle: "true"
-         insecureSkipTLSVerify: "true"
-       credential:
-         name: cloud-credentials
-         key: cloud
-       objectStorage:
-         bucket: velero
-         prefix: velero
-       provider: aws
+    - velero:
+        config:
+          profile: "default"
+          region: minio
+          s_3__url: minio-velero.apps.ocp1.rhcnsa.com
+          s_3__force_path_style: "true"
+          insecureSkipTLSVerify: "true"
+        credential:
+          name: cloud-credentials
+          key: cloud
+        objectStorage:
+          bucket: velero
+          prefix: velero
+        provider: aws
+        default: true
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero-sample
+  namespace: openshift-adp
+spec:
+  olm_managed: true
+  backup_storage_locations:
+    - config:
+        insecure_skip_tls_verify: true
+        profile: default
+        region: minio
+        s_3__force_path_style: true
+        s_3__url: 'http://minio-velero.apps.ocp1.rhcnsa.com'
+        region: minio
+      credentials_secret_ref:
+        name: cloud-credentials
+        namespace: openshift-adp
+      name: default
+      object_storage:
+        bucket: velero
+        prefix: velero
+      provider: aws
+  default_velero_plugins:
+    - aws
+    - openshift
+  enable_restic: true
 EOF
 
 # 报错
 # There is no existing backup storage location set as default
+
+# 报错
+time="2022-02-28T09:50:35Z" level=error msg="Error listing backups in backup store" backupLocation=velero-sample-1 controller=backup-sync error="rpc error: code = Unknown desc = InvalidAccessKeyId: The Access Key Id you provided does not exist in our records.\n\tstatus code: 403, request id: 16D7EA54037C55D3, host id: " error.file="/remote-source/app/velero-plugin-for-aws/object_store.go:384" error.function="main.(*ObjectStore).ListCommonPrefixes" logSource="pkg/controller/backup_sync_controller.go:182"
+
+报错
+time="2022-02-28T10:00:19Z" level=error msg="Error getting a backup store" backup-storage-location=velero-sample-1 controller=backup-storage-location error="rpc error: code = Unknown desc = config has invalid keys [insecure_skip_tls_verify s3_force_path_style s3_url]; valid keys are [region s3Url publicUrl kmsKeyId s3ForcePathStyle signatureVersion credentialsFile profile serverSideEncryption insecureSkipTLSVerify enableSharedConfig bucket prefix caCert]" error.file="/remote-source/deps/gomod/pkg/mod/github.com/vmware-tanzu/velero@v1.6.2/pkg/plugin/framework/validation.go:50" error.function=github.com/vmware-tanzu/velero/pkg/plugin/framework.validateConfigKeys logSource="pkg/controller/backup_storage_location_controller.go:100"
+
+oc get secret cloud-credentials -o yaml -n openshift-adp
+oc get backupstoragelocation -o yaml -n openshift-adp
+oc get dpa -o yaml -n openshift-adp
+
+cat cloud-credentials
+[default]
+aws_access_key_id = minio
+aws_secret_access_key = minio123
+oc create secret generic cloud-credentials --namespace openshift-adp --from-file cloud=cloud-credentials
+
+# 这个配置可以与 minio 工作在一起
+cat <<EOF | oc apply -f -
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa-sample
+  namespace: openshift-adp
+spec:
+  backupLocations:
+    - velero:
+        config:
+          profile: "default"
+          region: minio
+          s3Url: http://minio-velero.apps.ocp1.rhcnsa.com
+          insecureSkipTLSVerify: "true" 
+          s3ForcePathStyle: "true"
+        credential:
+          key: cloud
+          name: cloud-credentials
+        objectStorage:
+          bucket: velero
+          prefix: velero
+        default: true
+        provider: aws
+  configuration:
+    restic:
+      enable: true
+    velero:
+      defaultPlugins:
+        - aws
+        - csi
+        - openshift
+    featureFlags:
+    - EnableCSI
+EOF
 ```
