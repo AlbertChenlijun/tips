@@ -7687,13 +7687,13 @@ cat <<EOF | oc apply -f -
 apiVersion: oadp.openshift.io/v1alpha1
 kind: DataProtectionApplication
 metadata:
-name: velero-sample
+  name: velero-sample
 spec:
-configuration:
-  velero:
-    defaultPlugins:
-    - openshift
-    - aws
+  configuration:
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
   restic:
     enable: true
   backupLocations:
