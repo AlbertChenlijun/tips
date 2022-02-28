@@ -7630,13 +7630,25 @@ mc: <ERROR> Unable to initialize new alias from the provided credentials. The re
 
 
 Minio example
+https://github.com/minio/operator/blob/master/examples/kustomization/tenant-tiny/tenant.yaml
 
+
+cat <<EOF | oc apply -f -
 apiVersion: minio.min.io/v2
 kind: Tenant
 metadata:
   name: minio-tenant-1
   namespace: minio-tenant-1
 spec:
+  exposeServices:
+    minio: true
+    console: true
+  credsSecret:
+    name: minio-creds-secret
+  console:
+    consoleSecret:
+      name: console-secret
+    replicas: 1
   ## Specification for MinIO Pool(s) in this Tenant.
   pools:
     ## Servers specifies the number of MinIO Tenant Pods / Servers in this pool.
@@ -7653,7 +7665,9 @@ spec:
         spec:
           accessModes:
             - ReadWriteOnce
+          storageClassName: nfs-storage-provisioner-wait
           resources:
             requests:
               storage: 2Gi
+EOF
 ```
