@@ -7906,11 +7906,10 @@ metadata:
   namespace: openshift-operators
 spec:
   channel: stable
-  installPlanApproval: Manual
+  installPlanApproval: Automatic
   name: minio-operator
   source: operatorhubio-operators
   sourceNamespace: openshift-marketplace
-  startingCSV: minio-operator.v4.4.9
 EOF
 
 报错
@@ -7927,4 +7926,28 @@ ocp4 -n openshift-operator-lifecycle-manager logs catalog-operator-7b784489b9-q2
 ...
 I0212 07:00:56.963088       1 event.go:282] Event(v1.ObjectReference{Kind:"Namespace", Namespace:"", Name:"openshift-sdn", UID:"aff65012-f357-4ca4-8f2c-259869fa2076", APIVersion:"v1", ResourceVersion:"419477570", FieldPath:""}): type: 'Warning' reason: 'ResolutionFailed' constraints not satisfiable: no operators found in channel 4.7 of package sriov-network-operator in the catalog referenced by subscription sriov-network-operator, subscription sriov-network-operator exists
 
+报错
+ResolutionFailed
+ConstraintsNotSatisfiable
+constraints not satisfiable: operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 and @existing/openshift-operators//minio-operator.v4.4.9 provide Tenant (minio.min.io/v1), clusterserviceversion minio-operator.v4.4.9 exists and is not referenced by a subscription, subscription minio-operator exists, subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9
+
+operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 && @existing/openshift-operators//minio-operator.v4.4.9 provide Tenant (minio.min.io/v1)
+
+clusterserviceversion minio-operator.v4.4.9 && is not referenced by a subscription
+subscription minio-operator exists
+subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9
+
+
+$ oc get events -n openshift-operators 
+LAST SEEN   TYPE      REASON                OBJECT                                        MESSAGE
+123m        Warning   FailedCreate          replicaset/console-84bbbd478b                 Error creating: pods "console-84bbbd478b-" is forbidden: unable to validate against any security context constraint: [provider "anyuid": Forbidden: not usable by user or serviceaccount, provider "pipelines-scc": Forbidden: not usable by user or serviceaccount, provider "stackrox-sensor": Forbidden: not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser: Invalid value: 1000: must be in the ranges: [1000380000, 1000389999], provider "nonroot": Forbidden: not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden: not usable by user or serviceaccount, provider "machine-api-termination-handler": Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden: not usable by user or serviceaccount, provider "hostaccess": Forbidden: not usable by user or serviceaccount, provider "node-exporter": Forbidden: not usable by user or serviceaccount, provider "privileged": Forbidden: not usable by user or serviceaccount, provider "velero-privileged": Forbidden: not usable by user or serviceaccount]
+158m        Normal    ScalingReplicaSet     deployment/console                            Scaled up replica set console-84bbbd478b to 1
+123m        Warning   FailedCreate          replicaset/minio-operator-65f99cfd74          Error creating: pods "minio-operator-65f99cfd74-" is forbidden: unable to validate against any security context constraint: [provider "anyuid": Forbidden: not usable by user or serviceaccount, provider "pipelines-scc": Forbidden: not usable by user or serviceaccount, provider "stackrox-sensor": Forbidden: not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser: Invalid value: 1000: must be in the ranges: [1000380000, 1000389999], provider "nonroot": Forbidden: not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden: not usable by user or serviceaccount, provider "machine-api-termination-handler": Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden: not usable by user or serviceaccount, provider "hostaccess": Forbidden: not usable by user or serviceaccount, provider "node-exporter": Forbidden: not usable by user or serviceaccount, provider "privileged": Forbidden: not usable by user or serviceaccount, provider "velero-privileged": Forbidden: not usable by user or serviceaccount]
+168m        Normal    Killing               pod/minio-operator-689cf856f-2djfq            Stopping container minio-operator
+158m        Normal    ScalingReplicaSet     deployment/minio-operator                     Scaled up replica set minio-operator-65f99cfd74 to 2
+158m        Normal    RequirementsUnknown   clusterserviceversion/minio-operator.v4.4.9   requirements not yet checked
+158m        Normal    RequirementsNotMet    clusterserviceversion/minio-operator.v4.4.9   one or more requirements couldn't be found
+128m        Normal    AllRequirementsMet    clusterserviceversion/minio-operator.v4.4.9   all requirements found, attempting install
+123m        Normal    InstallSucceeded      clusterserviceversion/minio-operator.v4.4.9   waiting for install components to report healthy
+143m        Normal    NeedsReinstall        clusterserviceversion/minio-operator.v4.4.9   calculated deployment install is bad
 ```
