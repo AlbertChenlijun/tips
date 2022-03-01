@@ -7759,6 +7759,7 @@ oc get dpa -o yaml -n openshift-adp
 
 # https://docs.google.com/document/d/1YkEQLmTVu4lS88xmoyQLAxYVm-BvrDusemPJptclvjQ/edit#
 # 这个配置可以与 minio 工作在一起
+# aws_access_key_id 和 aws_secret_access_key 不要加单引号
 cat cloud-credentials
 [default]
 aws_access_key_id = minio
