@@ -7486,7 +7486,7 @@ tar -xvzf grpcurl_1.8.6_linux_x86_64.tar.gz -C /usr/local/bin
 podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/redhat-operator-index:v4.9
 podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/certified-operator-index:v4.9
 podman run --authfile pull-secret-full.json -p50051:50051 -it registry.redhat.io/redhat/community-operator-index:v4.9
-
+podman run --authfile pull-secret-full.json -p50051:50051 -it quay.io/operator-framework/upstream-community-operators:latest
 
 # Looking at the Index using grpcurl
 # 用 grpcurl 检查 index 内容
@@ -7499,6 +7499,9 @@ cat certified-operator-index/v4.9/packages.out
 mkdir -p community-operator-index/v4.9
 grpcurl -plaintext localhost:50051 api.Registry/ListPackages > community-operator-index/v4.9/packages.out
 cat community-operator-index/v4.9/packages.out
+mkdir -p upstream-community-operators/latest
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > upstream-community-operators/latest/packages.out
+cat upstream-community-operators/latest/packages.out
 
 cat > image-config-realse-local.yaml <<EOF
 apiVersion: mirror.openshift.io/v1alpha1
@@ -7893,4 +7896,33 @@ E0228 11:04:32.550976       1 operator.go:104] Unexpected error during the creat
 alias watch='watch '
 alias ll='ls -l '
 watch ll
+
+# 订阅 Elastic Cloud on Kubernetes Operator
+$ oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: minio-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Manual
+  name: minio-operator
+  source: operatorhubio-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: minio-operator.v4.4.9
+EOF
+
+报错
+calculated deployment install is bad
+# 参见 https://bugzilla.redhat.com/show_bug.cgi?id=1885398
+https://github.com/operator-framework/operator-lifecycle-manager/blob/master/pkg/controller/operators/olm/operator.go#L1535
+解决方法是
+Edit the CSV to remove validating and mutating webhooks. Only left conversion webhook.
+oc edit csv 
+
+
+# 查看 olm catalog-operator 日志
+ocp4 -n openshift-operator-lifecycle-manager logs catalog-operator-7b784489b9-q2dvv 
+
 ```
