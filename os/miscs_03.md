@@ -7632,6 +7632,11 @@ mc: <ERROR> Unable to initialize new alias from the provided credentials. The re
 Minio example
 https://github.com/minio/operator/blob/master/examples/kustomization/tenant-tiny/tenant.yaml
 
+# https://user-images.githubusercontent.com/30251247/111955614-b2378a80-8b24-11eb-8351-b89c653da7f1.png
+# kube-controller:
+#   extra_args:
+#     cluster-signing-cert-file: "/etc/kubernetes/ssl/kube-ca.pem"
+#     cluster-signing-key-file: "/etc/kubernetes/ssl/kube-ca-key.pem"
 
 cat <<EOF | oc apply -f -
 apiVersion: minio.min.io/v2
@@ -7645,6 +7650,7 @@ spec:
     console: true
   credsSecret:
     name: minio-creds-secret
+  requestAutoCert: false
   console:
     consoleSecret:
       name: console-secret
@@ -7855,4 +7861,32 @@ spec:
   - resticrepositories.velero.io
   restorePVs: true
 EOF
+
+# https://blog.csdn.net/qianggezhishen/article/details/80764378
+# 通过在 pv 里设定 labels，在 pvc 里设置 selector -> matchlables 将 pvc 绑定到特定 pv
+
+MinIO 报错
+# https://github.com/minio/operator/issues/983
+# The solution is to move to the latest version of operator: v4.4.3
+
+# 如果希望安装最新的 Minio Operator 需要创建 CatalogSource operatorhubio-operators
+$ oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/operator-framework/upstream-community-operators:latest
+  displayName: OperatorHub.io Operators
+  publisher: OperatorHub.io
+EOF
+
+$ oc -n openshift-operators logs minio-operator-689cf856f-2djfq
+...
+I0228 11:04:22.543972       1 main-controller.go:623] Waiting for the operator certificates to be issued the server could not find the requested resource
+I0228 11:04:32.548784       1 main-controller.go:620] operator TLS secret not found%!(EXTRA string=secrets "operator-tls" not found)
+E0228 11:04:32.550976       1 operator.go:104] Unexpected error during the creation of the csr/operator-openshift-operators-csr: the server could not find the requested resource
+
 ```
