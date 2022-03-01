@@ -7924,5 +7924,7 @@ oc edit csv
 
 # 查看 olm catalog-operator 日志
 ocp4 -n openshift-operator-lifecycle-manager logs catalog-operator-7b784489b9-q2dvv 
+...
+I0212 07:00:56.963088       1 event.go:282] Event(v1.ObjectReference{Kind:"Namespace", Namespace:"", Name:"openshift-sdn", UID:"aff65012-f357-4ca4-8f2c-259869fa2076", APIVersion:"v1", ResourceVersion:"419477570", FieldPath:""}): type: 'Warning' reason: 'ResolutionFailed' constraints not satisfiable: no operators found in channel 4.7 of package sriov-network-operator in the catalog referenced by subscription sriov-network-operator, subscription sriov-network-operator exists
 
 ```
