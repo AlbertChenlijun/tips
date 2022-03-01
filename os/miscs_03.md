@@ -7889,4 +7889,8 @@ I0228 11:04:22.543972       1 main-controller.go:623] Waiting for the operator c
 I0228 11:04:32.548784       1 main-controller.go:620] operator TLS secret not found%!(EXTRA string=secrets "operator-tls" not found)
 E0228 11:04:32.550976       1 operator.go:104] Unexpected error during the creation of the csr/operator-openshift-operators-csr: the server could not find the requested resource
 
+# 让 watch 与 alias 一起工作
+alias watch='watch '
+alias ll='ls -l '
+watch ll
 ```
