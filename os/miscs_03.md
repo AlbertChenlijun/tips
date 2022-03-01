@@ -7814,6 +7814,26 @@ spec:
   hooks: {}
   includedNamespaces:
   - gitea
+  snapshotVolumes: false
+  storageLocation: dpa-sample-1
+  ttl: 2h0m0s
+EOF
+
+# 创建 restic 备份
+# snapshotVolumes 设置为 false
+cat <<EOF | oc apply -f -
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: gitea-persistent-2
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  hooks: {}
+  includedNamespaces:
+  - gitea
+  snapshotVolumes: false
   storageLocation: dpa-sample-1
   ttl: 2h0m0s
 EOF
