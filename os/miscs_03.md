@@ -7960,6 +7960,40 @@ openshift-marketplace   minio-operator                                      Oper
 constraints not satisfiable: subscription minio-operator exists, @existing/openshift-operators//minio-operator.v4.4.9 and operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 provide Tenant (minio.min.io/v1), clusterserviceversion minio-operator.v4.4.9 exists and is not referenced by a subscription, subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9
 constraints not satisfiable: subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9, subscription minio-operator exists, @existing/openshift-operators//minio-operator.v4.4.9 and operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 provide Tenant (minio.min.io/v1), clusterserviceversion minio-operator.v4.4.9 exists and is not referenced by a subscription
 
+# 查看 channel 和 csv 
+1. oc get packagemanifests -n openshift-marketplace minio-operator -o json | jq -r '.status.channels[] | {channel: .name, csv: .currentCSV}'
+
+# 查看 installplan
+2. oc get installplan -n openshift-operators
+
+# 查看 operatorgroup
+3. oc get operatorgroup -n openshift-operators
+
+# 查看 csv
+4. oc get csv -n openshift-operators
+
+# 查看 deploy/catalog-operator 日志
+5. oc logs -n openshift-operator-lifecycle-manager deploy/catalog-operator | grep '^E0'
+
+# 查看 deploy/olm-operator 日志
+6. oc logs -n openshift-operator-lifecycle-manager deploy/olm-operator | grep '^E0'
+
+
+oc get subs gitea-operator -n openshift-operators -o yaml
+...
+  - lastTransitionTime: "2022-03-01T06:26:07Z"
+    reason: ReferencedInstallPlanNotFound
+    status: "True"
+    type: InstallPlanMissing 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1744245
+# https://bugzilla.redhat.com/show_bug.cgi?id=1895004
+
+$ oc get pods -n openshift-operator-lifecycle-manager
+NAME                                      READY   STATUS      RESTARTS      AGE
+catalog-operator-7b784489b9-q2dvv         1/1     Running     0             18d
+
+# 删除 openshift-operator-lifecycle-manager 下的 catalog-operator pod，这个 pod 会自动重建
+$ oc delete pod catalog-operator-7b784489b9-q2dvv -n openshift-operator-lifecycle-manager
 
 
 ```
