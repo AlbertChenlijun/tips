@@ -7950,4 +7950,10 @@ LAST SEEN   TYPE      REASON                OBJECT                              
 128m        Normal    AllRequirementsMet    clusterserviceversion/minio-operator.v4.4.9   all requirements found, attempting install
 123m        Normal    InstallSucceeded      clusterserviceversion/minio-operator.v4.4.9   waiting for install components to report healthy
 143m        Normal    NeedsReinstall        clusterserviceversion/minio-operator.v4.4.9   calculated deployment install is bad
+
+# 查询 minio 相关的 packagemanifests
+$ oc get packagemanifests -A | grep -i minio
+openshift-marketplace   minio-operator                                      Certified Operators        226d
+openshift-marketplace   minio-operator-rhmp                                 Red Hat Marketplace        226d
+openshift-marketplace   minio-operator                                      OperatorHub.io Operators   18h
 ```
