@@ -7937,7 +7937,7 @@ clusterserviceversion minio-operator.v4.4.9 && is not referenced by a subscripti
 subscription minio-operator exists
 subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9
 
-
+# https://access.redhat.com/solutions/6751941
 $ oc get events -n openshift-operators 
 LAST SEEN   TYPE      REASON                OBJECT                                        MESSAGE
 123m        Warning   FailedCreate          replicaset/console-84bbbd478b                 Error creating: pods "console-84bbbd478b-" is forbidden: unable to validate against any security context constraint: [provider "anyuid": Forbidden: not usable by user or serviceaccount, provider "pipelines-scc": Forbidden: not usable by user or serviceaccount, provider "stackrox-sensor": Forbidden: not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser: Invalid value: 1000: must be in the ranges: [1000380000, 1000389999], provider "nonroot": Forbidden: not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden: not usable by user or serviceaccount, provider "machine-api-termination-handler": Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden: not usable by user or serviceaccount, provider "hostaccess": Forbidden: not usable by user or serviceaccount, provider "node-exporter": Forbidden: not usable by user or serviceaccount, provider "privileged": Forbidden: not usable by user or serviceaccount, provider "velero-privileged": Forbidden: not usable by user or serviceaccount]
