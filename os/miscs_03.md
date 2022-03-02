@@ -7653,7 +7653,7 @@ spec:
     console: true
   credsSecret:
     name: minio-creds-secret
-  requestAutoCert: false
+  requestAutoCert: true
   console:
     consoleSecret:
       name: console-secret
@@ -7677,7 +7677,7 @@ spec:
           storageClassName: nfs-storage-provisioner-wait
           resources:
             requests:
-              storage: 2Gi
+              storage: 20Gi
 EOF
 
 # openshift wordpress + mysql template
@@ -7994,6 +7994,60 @@ catalog-operator-7b784489b9-q2dvv         1/1     Running     0             18d
 
 # 删除 openshift-operator-lifecycle-manager 下的 catalog-operator pod，这个 pod 会自动重建
 $ oc delete pod catalog-operator-7b784489b9-q2dvv -n openshift-operator-lifecycle-manager
+
+# minio 安装时的报错信息 events 报错信息
+$ oc get events -n openshift-operators
+LAST SEEN   TYPE      REASON                OBJECT                                        MESSAGE
+3m50s       Warning   FailedCreate          replicaset/console-84bbbd478b                 Error creating: pods "console-84bbbd478b-" is forbidden: unable to validate against any security context constraint: [provider "anyuid": Forbidden: not usable by user or serviceaccount, provider "pipelines-scc": Forbidden: not usable by user or serviceaccount, provider "stackrox-sensor": Forbidden: not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser: Invalid value: 1000: must be in the ranges: [1000380000, 1000389999], provider "nonroot": Forbidden: not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden: not usable by user or serviceaccount, provider "machine-api-termination-handler": Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden: not usable by user or serviceaccount, provider "hostaccess": Forbidden: not usable by user or serviceaccount, provider "node-exporter": Forbidden: not usable by user or serviceaccount, provider "privileged": Forbidden: not usable by user or serviceaccount, provider "velero-privileged": Forbidden: not usable by user or serviceaccount]
+36m         Normal    ScalingReplicaSet     deployment/console                            Scaled up replica set console-84bbbd478b to 1
+3m49s       Warning   FailedCreate          replicaset/minio-operator-65f99cfd74          Error creating: pods "minio-operator-65f99cfd74-" is forbidden: unable to validate against any security context constraint: [provider "anyuid": Forbidden: not usable by user or serviceaccount, provider "pipelines-scc": Forbidden: not usable by user or serviceaccount, provider "stackrox-sensor": Forbidden: not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser: Invalid value: 1000: must be in the ranges: [1000380000, 1000389999], provider "nonroot": Forbidden: not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden: not usable by user or serviceaccount, provider "machine-api-termination-handler": Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden: not usable by user or serviceaccount, provider "hostaccess": Forbidden: not usable by user or serviceaccount, provider "node-exporter": Forbidden: not usable by user or serviceaccount, provider "privileged": Forbidden: not usable by user or serviceaccount, provider "velero-privileged": Forbidden: not usable by user or serviceaccount]
+36m         Normal    ScalingReplicaSet     deployment/minio-operator                     Scaled up replica set minio-operator-65f99cfd74 to 2
+36m         Normal    RequirementsUnknown   clusterserviceversion/minio-operator.v4.4.9   requirements not yet checked
+36m         Normal    RequirementsNotMet    clusterserviceversion/minio-operator.v4.4.9   one or more requirements couldn't be found
+6m57s       Normal    AllRequirementsMet    clusterserviceversion/minio-operator.v4.4.9   all requirements found, attempting install
+117s        Normal    InstallSucceeded      clusterserviceversion/minio-operator.v4.4.9   waiting for install components to report healthy
+36m         Normal    NeedsReinstall        clusterserviceversion/minio-operator.v4.4.9   calculated deployment install is bad
+
+https://docs.min.io/minio/k8s/openshift/deploy-minio-tenant.html
+oc get namespace openshift-operators -o=jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}{"\n"}'
+1000380000/10000
+
+oc project openshift-operators
+oc adm policy add-scc-to-user anyuid -z minio-operator
+oc patch deployment/cookbook --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+oc adm policy add-scc-to-user anyuid -z default -n minio-tenant-1
+oc get statefulset 
+oc patch statefulset/minio-tenant-1-ss-0 --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+8m19s       Normal    WaitForFirstConsumer   persistentvolumeclaim/data3-minio-tenant-1-ss-0-0   waiting for first consumer to be created before binding
+2m19s       Normal    ExternalProvisioning   persistentvolumeclaim/data3-minio-tenant-1-ss-0-0   waiting for a volume to be created, either by external provisioner "nfs-storage" or manually created by system administrator
+22s         Warning   ProvisioningFailed     persistentvolumeclaim/data3-minio-tenant-1-ss-0-0   failed to get target node: nodes "worker1.ocp4.rhcnsa.com" is forbidden: User "system:serviceaccount:nfs-provisioner:nfs-client-provisioner" cannot get resource "nodes" in API group "" at the cluster scope
+
+$ oc project nfs-provisioner
+$ oc adm policy add-scc-to-user privileged -z nfs-client-provisioner
+
+https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/pull/71/files/2cad8da61c271f166e8a53c5c6866560e0466413
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - nodes
+
+MountVolume.SetUp failed for volume "minio-tenant-1-tls" : secret "minio-tenant-1-tls" not found
+
+6m46s       Warning   FailedMount             pod/minio-tenant-1-ss-0-0                           Unable to attach or mount volumes: unmounted volumes=[minio-tenant-1-tls], unattached volumes=[minio-tenant-1-tls kube-api-access-bj5sm data0 data1 data2 data3]: timed out waiting for the condition
+7m45s       Warning   FailedMount             pod/minio-tenant-1-ss-0-0                           MountVolume.SetUp failed for volume "minio-tenant-1-tls" : secret "minio-tenant-1-tls" not found
+
+# https://github.com/minio/operator/issues/743
+# Minio tenant stacked with 'Waiting for MinIO TLS Certificate' message #743
 
 
 ```
