@@ -7956,4 +7956,10 @@ $ oc get packagemanifests -A | grep -i minio
 openshift-marketplace   minio-operator                                      Certified Operators        226d
 openshift-marketplace   minio-operator-rhmp                                 Red Hat Marketplace        226d
 openshift-marketplace   minio-operator                                      OperatorHub.io Operators   18h
+
+constraints not satisfiable: subscription minio-operator exists, @existing/openshift-operators//minio-operator.v4.4.9 and operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 provide Tenant (minio.min.io/v1), clusterserviceversion minio-operator.v4.4.9 exists and is not referenced by a subscription, subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9
+constraints not satisfiable: subscription minio-operator requires operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9, subscription minio-operator exists, @existing/openshift-operators//minio-operator.v4.4.9 and operatorhubio-operators/openshift-marketplace/stable/minio-operator.v4.4.9 provide Tenant (minio.min.io/v1), clusterserviceversion minio-operator.v4.4.9 exists and is not referenced by a subscription
+
+
+
 ```
