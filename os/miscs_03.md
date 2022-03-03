@@ -7635,6 +7635,25 @@ mc: <ERROR> Unable to initialize new alias from the provided credentials. The re
 Minio example
 https://github.com/minio/operator/blob/master/examples/kustomization/tenant-tiny/tenant.yaml
 
+# https://github.com/minio/operator/blob/master/docs/examples.md#minio-tenant-with-tls-via-customer-provided-certificates
+mkcert "*.minio-tenant-1.svc.cluster.local"
+mkcert "*.minio-tenant-1.minio-tenant-1.svc.cluster.local"
+mkcert "*.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local"
+
+oc create secret tls minio-tls-cert --key="_wildcard.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+oc create secret tls minio-buckets-cert --key="_wildcard.minio-tenant-1.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+oc create secret tls minio-hl-cert --key="_wildcard.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+
+oc edit tenant minio-tenant-1 -n minio-tenant-1
+...
+  externalCertSecret:
+    - name: minio-tls-cert
+      type: kubernetes.io/tls
+    - name: minio-buckets-cert
+      type: kubernetes.io/tls
+    - name: minio-hl-cert
+      type: kubernetes.io/tls
+
 # https://user-images.githubusercontent.com/30251247/111955614-b2378a80-8b24-11eb-8351-b89c653da7f1.png
 # kube-controller:
 #   extra_args:
@@ -7653,7 +7672,14 @@ spec:
     console: true
   credsSecret:
     name: minio-creds-secret
-  requestAutoCert: true
+  requestAutoCert: false
+  externalCertSecret:
+    - name: minio-tls-cert
+      type: kubernetes.io/tls
+    - name: minio-buckets-cert
+      type: kubernetes.io/tls
+    - name: minio-hl-cert
+      type: kubernetes.io/tls
   console:
     consoleSecret:
       name: console-secret
@@ -8049,5 +8075,30 @@ MountVolume.SetUp failed for volume "minio-tenant-1-tls" : secret "minio-tenant-
 # https://github.com/minio/operator/issues/743
 # Minio tenant stacked with 'Waiting for MinIO TLS Certificate' message #743
 
+'minio-tenant-1/minio-tenant-1' Error waiting for pool to be ready: Get "https://minio-tenant-1-ss-0-0.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local:9000/minio/admin/v3/info": x509: certificate signed by unknown authority
 
+I0302 12:39:44.053123       1 main-controller.go:808] minio-tenant-1/minio-tenant-1 Detected we are adding a new pool
+I0302 12:40:45.278290       1 monitoring.go:99] 'minio-tenant-1/minio-tenant-1' no pool is initialized
+I0302 12:41:05.992717       1 main-controller.go:949] 'minio-tenant-1/minio-tenant-1' Error waiting for pool to be ready: Get "https://minio-tenant-1-ss-0-0.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local:9000/minio/admin/v3/info": x509: certificate signed by unknown authority
+E0302 12:41:05.992793       1 main-controller.go:559] error syncing 'minio-tenant-1/minio-tenant-1': Waiting for all pools to initialize
+
+# https://github.com/minio/operator/blob/master/docs/examples.md#minio-tenant-with-tls-via-customer-provided-certificates
+
+mkcert "*.minio-tenant-1.svc.cluster.local"
+mkcert "*.minio-tenant-1.minio-tenant-1.svc.cluster.local"
+mkcert "*.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local"
+
+oc create secret tls minio-tls-cert --key="_wildcard.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+oc create secret tls minio-buckets-cert --key="_wildcard.minio-tenant-1.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+oc create secret tls minio-hl-cert --key="_wildcard.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local-key.pem" --cert="_wildcard.minio-tenant-1-hl.minio-tenant-1.svc.cluster.local.pem" -n minio-tenant-1
+
+oc edit tenant minio-tenant-1 -n minio-tenant-1
+...
+  externalCertSecret:
+    - name: minio-tls-cert
+      type: kubernetes.io/tls
+    - name: minio-buckets-cert
+      type: kubernetes.io/tls
+    - name: minio-hl-cert
+      type: kubernetes.io/tls
 ```
