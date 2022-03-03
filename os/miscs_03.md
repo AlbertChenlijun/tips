@@ -8101,4 +8101,11 @@ oc edit tenant minio-tenant-1 -n minio-tenant-1
       type: kubernetes.io/tls
     - name: minio-hl-cert
       type: kubernetes.io/tls
+
+# Kubernetes Data Protection Working Group Minutes & Agenda
+# https://docs.google.com/document/d/15tLCV3csvjHbKb16DVk-mfUmFry_Rlwo-2uG6KNGsfw/edit#heading=h.k81oezne6705
+
+# LSO 与多路径
+# https://bugzilla.redhat.com/show_bug.cgi?id=1980770
+
 ```
