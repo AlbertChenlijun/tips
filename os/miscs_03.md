@@ -8154,4 +8154,74 @@ EOF
 08.519951   13982 kubelet_node_status.go:95] "Unable to register node with API server" err="nodes is forbidden: User \"system:anonymous\" cannot cr>
 08.595079   13982 event.go:264] Server rejected event '&v1.Event{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"maste>
 
+报错
+Mar 07 02:18:47 master-0.ocp4-1.example.com hyperkube[2753]: W0307 02:18:47.064370    2753 container.go:586] Failed to update stats for container "/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-podfc4ed746_d231_4ef0_bcce_46d4573e43d8.slice/crio-d712919bb68174a533360ac01f20a8364cc49cb0acd619ba04582867d9b38e05.scope": unable to determine device info for dir: /var/lib/containers/storage/overlay/8ac803a5779b49a3c2820fe2db4bcca24b28ffb55889fa87f3a1a4c685924c19/diff: stat failed on /var/lib/containers/storage/overlay/8ac803a5779b49a3c2820fe2db4bcca24b28ffb55889fa87f3a1a4c685924c19/diff with error: no such file or directory, continuing to push stats
+# https://access.redhat.com/solutions/5748601
+# 用类似思路
+crictl rmi <image>
+crictl pull <image>
+
+
+1690495 ?        Zs     0:00 [conmon] <defunct>
+1727495 ?        Z      0:00 [conmon] <defunct>
+1884242 ?        Z      0:00 [conmon] <defunct>
+# https://bugzilla.redhat.com/show_bug.cgi?id=1848524
+# https://bugzilla.redhat.com/show_bug.cgi?id=1952137
+[core@master-0 ~]$ sudo systemctl status crio
+Failed to get properties: Connection timed out
+
+检查SNO安装错误
+sudo journalctl > /tmp/err 
+sudo cat /tmp/err | grep -Ev "sudo|Succeeded|CEO|libpod|Started libcontainer|stat device|volatile|I0307" | tail -10
+
+## 重要：重要：重要
+# 在安装过程中，检查 SNO 节点的 /etc/containers/registries.conf 文件
+# 如果内容不正确则重新生成这个文件
+# 需重启 crio 服务，需重启 2 次，一次是 bootkube 阶段，一次是写入磁盘重启之后
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', "docker.io"]
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocp4/openshift4"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/ocpmetal/assisted-installer-agent"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/ocpmetal/assisted-installer-agent"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
+EOF
+chmod a+r /etc/containers/registries.conf
+systemctl restart crio.service
+
 ```
