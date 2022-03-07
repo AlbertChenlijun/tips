@@ -8108,4 +8108,50 @@ oc edit tenant minio-tenant-1 -n minio-tenant-1
 # LSO 与多路径
 # https://bugzilla.redhat.com/show_bug.cgi?id=1980770
 
+# 修剪 operator index image
+opm index prune -f registry.redhat.io/redhat/redhat-operator-index:v4.9 -p cluster-kube-descheduler-operator,cluster-logging,compliance-operator, container-security-operator,cryostat-operator,elasticsearch-operator,idp-mgmt-operator-product, kiali-ossm,kubevirt-hyperconverged,local-storage-operator,metallb-operator,mtc-operator, mtv-operator,node-healthcheck-operator,ocs-operator,odf-multicluster-orchestrator,odf-operator, opentelemetry-product,performance-addon-operator,quay-bridge-operator,quay-operator,rhacs-operator, rhsso-operator,serverless-operator,service-registry-operator,servicemeshoperator,web-terminal -t $LOCAL_REGISTRY/olm-mirror/redhat-operator-index:v4.9
+
+# fio 测试
+# 随机读
+fio -filename=/tmp/test_randread -direct=1 -iodepth 1 -thread -rw=randread -ioengine=psync -bs=16k -size=2G -numjobs=10 -runtime=60 -group_reporting -name=mytest
+
+# 顺序读
+fio -filename=/dev/sdb1 -direct=1 -iodepth 1 -thread -rw=read -ioengine=psync -bs=16k -size=2G -numjobs=10 -runtime=60 -group_reporting -name=mytest
+
+# 随机写
+fio -filename=/tmp/test_randwrite -direct=1 -iodepth 1 -thread -rw=randwrite -ioengine=psync -bs=16k -size=2G -numjobs=10 -runtime=60 -group_reporting -name=mytest
+
+# 顺序写
+fio -filename=/dev/sdb1 -direct=1 -iodepth 1 -thread -rw=write -ioengine=psync -bs=16k -size=2G -numjobs=10 -runtime=60 -group_reporting -name=mytest
+
+# 混合随机读写
+fio -filename=/dev/sdb1 -direct=1 -iodepth 1 -thread -rw=randrw -rwmixread=70 -ioengine=psync -bs=16k -size=2G -numjobs=10 -runtime=60 -group_reporting -name=mytest -ioscheduler=noop
+
+
+podman save --format docker-dir -o ubi8 registry.access.redhat.com/ubi8/ubi:8.5-226.1645809065
+podman load -i ubi8
+
+cat > Dockerfile <<EOF
+FROM localhost/ubi8:latest
+COPY ./oc-mirror /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/oc-mirror", ""]
+EOF
+
+buildah bud -t oc-mirror:latest .
+
+cat > /usr/local/bin/oc-mirror <<'EOF'
+#!/bin/bash
+#
+# Doing it this way is just easier than trying to install python3 on EL7
+# podman run --rm -ti --volume $(pwd):/srv:z localhost/filetranspiler:latest $*
+podman run --rm --volume $(pwd):/srv:z localhost/oc-mirror:latest $*
+##
+##
+EOF
+
+
+08.518733   13982 kubelet_node_status.go:73] "Attempting to register node" node="master-0.ocp4-1.example.com"
+08.519951   13982 kubelet_node_status.go:95] "Unable to register node with API server" err="nodes is forbidden: User \"system:anonymous\" cannot cr>
+08.595079   13982 event.go:264] Server rejected event '&v1.Event{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"maste>
+
 ```
