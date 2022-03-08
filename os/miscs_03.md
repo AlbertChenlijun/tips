@@ -8328,4 +8328,19 @@ oc apply -f ./99-master-zzz-registries-configuration.yaml
 
 ## 重要：重要：重要
 
+# 阿里云 centos8 yum repo 问题解决
+https://blog.tag.gg/showinfo-3-36184-0.html
+
+rename '.repo' '.repo.bak' /etc/yum.repos.d/*.repo 
+wget https://mirrors.aliyun.com/repo/Centos-vault-8.5.2111.repo -O /etc/yum.repos.d/Centos-vault-8.5.2111.repo
+wget https://mirrors.aliyun.com/repo/epel-archive-8.repo -O /etc/yum.repos.d/epel-archive-8.repo
+
+sed -i 's/mirrors.cloud.aliyuncs.com/url_tmp/g'  /etc/yum.repos.d/Centos-vault-8.5.2111.repo &&  sed -i 's/mirrors.aliyun.com/mirrors.cloud.aliyuncs.com/g' /etc/yum.repos.d/Centos-vault-8.5.2111.repo && sed -i 's/url_tmp/mirrors.aliyun.com/g' /etc/yum.repos.d/Centos-vault-8.5.2111.repo
+sed -i 's/mirrors.aliyun.com/mirrors.cloud.aliyuncs.com/g' /etc/yum.repos.d/epel-archive-8.repo
+yum clean all && yum makecache
+
+parted -s /dev/sdb mklabel msdos 
+parted -s /dev/sdb unit mib mkpart primary 1 100%
+mkfs.xfs /dev/sdb1 
+
 ```
