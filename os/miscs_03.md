@@ -8355,5 +8355,12 @@ core     pts/0    192.168.122.15   04:41    4.00s  0.74s  0.21s w
 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 core     pts/0    192.168.122.15   04:41    2.00s  0.76s  0.17s w
 
+],Args:[],WorkingDir:,Ports:[]ContainerPort{},Env:[]EnvVar{EnvVar{Name:SERVICES,Value:image-registry.openshift-image-registry.svc,ValueFrom:nil,},EnvVar{Name:NAMESERVER,Value:172.30.0.10,ValueFrom:nil,},EnvVar{Name:CLUSTER_DOMAIN,Value:cluster.local,ValueFrom:nil,},},Resources:ResourceRequirements{Limits:ResourceList{},Requests:ResourceList{cpu: {{5 -3} {<nil>} 5m DecimalSI},memory: {{22020096 0} {<nil>} 21Mi BinarySI},},},VolumeMounts:[]VolumeMount{VolumeMount{Name:hosts-file,ReadOnly:false,MountPath:/etc/hosts,SubPath:,MountPropagation:nil,SubPathExpr:,},VolumeMount{Name:kube-api-access-r8d8c,ReadOnly:true,MountPath:/var/run/secrets/kubernetes.io/serviceaccount,SubPath:,MountPropagation:nil,SubPathExpr:,},},LivenessProbe:nil,ReadinessProbe:nil,Lifecycle:nil,TerminationMessagePath:/dev/termination-log,ImagePullPolicy:IfNotPresent,SecurityContext:&SecurityContext{Capabilities:nil,Privileged:*true,SELinuxOptions:nil,RunAsUser:nil,RunAsNonRoot:nil,ReadOnlyRootFilesystem:nil,AllowPrivilegeEscalation:nil,RunAsGroup:nil,ProcMount:nil,WindowsOptions:nil,SeccompProfile:nil,},Stdin:false,StdinOnce:false,TTY:false,EnvFrom:[]EnvFromSource{},TerminationMessagePolicy:FallbackToLogsOnError,VolumeDevices:[]VolumeDevice{},StartupProbe:nil,} start failed in pod node-resolver-jkqwb_openshift-dns(70718e05-af7d-462b-832b-5f539c9ed688): CreateContainerError: container create failed: time="2022-03-08T00:42:25-05:00" level=error msg="container_linux.go:370: starting container process caused: unknown capability \"CAP_PERFMON\""
+
+# microshift 报错
+# oc get pods -A 
+openshift-dns                   node-resolver-jkqwb                   0/1     CreateContainerError   0          3h7m
+...
+E0308 06:02:51.021886       1 pod_workers.go:190] "Error syncing pod, skipping" err="failed to \"StartContainer\" for \"dns-node-resolver\" with CreateContainerError: \"container create failed: time=\\\"2022-03-08T01:02:50-05:00\\\" level=error msg=\\\"container_linux.go:370: starting container process caused: unknown capability \\\\\\\"CAP_PERFMON\\\\\\\"\\\"\\n\"" pod="openshift-dns/node-resolver-jkqwb" podUID=70718e05-af7d-462b-832b-5f539c9ed688
 
 ```
