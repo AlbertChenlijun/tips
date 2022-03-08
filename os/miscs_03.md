@@ -8343,4 +8343,17 @@ parted -s /dev/sdb mklabel msdos
 parted -s /dev/sdb unit mib mkpart primary 1 100%
 mkfs.xfs /dev/sdb1 
 
+
+load average 高出天际
+[core@master-0 ~]$ w
+ 04:42:11 up 23:21,  1 user,  load average: 1796.53, 1759.31, 1687.40
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+core     pts/0    192.168.122.15   04:41    4.00s  0.74s  0.21s w
+
+[core@master-0 ~]$ w
+ 04:43:56 up 23:23,  1 user,  load average: 1790.65, 1763.70, 1696.40
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+core     pts/0    192.168.122.15   04:41    2.00s  0.76s  0.17s w
+
+
 ```
