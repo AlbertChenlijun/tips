@@ -8366,4 +8366,133 @@ E0308 06:02:51.021886       1 pod_workers.go:190] "Error syncing pod, skipping" 
 # 更新 libcap
 # https://bugzilla.redhat.com/show_bug.cgi?id=1946982#c2
 
+# etcd "took too long"
+# 超 100 ms 报错
+# https://access.redhat.com/solutions/5564771
+# oc -n openshift-etcd logs etcd-master-0.ocp4-1.example.com -c etcd 2>&1 | grep "took too long"  
+...
+{"level":"warn","ts":"2022-03-09T01:59:18.782Z","caller":"etcdserver/util.go:166","msg":"apply request took too long","took":"215.870148ms","expected-duration":"200ms","prefix":"read-only range ","request":"key:\"/kubernetes.io/apiregistration.k8s.io/apiservices/v1.project.openshift.io\" ","response":"range_response_count:1 size:3290"}
+{"level":"warn","ts":"2022-03-09T01:59:18.783Z","caller":"etcdserver/util.go:166","msg":"apply request took too long","took":"216.648539ms","expected-duration":"200ms","prefix":"read-only range ","request":"key:\"/kubernetes.io/configmaps/openshift-monitoring/grafana-dashboard-node-rsrc-use\" ","response":"range_response_count:1 size:37137"}
+{"level":"warn","ts":"2022-03-09T01:59:18.783Z","caller":"etcdserver/util.go:166","msg":"apply request took too long","took":"288.145488ms","expected-duration":"200ms","prefix":"read-only range ","request":"key:\"/kubernetes.io/configmaps/open-cluster-management/klusterlet-addon-controller-lock\" ","response":"range_response_count:1 size:692"}
+
+# oc rsh -n openshift-etcd etcd-master-0.ocp4-1.example.com etcdctl endpoint status --cluster -w table
+Defaulted container "etcdctl" out of: etcdctl, etcd, etcd-metrics, etcd-health-monitor, setup (init), etcd-ensure-env-vars (init), etcd-resources-copy (init)
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|           ENDPOINT           |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://192.168.122.201:2379 | d0bb340a058a43d3 |   3.5.0 |  123 MB |      true |      false |         5 |    3787528 |            3787528 |        |
++------------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
+# oc rsh -n openshift-etcd etcd-master-0.ocp4-1.example.com etcdctl endpoint status --cluster -w json
+Defaulted container "etcdctl" out of: etcdctl, etcd, etcd-metrics, etcd-health-monitor, setup (init), etcd-ensure-env-vars (init), etcd-resources-copy (init)
+[{"Endpoint":"https://192.168.122.201:2379","Status":{"header":{"cluster_id":12956385733825577103,"member_id":15040672598181168083,"revision":3722763,"raft_term":5},"version":"3.5.0","dbSize":123326464,"leader":15040672598181168083,"raftIndex":3791235,"raftTerm":5,"raftAppliedIndex":3791235,"dbSizeInUse":69120000}}]
+
+# 可能的解决方法是执行 etcd defrag
+# https://docs.openshift.com/container-platform/4.6/post_installation_configuration/cluster-tasks.html#etcd-defrag_post-install-cluster-tasks
+# 单节点 SNO 清理
+oc rsh -n openshift-etcd etcd-master-0.ocp4-1.example.com
+unset ETCDCTL_ENDPOINTS
+etcdctl --command-timeout=30s --endpoints=https://localhost:2379 defrag
+Finished defragmenting etcd member[https://localhost:2379]
+etcdctl endpoint status -w table --cluster
+etcdctl alarm list
+
+# 重启节点
+Mar 09 02:32:34 master-0.ocp4-1.example.com hyperkube[2712]: [-]has-synced failed: reason withheld
+Mar 09 02:32:34 master-0.ocp4-1.example.com hyperkube[2712]: [+]process-running ok
+Mar 09 02:32:34 master-0.ocp4-1.example.com hyperkube[2712]: healthz check failed
+
+# journalctl | grep -Ev "Trying to access|I0309" | tail -100 
+Mar 09 00:47:16 master-0.ocp4-1.example.com hyperkube[2693]: E0309 00:47:16.282050    2693 kubelet.go:2170] "Housekeeping took longer than 15s" err="housekeeping took too
+ long" seconds=62.208852755
+ ...
+Mar 09 00:48:13 master-0.ocp4-1.example.com hyperkube[2693]: E0309 00:48:13.797653    2693 remote_runtime.go:228] "CreateContainer in sandbox from runtime service failed"
+ err="rpc error: code = DeadlineExceeded desc = context deadline exceeded" podSandboxID="5df472fc74ca530a36f9829f3df3df1582ce571d76fec3873abd2b76d8e73746"
+Mar 09 00:48:13 master-0.ocp4-1.example.com hyperkube[2693]: E0309 00:48:13.800185    2693 kuberuntime_manager.go:898] container &Container{Name:klusterlet,Image:registry
+.redhat.io/rhacm2/registration-rhel8-operator@sha256:e7e1b5545f4a4946f40cdd2101b5ccba9b947320debd1a244dd5244b3430a61b,Command:[],Args:[/registration-operator klusterlet],
+WorkingDir:,Ports:[]ContainerPort{},Env:[]EnvVar{},Resources:ResourceRequirements{Limits:ResourceList{},Requests:ResourceList{},},VolumeMounts:[]VolumeMount{VolumeMount{N
+ame:kube-api-access-nndlc,ReadOnly:true,MountPath:/var/run/secrets/kubernetes.io/serviceaccount,SubPath:,MountPropagation:nil,SubPathExpr:,},},LivenessProbe:&Probe{Handle
+r:Handler{Exec:nil,HTTPGet:&HTTPGetAction{Path:/healthz,Port:{0 8443 },Host:,Scheme:HTTPS,HTTPHeaders:[]HTTPHeader{},},TCPSocket:nil,},InitialDelaySeconds:2,TimeoutSecond
+s:1,PeriodSeconds:10,SuccessThreshold:1,FailureThreshold:3,TerminationGracePeriodSeconds:nil,},ReadinessProbe:&Probe{Handler:Handler{Exec:nil,HTTPGet:&HTTPGetAction{Path:
+/healthz,Port:{0 8443 },Host:,Scheme:HTTPS,HTTPHeaders:[]HTTPHeader{},},TCPSocket:nil,},InitialDelaySeconds:2,TimeoutSeconds:1,PeriodSeconds:10,SuccessThreshold:1,Failure
+Threshold:3,TerminationGracePeriodSeconds:nil,},Lifecycle:nil,TerminationMessagePath:/dev/termination-log,ImagePullPolicy:IfNotPresent,SecurityContext:&SecurityContext{Ca
+pabilities:&Capabilities{Add:[],Drop:[KILL MKNOD SETGID SETUID],},Privileged:nil,SELinuxOptions:nil,RunAsUser:*1000700000,RunAsNonRoot:nil,ReadOnlyRootFilesystem:nil,Allo
+wPrivilegeEscalation:nil,RunAsGroup:nil,ProcMount:nil,WindowsOptions:nil,SeccompProfile:nil,},Stdin:false,StdinOnce:false,TTY:false,EnvFrom:[]EnvFromSource{},TerminationM
+essagePolicy:File,VolumeDevices:[]VolumeDevice{},StartupProbe:nil,} start failed in pod klusterlet-7747cc8c89-vqclz_open-cluster-management-agent(a88b429c-44e3-40d5-9be0-
+6d91eca39b45): CreateContainerError: context deadline exceeded
+...
+Mar 09 02:58:07 master-0.ocp4-1.example.com hyperkube[2712]: E0309 02:58:07.588656    2712 pod_workers.go:836] "Error syncing pod, skipping" err="failed to \"StartContainer\" for \"cluster-image-registry-operator\" with CreateContainerError: \"context deadline exceeded\"" pod="openshift-image-registry/cluster-image-registry-operator-869b9fd7b-dx5jc" podUID=f87fade5-13c9-45bd-a1f2-e092cd7bf6e0
+
+
+Mar 09 00:47:16 master-0.ocp4-1.example.com hyperkube[2693]: E0309 00:47:16.282050    2693 kubelet.go:2170] "Housekeeping took longer than 15s" err="housekeeping took too
+
+Mar 09 00:47:17 master-0.ocp4-1.example.com hyperkube[2693]: E0309 00:47:17.145382    2693 cadvisor_stats_provider.go:415] "Partial failure issuing cadvisor.ContainerInfo
+V2" err="partial failures: [\"/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-podf1260c98_d315_4534_b68a_d52c529be395.slice/crio-conmon-b7f7a98628d1a859e068f7
+d285eaf6ece04c5f3021f7373bfb5ca0fb38afc5d7.scope\": RecentStats: unable to find data in memory cache], [\"/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-po
+da88b429c_44e3_40d5_9be0_6d91eca39b45.slice/crio-conmon-f50c9b7e1092e2d789cd557f51a1ddeef5f22286d581786cfcb885e86960e5b1.scope\": RecentStats: unable to find data in memo
+ry cache], [\"/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-podd6d6bae0_8c1f_4466_b57e_5f3a3b9743fc.slice/crio-conmon-d2e7f6a9aaf0603f2ad4d7505efa30309d2a16
+f9c2ab77394c2f65bab4f34243.scope\": RecentStats: unable to find data in memory cache], [\"/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-poda88b429c_44e3_4
+0d5_9be0_6d91eca39b45.slice/crio-fdcff3ab994e3893e23e75f9a383fa3fa70604c9103b2d2cc044b583023422c6.scope\": RecentStats: unable to find data in memory cache], [\"/kubepods
+.slice/kubepods-burstable.slice/kubepods-burstable-podf1260c98_d315_4534_b68a_d52c529be395.slice/crio-5b8416a0b7991884ccd879609aec29d8e335b7c657992bf7038b6ec248fb3800.sco
+pe\": RecentStats: unable to find data in memory cache]"
+
+
+# cat /tmp/err | grep "Linux version 4.18.0" 
+Mar 07 05:07:40 localhost kernel: Linux version 4.18.0-305.19.1.el8_4.x86_64 (mockbuild@x86-vm-09.build.eng.bos.redhat.com) (gcc version 8.4.1 20200928 (Red Hat 8.4.1-1) (GCC)) #1 SMP Tue Sep 7 07:07:31 EDT 2021
+Mar 07 05:14:25 localhost kernel: Linux version 4.18.0-305.19.1.el8_4.x86_64 (mockbuild@x86-vm-09.build.eng.bos.redhat.com) (gcc version 8.4.1 20200928 (Red Hat 8.4.1-1) (GCC)) #1 SMP Tue Sep 7 07:07:31 EDT 2021
+Mar 07 05:20:37 localhost kernel: Linux version 4.18.0-305.28.1.el8_4.x86_64 (mockbuild@x86-vm-08.build.eng.bos.redhat.com) (gcc version 8.4.1 20200928 (Red Hat 8.4.1-1) (GCC)) #1 SMP Mon Nov 8 07:45:47 EST 2021
+Mar 08 04:47:11 localhost kernel: Linux version 4.18.0-305.28.1.el8_4.x86_64 (mockbuild@x86-vm-08.build.eng.bos.redhat.com) (gcc version 8.4.1 20200928 (Red Hat 8.4.1-1) (GCC)) #1 SMP Mon Nov 8 07:45:47 EST 2021
+Mar 09 02:18:20 localhost kernel: Linux version 4.18.0-305.28.1.el8_4.x86_64 (mockbuild@x86-vm-08.build.eng.bos.redhat.com) (gcc version 8.4.1 20200928 (Red Hat 8.4.1-1) (GCC)) #1 SMP Mon Nov 8 07:45:47 EST 2021
+
+journalctl | grep "Mar 07 05:20:37 localhost kernel: Linux version 4.18.0-305.28" -A200000 | grep "E0307" | tail -50 | more
+...
+Mar 07 23:55:24 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:55:24.579107   25172 manager.go:1132] Failed to create existing container: /kubepods.slice/kubepods
+-burstable.slice/kubepods-burstable-pod781daf02_0425_4195_880c_82e842851cfa.slice/crio-dd0d932d6d729b873c8f4f0287a7c531b1148d6beb95c85f687a73b416ce63f4.scope: Error findi
+ng container dd0d932d6d729b873c8f4f0287a7c531b1148d6beb95c85f687a73b416ce63f4: Status 404 returned error &{%!s(*http.body=&{0xc00a81cf90 <nil> <nil> false false {0 0} fal
+se false false <nil>}) {%!s(int32=0) %!s(uint32=0)} %!s(bool=false) <nil> %!s(func(error) error=0x8944e0) %!s(func() error=0x894460)}
+
+
+Mar 07 23:52:26 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:52:26.138197   25172 cadvisor_stats_provider.go:415] "Partial failure issuing cadvisor.ContainerInf
+oV2" err="partial failures: [\"/kubepods.slice/kubepods-poda39c2f19_8f6c_46f7_8b49_8f43696bc3a4.slice\": RecentStats: unable to find data in memory cache], [\"/kubepods.s
+lice/kubepods-poda0cb72ac_5d97_4aae_8f4c_41e50b2c799b.slice\": RecentStats: unable to find data in memory cache], [\"/kubepods.slice/kubepods-poda0cb72ac_5d97_4aae_8f4c_4
+1e50b2c799b.slice/crio-5a9e7f14efe9bf354e33327f3afc5c27eede1815662e7ff76475ecaecf680a4e.scope\": RecentStats: unable to find data in memory cache]"
+Mar 07 23:52:36 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:52:36.436249   25172 remote_runtime.go:144] "StopPodSandbox from runtime service failed" err="rpc e
+rror: code = Unknown desc = failed to destroy network for pod sandbox k8s_installer-7-master-0.ocp4-1.example.com_openshift-kube-apiserver_a39c2f19-8f6c-46f7-8b49-8f43696
+bc3a4_0(c70f0fafba5a8c3b472f9ddefe453745cc810c3364d038f1021ce95d91860f21): error removing pod openshift-kube-apiserver_installer-7-master-0.ocp4-1.example.com from CNI ne
+twork \"multus-cni-network\": Multus: [openshift-kube-apiserver/installer-7-master-0.ocp4-1.example.com]: error getting pod: Get \"https://[api-int.ocp4-1.example.com]:64
+43/api/v1/namespaces/openshift-kube-apiserver/pods/installer-7-master-0.ocp4-1.example.com?timeout=1m0s\": dial tcp 192.168.122.201:6443: connect: connection refused" pod
+SandboxID="c70f0fafba5a8c3b472f9ddefe453745cc810c3364d038f1021ce95d91860f21"
+Mar 07 23:52:36 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:52:36.436383   25172 kuberuntime_manager.go:992] "Failed to stop sandbox" podSandboxID={Type:cri-o 
+ID:c70f0fafba5a8c3b472f9ddefe453745cc810c3364d038f1021ce95d91860f21}
+Mar 07 23:52:36 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:52:36.436704   25172 kuberuntime_manager.go:752] "killPodWithSyncResult failed" err="failed to \"Ki
+llPodSandbox\" for \"a39c2f19-8f6c-46f7-8b49-8f43696bc3a4\" with KillPodSandboxError: \"rpc error: code = Unknown desc = failed to destroy network for pod sandbox k8s_ins
+taller-7-master-0.ocp4-1.example.com_openshift-kube-apiserver_a39c2f19-8f6c-46f7-8b49-8f43696bc3a4_0(c70f0fafba5a8c3b472f9ddefe453745cc810c3364d038f1021ce95d91860f21): er
+ror removing pod openshift-kube-apiserver_installer-7-master-0.ocp4-1.example.com from CNI network \\\"multus-cni-network\\\": Multus: [openshift-kube-apiserver/installer
+-7-master-0.ocp4-1.example.com]: error getting pod: Get \\\"https://[api-int.ocp4-1.example.com]:6443/api/v1/namespaces/openshift-kube-apiserver/pods/installer-7-master-0
+.ocp4-1.example.com?timeout=1m0s\\\": dial tcp 192.168.122.201:6443: connect: connection refused\""
+
+
+Mar 07 23:52:26 master-0.ocp4-1.example.com hyperkube[25172]: E0307 23:52:26.138197   25172 cadvisor_stats_provider.go:415] "Partial failure issuing cadvisor.ContainerInf
+oV2" err="partial failures: [\"/kubepods.slice/kubepods-poda39c2f19_8f6c_46f7_8b49_8f43696bc3a4.slice\": RecentStats: unable to find data in memory cache], [\"/kubepods.s
+lice/kubepods-poda0cb72ac_5d97_4aae_8f4c_41e50b2c799b.slice\": RecentStats: unable to find data in memory cache], [\"/kubepods.slice/kubepods-poda0cb72ac_5d97_4aae_8f4c_4
+1e50b2c799b.slice/crio-5a9e7f14efe9bf354e33327f3afc5c27eede1815662e7ff76475ecaecf680a4e.scope\": RecentStats: unable to find data in memory cache]"
+...
+Mar 07 23:52:28 master-0.ocp4-1.example.com hyperkube[25172]: I0307 23:52:28.159365   25172 kubelet.go:2083] "SyncLoop UPDATE" source="api" pods=[hive/hiveadmission-88b6f
+9c76-tj5mw]
+Mar 07 23:52:28 master-0.ocp4-1.example.com hyperkube[25172]: W0307 23:52:28.177987   25172 manager.go:1185] Failed to process watch event {EventType:0 Name:/kubepods.sli
+ce/kubepods-besteffort.slice/kubepods-besteffort-pod942ed859_6473_4d35_896a_3875885ac616.slice/crio-a7e299cefe7c5b2df12b8709c3c0d44599a5a7ce4fc68e7fe41c551f5bd1ed55.scope
+ WatchSource:0}: Error finding container a7e299cefe7c5b2df12b8709c3c0d44599a5a7ce4fc68e7fe41c551f5bd1ed55: Status 404 returned error &{%!s(*http.body=&{0xc0089ba888 <nil>
+ <nil> false false {0 0} false false false <nil>}) {%!s(int32=0) %!s(uint32=0)} %!s(bool=false) <nil> %!s(func(error) error=0x8944e0) %!s(func() error=0x894460)}
+Mar 07 23:52:28 master-0.ocp4-1.example.com crio[1656]: time="2022-03-07 23:52:28.197060704Z" level=info msg="Ran pod sandbox a7e299cefe7c5b2df12b8709c3c0d44599a5a7ce4fc6
+8e7fe41c551f5bd1ed55 with infra container: hive/hiveadmission-88b6f9c76-tj5mw/POD" id=d92aca08-0340-4a2d-8757-bc087fe1f95b name=/runtime.v1alpha2.RuntimeService/RunPodSan
+dbox
+Mar 07 23:52:28 master-0.ocp4-1.example.com crio[1656]: time="2022-03-07 23:52:28.224210232Z" level=info msg="Checking image status: registry.redhat.io/rhacm2/openshift-h
+ive-rhel8@sha256:3a52b2d426fdce810ce8be2bc16bdafcbd0e41fef4ac5af0cf23a11ddfb875c5" id=37c069e2-c59b-46a9-9697-620be5e52f6f name=/runtime.v1alpha2.ImageService/ImageStatus
+Mar 07 23:52:28 master-0.ocp4-1.example.com crio[1656]: time="2022-03-07 23:52:28.304400983Z" level=info msg="Image status: &{0xc002dfdce0 map[]}" id=37c069e2-c59b-46a9-9
+697-620be5e52f6f name=/runtime.v1alpha2.ImageService/ImageStatus
+Mar 07 23:52:28 master-0.ocp4-1.example.com crio[1656]: time="2022-03-07 23:52:28.314449435Z" level=info msg="Pulling image: registry.redhat.io/rhacm2/openshift-hive-rhel
+8@sha256:3a52b2d426fdce810ce8be2bc16bdafcbd0e41fef4ac5af0cf23a11ddfb875c5" id=de64745c-8c51-47d2-9f1f-3a6c38c91a23 name=/runtime.v1alpha2.ImageService/PullImage
+
+[core@master-0 ~]$ sudo ps awx | grep -Ev "Ssl|Ss|S\+| S "  | more
+
 ```
