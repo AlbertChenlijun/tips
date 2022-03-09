@@ -8363,4 +8363,7 @@ openshift-dns                   node-resolver-jkqwb                   0/1     Cr
 ...
 E0308 06:02:51.021886       1 pod_workers.go:190] "Error syncing pod, skipping" err="failed to \"StartContainer\" for \"dns-node-resolver\" with CreateContainerError: \"container create failed: time=\\\"2022-03-08T01:02:50-05:00\\\" level=error msg=\\\"container_linux.go:370: starting container process caused: unknown capability \\\\\\\"CAP_PERFMON\\\\\\\"\\\"\\n\"" pod="openshift-dns/node-resolver-jkqwb" podUID=70718e05-af7d-462b-832b-5f539c9ed688
 
+# 更新 libcap
+# https://bugzilla.redhat.com/show_bug.cgi?id=1946982#c2
+
 ```
