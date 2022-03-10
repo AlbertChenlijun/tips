@@ -8622,5 +8622,26 @@ EOF
 skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://k8s.gcr.io/pause:3.5 docker://quay.ocp4.rhcnsa.com/pause/pause:3.5
 
 
+mkdir ~/kubeconfig/edge-1
+scp root@microshift-for-gree:/var/lib/microshift/resources/kubeadmin/kubeconfig ~/kubeconfig/edge-1
 
+EDGE_1_IP="xxxx"
+gsed -i "s|127.0.0.1|${EDGE_1_IP}|g" ~/kubeconfig/edge-1/kubeconfig
+
+oc --kubeconfig=/Users/junwang/kubeconfig/edge-1/kubeconfig get nodes
+
+# 清理 microshift
+# systemctl stop microshift
+# cd /var/lib/containers
+# ls /var/lib/containers
+cache  sigstore  storage
+# rm -rf /var/lib/containers/cache/*
+# rm -rf /var/lib/containers/sigstore/*
+# rm -rf /var/lib/containers/storage/*
+# hostnamectl set-hostname edge-1.ocp4.rhcnsa.com
+# nmcli con mod 'System eth0' +ipv4.address <ip/mask>
+# systemctl start microshift
+
+# 查看证书
+openssl s_client -host <ocp-app> -port 443 -prexit -showcerts </dev/null
 ```
