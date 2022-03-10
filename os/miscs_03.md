@@ -8644,4 +8644,64 @@ cache  sigstore  storage
 
 # 查看证书
 openssl s_client -host <ocp-app> -port 443 -prexit -showcerts </dev/null
+
+# 清理容器存储
+# https://access.redhat.com/solutions/5350721
+# oc adm drain master0.ocp4.rhcnsa.com --ignore-daemonsets --delete-local-data
+# systemctl stop kubelet
+# crictl stopp `crictl pods -q`        ##  "stopp" with two "p" for stopping pods
+# crictl stop `crictl ps -aq`
+# crictl rmp `crictl pods -q`
+# rm -rf /var/lib/containers/*
+# crio wipe -f
+# systemctl disable kubelet crio
+# systemctl enable kubelet crio
+# systemctl start crio kubelet
+# oc get nodes
+# oc adm uncordon NODENAME
+
+(ocp4)[root@helper ~]# oc -n openshift-etcd get pods
+NAME                                        READY   STATUS      RESTARTS        AGE
+etcd-master0.ocp4.rhcnsa.com                4/4     Running     17              26d
+etcd-master1.ocp4.rhcnsa.com                4/4     Running     13              26d
+etcd-master2.ocp4.rhcnsa.com                3/4     Running     5 (2d21h ago)   26d
+
+# https://access.redhat.com/solutions/5564771
+# oc -n openshift-etcd logs etcd-master2.ocp4.rhcnsa.com  -c etcd 2>&1 | grep "took too long"
+# oc rsh -n openshift-etcd etcd-master0.ocp4.rhcnsa.com etcdctl endpoint status --cluster -w table
+(ocp4)[root@helper ~]# oc rsh -n openshift-etcd etcd-master0.ocp4.rhcnsa.com etcdctl endpoint status --cluster -w table 
+Defaulted container "etcdctl" out of: etcdctl, etcd, etcd-metrics, etcd-health-monitor, setup (init), etcd-ensure-env-vars (init), etcd-resources-copy (init)
++-----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|          ENDPOINT           |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++-----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://172.26.168.103:2379 | 32fc244bb2fa43b7 |   3.5.0 |  1.3 GB |     false |      false |     13551 |  692073093 |          692073093 |        |
+| https://172.26.168.102:2379 | 6d0d0c6969d26184 |   3.5.0 |  1.3 GB |     false |      false |     13551 |  692073095 |          692073095 |        |
+| https://172.26.168.104:2379 | 83679cd94c4fae94 |   3.5.0 |  1.3 GB |      true |      false |     13551 |  692073095 |          692073095 |        |
++-----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
+
+https://docs.openshift.com/container-platform/4.6/post_installation_configuration/cluster-tasks.html#etcd-defrag_post-install-cluster-tasks
+
+# 非 leader 
+oc -n openshift-etcd rsh etcd-master0.ocp4.rhcnsa.com
+sh-4.4# unset ETCDCTL_ENDPOINTS
+sh-4.4# etcdctl --command-timeout=30s --endpoints=https://localhost:2379 defrag
+Finished defragmenting etcd member[https://localhost:2379]
+sh-4.4# etcdctl endpoint status -w table --cluster
+
+oc -n openshift-etcd rsh etcd-master1.ocp4.rhcnsa.com
+sh-4.4# unset ETCDCTL_ENDPOINTS
+sh-4.4# etcdctl --command-timeout=30s --endpoints=https://localhost:2379 defrag
+Finished defragmenting etcd member[https://localhost:2379]
+sh-4.4# etcdctl endpoint status -w table --cluster
+
+# 最后处理 leader
+oc -n openshift-etcd rsh etcd-master2.ocp4.rhcnsa.com
+sh-4.4# unset ETCDCTL_ENDPOINTS
+sh-4.4# etcdctl --command-timeout=30s --endpoints=https://localhost:2379 defrag
+Finished defragmenting etcd member[https://localhost:2379]
+sh-4.4# etcdctl endpoint status -w table --cluster
+
+network                                    4.9.18    True        True          False      234d    DaemonSet "openshift-network-diagnostics/network-check-target" is not available (awaiting 1 nodes)
+
 ```
