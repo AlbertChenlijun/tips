@@ -8746,4 +8746,10 @@ skopeo copy --all  --format v2s2 --authfile /root/.docker/config.json docker://r
 
 skopeo inspect --authfile /root/.docker/config.json docker://quay.ocp4.rhcnsa.com/rhacm2/registration-rhel8-operator@sha256:e7e1b5545f4a4946f40cdd2101b5ccba9b947320debd1a244dd5244b3430a61b
 
+# 将数据库持久化到本地
+mkdir -p /root/db
+chmod a+rw /root/db
+cd /root/assisted-service
+podman run -dt --pod assisted-installer --env-file onprem-environment --pull never -v /root/db:/var/lib/pgsql/data:z --name postgres quay.io/centos7/postgresql-12-centos7:latest
+
 ```
