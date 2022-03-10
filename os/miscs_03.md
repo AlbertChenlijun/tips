@@ -8495,4 +8495,132 @@ Mar 07 23:52:28 master-0.ocp4-1.example.com crio[1656]: time="2022-03-07 23:52:2
 
 [core@master-0 ~]$ sudo ps awx | grep -Ev "Ssl|Ss|S\+| S "  | more
 
+
+-----BEGIN CERTIFICATE-----
+MIIDYzCCAkugAwIBAgIIQRP3xrlQftgwDQYJKoZIhvcNAQELBQAwJjEkMCIGA1UE
+AwwbaW5ncmVzcy1vcGVyYXRvckAxNjI2NjA2MTU2MB4XDTIxMDcxODExMDIzOFoX
+DTIzMDcxODExMDIzOVowITEfMB0GA1UEAwwWKi5hcHBzLm9jcDQucmhjbnNhLmNv
+bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOPdR9qh1gTs1iUqUcK8
+IDhekCUPmJywFwRuatzydztAPcGDvj4Y5GWx2pu+D8BD2A+Q3F59904BZWb4FlTe
+6kDoMvcXr9Y5HGsfIMQpJ5GdFGzNg0veDu88K1P4NAmK5C+FKVYKb83wBja/x7Ys
+3g0oqXaQuESY83okJCM3zplPcXxFyqVgrC7E9A/TNJsuZvRZWGfQHIUrxsUPEiVT
+jp8AwOcmyAEocm5mdNWThQGvBARdmuKuySb1/03BNbKD7qmj5x8/dz3rCyF7ufz3
+JOXsKzCuv5VGBx+IEg9IX+rvlNd2MCq/dJy3oAUrSEYUjOi4ZZ/OH87fndXuMNKC
+eesCAwEAAaOBmTCBljAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUH
+AwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUpW/Kg6qjguBcMYBqbilYtopB4E0w
+HwYDVR0jBBgwFoAULmTEKt6hRTncC2BADMSke8A25rgwIQYDVR0RBBowGIIWKi5h
+cHBzLm9jcDQucmhjbnNhLmNvbTANBgkqhkiG9w0BAQsFAAOCAQEAB97KrWlCuUgV
+gcZKqw800F4VOiJGXxsEQhHQ1EMfaBNkV51LBWLiD0iJND9UDL3nOVK0DTXLNbh6
+kofsI21vo3/XsJ/BofC6Pu1kFGqNiztVMh4BogCQSXkIu4K3wM04kgsj5Ynh4/Vz
+3UpUqR9q7AkqBgEEX55ytIY1l/Py/KnBgj3DGVLEQuJnOOyyhsPoKFz9pMOJ/r4+
+zJ+L0bpLRjsH1Zb7OPodzTHMCqPgdY/b7YOYtQcFYHSrtP5dmIIlUoLdqgCAlBGb
+oIAtkZlQQFudmI6p28zbmV3zoAsY9QSFv6Gg4Eiik+lttgy86yk6OqdSF+K2kwXQ
+qairhQ9Log==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDDDCCAfSgAwIBAgIBATANBgkqhkiG9w0BAQsFADAmMSQwIgYDVQQDDBtpbmdy
+ZXNzLW9wZXJhdG9yQDE2MjY2MDYxNTYwHhcNMjEwNzE4MTEwMjM2WhcNMjMwNzE4
+MTEwMjM3WjAmMSQwIgYDVQQDDBtpbmdyZXNzLW9wZXJhdG9yQDE2MjY2MDYxNTYw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDB5Fjs4hC5Ade8DwMP6n46
+kmSz6pNLVYIkiLLgPFrG6d17Sn5UCqujlrP9fE1o9Q4BQeeu29k43sOQ/sIKljzu
+3ArOYTZvb1kaflMwJvmn0MagFR1TnSDB8kwnDeAZcdO0FK8JhJ85UDeEinF4rb1v
+zf4dJEoU3pNXY9hT47vqsXo3oB59DsrbtM2ythAPkZ9vv3G0kC0HOl8rjf9IJX4V
+lZZazvLv92euVyOtIHPgpbnrRUc74kWf8n5pzUDL13oFNaBMGabC+3fq8XaSwIb4
+6CGLW3BFfxy+2xEToUJ+aZqNRzR+hdy3+V/Wm57I/img/FVQJ/tkBlricupcOWcP
+AgMBAAGjRTBDMA4GA1UdDwEB/wQEAwICpDASBgNVHRMBAf8ECDAGAQH/AgEAMB0G
+A1UdDgQWBBQuZMQq3qFFOdwLYEAMxKR7wDbmuDANBgkqhkiG9w0BAQsFAAOCAQEA
+JRWfbK0Czhoi2r/RnBHjU+PyQsSIlflgdn96N1FgevsHCz/w7wjvyYbNtdlgF+wj
+KH0EwB8cR5clKIESkGsGBjUjDytrUwofpbgFt2B+Ec+iaaaVdI1F3kb/uI7XF5S1
+eAVgZtPpSYkro8tCUR+fFAgypnkAkeNyYQMVX5tPTAiFrO7nO5RXdbi/Lrb68cQZ
+d/rE+5X3JtgYwILS+cxVS+ScAOQfPQspsgLIXq+OitU1a8z2QvdWKK+c9sCvcXjS
+I0yijITLiFyWuNLvK3wAUswYBRg9sXZX5OAKU51amR/POiVqnPPQYlJQk//JmRij
+KGh+it3EJJlVTH6jVLkpEA==
+-----END CERTIFICATE-----
+
+quay.io/coreos/flannel:v0.14.0
+quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
+
+
+
+# quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+skopeo copy --format v2s2 --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920 docker://quay.ocp4.rhcnsa.com/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+
+# quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147 docker://quay.ocp4.rhcnsa.com/microshift/microshift:4.8.0-0.microshift-2022-01-06-210147
+
+# quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117 docker://quay.ocp4.rhcnsa.com/microshift/flannel-cni:4.8.0-0.okd-2021-10-10-030117
+
+# quay.io/coreos/flannel:v0.14.0
+skopeo copy --format v2s2  --authfile /root/.docker/config.json --all docker://quay.io/coreos/flannel:v0.14.0 docker://quay.ocp4.rhcnsa.com/coreos/flannel:v0.14.0
+
+# quay.io/kubevirt/hostpath-provisioner:v0.8.0
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/kubevirt/hostpath-provisioner:v0.8.0 docker://quay.ocp4.rhcnsa.com/kubevirt/hostpath-provisioner:v0.8.0
+
+# quay.io/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8 docker://quay.ocp4.rhcnsa.com/openshift/okd-content@sha256:bcdefdbcee8af1e634e68a850c52fe1e9cb31364525e30f5b20ee4eacb93c3e8
+
+# quay.io/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec docker://quay.ocp4.rhcnsa.com/openshift/okd-content@sha256:459f15f0e457edaf04fa1a44be6858044d9af4de276620df46dc91a565ddb4ec
+
+# quay.io/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd docker://quay.ocp4.rhcnsa.com/openshift/okd-content@sha256:27f7918b5f0444e278118b2ee054f5b6fadfc4005cf91cb78106c3f5e1833edd
+
+# quay.io/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64 docker://quay.ocp4.rhcnsa.com/openshift/okd-content@sha256:01cfbbfdc11e2cbb8856f31a65c83acc7cfbd1986c1309f58c255840efcc0b64
+
+# quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://quay.io/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e docker://quay.ocp4.rhcnsa.com/openshift/okd-content@sha256:dd1cd4d7b1f2d097eaa965bc5e2fe7ebfe333d6cbaeabc7879283af1a88dbf4e
+
+
+
+cat > /etc/containers/registries.conf <<EOF
+unqualified-search-registries = ['registry.example.com:5000']
+ 
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift/okd-content"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift/okd-content"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/microshift/flannel-cni"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/microshift/flannel-cni"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/coreos/flannel"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/coreos/flannel"    
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/kubevirt/hostpath-provisioner"
+  mirror-by-digest-only = false
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/kubevirt/hostpath-provisioner"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhacm2"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/rhacm2"
+EOF
+
+
+skopeo copy --format v2s2 --authfile /root/.docker/config.json --all docker://k8s.gcr.io/pause:3.5 docker://quay.ocp4.rhcnsa.com/pause/pause:3.5
+
+
+
 ```
