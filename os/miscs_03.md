@@ -8704,4 +8704,18 @@ sh-4.4# etcdctl endpoint status -w table --cluster
 
 network                                    4.9.18    True        True          False      234d    DaemonSet "openshift-network-diagnostics/network-check-target" is not available (awaiting 1 nodes)
 
+报错
+etcd cluster "etcd": 99th percentile of gRPC requests is 0.22422727272727264s on etcd instance 172.26.168.102:9979.
+
+# 查看 namespace test1 下有哪些 api resources
+oc api-resources --verbs=list --namespaced -o name | xargs -n 1 oc get --show-kind --ignore-not-found -n test1 
+oc patch perconaxtradbclusterbackup.pxc.percona.com cron-cluster1-s3-us-west-2022226000-3d2dv -n test1 -p '{"metadata":{"finalizers":[]}}' --type=merge
+oc patch perconaxtradbclusterbackup.pxc.percona.com cron-cluster1-s3-us-west-202235000-3d2dv -n test1 -p '{"metadata":{"finalizers":[]}}' --type=merge
+oc patch perconaxtradbcluster.pxc.percona.com cluster1 -n test1 -p '{"metadata":{"finalizers":[]}}' --type=merge
+(ocp4)[root@helper ~]# oc get managedcluster
+NAME            HUB ACCEPTED   MANAGED CLUSTER URLS                                           JOINED   AVAILABLE   AGE
+local-cluster   true           https://api.ocp4.rhcnsa.com:6443                               True     True        24d
+test1           true           https://api.cluster-66zw4.66zw4.sandbox1272.opentlc.com:6443   True     Unknown     23d
+
+oc delete managedcluster test1
 ```
