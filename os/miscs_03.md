@@ -8718,4 +8718,32 @@ local-cluster   true           https://api.ocp4.rhcnsa.com:6443                 
 test1           true           https://api.cluster-66zw4.66zw4.sandbox1272.opentlc.com:6443   True     Unknown     23d
 
 oc delete managedcluster test1
+
+
+### 在 edge-1 创建 open-cluster-management-agent namespace，创建 serviceaccount，修改 imagePullSecrets
+podman login quay.ocp4.rhcnsa.com --authfile=./auth.json
+oc new-project open-cluster-management-agent
+oc -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc -n open-cluster-management-agent create sa klusterlet
+oc -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc -n open-cluster-management-agent create sa klusterlet-work-sa
+oc -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+### 在 edge-1 创建 open-cluster-management-agent-addon namespace， 创建 serviceaccount，修改 imagePullSecrets
+oc new-project open-cluster-management-agent-addon
+oc -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+### 在 edge-1 切换到 open-cluster-management-agent namespace
+oc project open-cluster-management-agent
+echo $CRDS | base64 -d | oc apply -f -
+echo $IMPORT | base64 -d | oc apply -f -
+
+skopeo copy --all  --format v2s2 --authfile /root/.docker/config.json docker://registry.redhat.io/rhacm2/registration-rhel8-operator@sha256:e7e1b5545f4a4946f40cdd2101b5ccba9b947320debd1a244dd5244b3430a61b docker://quay.ocp4.rhcnsa.com/rhacm2/registration-rhel8-operator@sha256:e7e1b5545f4a4946f40cdd2101b5ccba9b947320debd1a244dd5244b3430a61b
+
+skopeo inspect --authfile /root/.docker/config.json docker://quay.ocp4.rhcnsa.com/rhacm2/registration-rhel8-operator@sha256:e7e1b5545f4a4946f40cdd2101b5ccba9b947320debd1a244dd5244b3430a61b
+
 ```
