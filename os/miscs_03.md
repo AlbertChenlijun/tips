@@ -8752,4 +8752,101 @@ chmod a+rw /root/db
 cd /root/assisted-service
 podman run -dt --pod assisted-installer --env-file onprem-environment --pull never -v /root/db:/var/lib/pgsql/data:z --name postgres quay.io/centos7/postgresql-12-centos7:latest
 
+# 为 Channel 指定自定义 CA
+# https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.3/html/applications/managing-applications#using-custom-CA-certificates-for-secure-HTTPS-connection
+oc get channel -A 
+NAMESPACE                                                       NAME                                                         TYPE       PATHNAME                                                                            AGE
+...
+nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import-ns   nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import   Git        https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import          24d
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: git-ca
+  namespace: nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import-ns
+data:
+  caCerts: |
+    -----BEGIN CERTIFICATE-----
+    MIIDYzCCAkugAwIBAgIIQRP3xrlQftgwDQYJKoZIhvcNAQELBQAwJjEkMCIGA1UE
+    AwwbaW5ncmVzcy1vcGVyYXRvckAxNjI2NjA2MTU2MB4XDTIxMDcxODExMDIzOFoX
+    DTIzMDcxODExMDIzOVowITEfMB0GA1UEAwwWKi5hcHBzLm9jcDQucmhjbnNhLmNv
+    bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOPdR9qh1gTs1iUqUcK8
+    IDhekCUPmJywFwRuatzydztAPcGDvj4Y5GWx2pu+D8BD2A+Q3F59904BZWb4FlTe
+    6kDoMvcXr9Y5HGsfIMQpJ5GdFGzNg0veDu88K1P4NAmK5C+FKVYKb83wBja/x7Ys
+    3g0oqXaQuESY83okJCM3zplPcXxFyqVgrC7E9A/TNJsuZvRZWGfQHIUrxsUPEiVT
+    jp8AwOcmyAEocm5mdNWThQGvBARdmuKuySb1/03BNbKD7qmj5x8/dz3rCyF7ufz3
+    JOXsKzCuv5VGBx+IEg9IX+rvlNd2MCq/dJy3oAUrSEYUjOi4ZZ/OH87fndXuMNKC
+    eesCAwEAAaOBmTCBljAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUH
+    AwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUpW/Kg6qjguBcMYBqbilYtopB4E0w
+    HwYDVR0jBBgwFoAULmTEKt6hRTncC2BADMSke8A25rgwIQYDVR0RBBowGIIWKi5h
+    cHBzLm9jcDQucmhjbnNhLmNvbTANBgkqhkiG9w0BAQsFAAOCAQEAB97KrWlCuUgV
+    gcZKqw800F4VOiJGXxsEQhHQ1EMfaBNkV51LBWLiD0iJND9UDL3nOVK0DTXLNbh6
+    kofsI21vo3/XsJ/BofC6Pu1kFGqNiztVMh4BogCQSXkIu4K3wM04kgsj5Ynh4/Vz
+    3UpUqR9q7AkqBgEEX55ytIY1l/Py/KnBgj3DGVLEQuJnOOyyhsPoKFz9pMOJ/r4+
+    zJ+L0bpLRjsH1Zb7OPodzTHMCqPgdY/b7YOYtQcFYHSrtP5dmIIlUoLdqgCAlBGb
+    oIAtkZlQQFudmI6p28zbmV3zoAsY9QSFv6Gg4Eiik+lttgy86yk6OqdSF+K2kwXQ
+    qairhQ9Log==
+    -----END CERTIFICATE-----
+    -----BEGIN CERTIFICATE-----
+    MIIDDDCCAfSgAwIBAgIBATANBgkqhkiG9w0BAQsFADAmMSQwIgYDVQQDDBtpbmdy
+    ZXNzLW9wZXJhdG9yQDE2MjY2MDYxNTYwHhcNMjEwNzE4MTEwMjM2WhcNMjMwNzE4
+    MTEwMjM3WjAmMSQwIgYDVQQDDBtpbmdyZXNzLW9wZXJhdG9yQDE2MjY2MDYxNTYw
+    ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDB5Fjs4hC5Ade8DwMP6n46
+    kmSz6pNLVYIkiLLgPFrG6d17Sn5UCqujlrP9fE1o9Q4BQeeu29k43sOQ/sIKljzu
+    3ArOYTZvb1kaflMwJvmn0MagFR1TnSDB8kwnDeAZcdO0FK8JhJ85UDeEinF4rb1v
+    zf4dJEoU3pNXY9hT47vqsXo3oB59DsrbtM2ythAPkZ9vv3G0kC0HOl8rjf9IJX4V
+    lZZazvLv92euVyOtIHPgpbnrRUc74kWf8n5pzUDL13oFNaBMGabC+3fq8XaSwIb4
+    6CGLW3BFfxy+2xEToUJ+aZqNRzR+hdy3+V/Wm57I/img/FVQJ/tkBlricupcOWcP
+    AgMBAAGjRTBDMA4GA1UdDwEB/wQEAwICpDASBgNVHRMBAf8ECDAGAQH/AgEAMB0G
+    A1UdDgQWBBQuZMQq3qFFOdwLYEAMxKR7wDbmuDANBgkqhkiG9w0BAQsFAAOCAQEA
+    JRWfbK0Czhoi2r/RnBHjU+PyQsSIlflgdn96N1FgevsHCz/w7wjvyYbNtdlgF+wj
+    KH0EwB8cR5clKIESkGsGBjUjDytrUwofpbgFt2B+Ec+iaaaVdI1F3kb/uI7XF5S1
+    eAVgZtPpSYkro8tCUR+fFAgypnkAkeNyYQMVX5tPTAiFrO7nO5RXdbi/Lrb68cQZ
+    d/rE+5X3JtgYwILS+cxVS+ScAOQfPQspsgLIXq+OitU1a8z2QvdWKK+c9sCvcXjS
+    I0yijITLiFyWuNLvK3wAUswYBRg9sXZX5OAKU51amR/POiVqnPPQYlJQk//JmRij
+    KGh+it3EJJlVTH6jVLkpEA==
+    -----END CERTIFICATE-----
+EOF  
+
+
+oc -n nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import-ns patch channel nswith-admin-giteaappsocp4rhcnsacom-lab-user-1-book-import --patch '{"spec":{"configMapRef":{"name":"git-ca"}}}' --type=merge
+
+
+curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8_Stream/devel:kubic:libcontainers:stable.repo
+curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:1.21.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:1.21/CentOS_8_Stream/devel:kubic:libcontainers:stable:cri-o:1.21.repo
+
+mkdir -p /root/db
+chmod -R a+rw /root/db
+cd /root/db
+podman cp -r postgres:/var/lib/pgsql/data .
+chown -R 26:26 .
+podman run -dt --pod assisted-installer --env-file onprem-environment --pull never -v /root/db:/var/lib/pgsql:z --name postgres quay.io/centos7/postgresql-12-centos7:latest
+
+# cd /etc/kubernetes/static-pod-resources/kube-apiserver-certs/secrets/node-kubeconfigs/
+# kubectl --kubeconfig=localhost.kubeconfig -n openshift-machine-config-operator logs machine-config-daemon-sz99n machine-config-daemon
+...
+E0311 11:31:10.370559    9928 daemon.go:1549] content mismatch for file "/etc/containers/registries.conf" (-want +got):
+
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml
+
+skopeo copy --all --authfile /root/.docker/config.json docker://docker.io/redis:6.2.6-alpine docker://quay.ocp4.rhcnsa.com/redis/redis:6.2.6-alpine
+skopeo copy --all --authfile /root/.docker/config.json docker://registry.redhat.io/rhel8/redis-6:latest docker://quay.ocp4.rhcnsa.com/rhel8/redis-6:latest
+
+# 日志 
+# openshift-gitops-applicationset-controller
+# oc -n openshift-gitops logs openshift-gitops-applicationset-controller-5b684bf665-nq2b6 | tail -20
+...
+time="2022-03-12T03:06:53Z" level=info msg="Kind.Group/Version Reference" kind.apiVersion=placementdecisions.cluster.open-cluster-management.io/v1alpha1
+time="2022-03-12T03:06:53Z" level=info msg="selection type" listOptions.LabelSelector="cluster.open-cluster-management.io/placement=gitops-openshift-clusters"
+time="2022-03-12T03:06:53Z" level=info msg="Number of decisions found: 2"
+time="2022-03-12T03:06:53Z" level=info msg="cluster: map[clusterName:edge-1 reason:]"
+time="2022-03-12T03:06:53Z" level=info msg="matched cluster in ArgoCD" clusterName=edge-1
+time="2022-03-12T03:06:53Z" level=info msg="cluster: map[clusterName:local-cluster reason:]"
+time="2022-03-12T03:06:53Z" level=info msg="matched cluster in ArgoCD" clusterName=local-cluster
+time="2022-03-12T03:06:53Z" level=info msg="generated 2 applications" generator="{<nil> <nil> <nil> <nil> <nil> 0xc000318ea0}"
+time="2022-03-12T03:06:53Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: Destination server missing from app spec"
+
+
 ```
