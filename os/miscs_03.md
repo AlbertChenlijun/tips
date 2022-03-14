@@ -8910,3 +8910,8 @@ time="2022-03-14T04:25:19Z" level=error msg="error occurred during application g
 time="2022-03-14T04:25:28Z" level=info msg="generated 2 applications" generator="{0xc000326000 <nil> <nil> <nil> <nil> <nil>}"
 time="2022-03-14T04:25:28Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: cluster 'https://edge-1.ocp4.rhcnsa.com:6443' has not been configured"
 
+argocd cluster add edge-1 --kubeconfig /Users/junwang/kubeconfig/edge-1/kubeconfig --core --server https://edge-1.ocp4.rhcnsa.com:6443 --insecure
+
+ERRO[0005] finished unary call with code Unknown         error="cannot find pod with selector: [app.kubernetes.io/name=argocd-redis-ha-haproxy app.kubernetes.io/name=argocd-redis]" grpc.code=Unknown grpc.method=Create grpc.service=cluster.ClusterService grpc.start_time="2022-03-14T13:23:37+08:00" grpc.time_ms=120.329 span.kind=server system=grpc
+
+```
