@@ -8848,5 +8848,12 @@ time="2022-03-12T03:06:53Z" level=info msg="matched cluster in ArgoCD" clusterNa
 time="2022-03-12T03:06:53Z" level=info msg="generated 2 applications" generator="{<nil> <nil> <nil> <nil> <nil> 0xc000318ea0}"
 time="2022-03-12T03:06:53Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: Destination server missing from app spec"
 
-
+oc patch deployment/service-ca -n openshift-service-ca --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 ```
+
+### OpenShift / RHEL / DevSecOps 汇总目录
+非常好的 OpenShift / RHEL 汇总<br>
+https://blog.csdn.net/weixin_43902588/article/details/105060359<br>
+
+
+
