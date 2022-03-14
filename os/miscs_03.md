@@ -8848,7 +8848,10 @@ time="2022-03-12T03:06:53Z" level=info msg="matched cluster in ArgoCD" clusterNa
 time="2022-03-12T03:06:53Z" level=info msg="generated 2 applications" generator="{<nil> <nil> <nil> <nil> <nil> 0xc000318ea0}"
 time="2022-03-12T03:06:53Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: Destination server missing from app spec"
 
+# 触发 deployment service-ca 的重新部署
 oc patch deployment/service-ca -n openshift-service-ca --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+$ PASSWD=$(oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d)
 ```
 
 ### OpenShift / RHEL / DevSecOps 汇总目录
@@ -8856,4 +8859,54 @@ oc patch deployment/service-ca -n openshift-service-ca --patch "{\"spec\":{\"tem
 https://blog.csdn.net/weixin_43902588/article/details/105060359<br>
 
 
+```
+spec:
+  generators:
+  - list:
+      elements:
+      - cluster: environment-dev
+        url: https://api.ocp4.rhcnsa.com:6443
+      - cluster: environment-edge-1
+        url: https://edge-1.ocp4.rhcnsa.com:6443
+  template:
+    metadata:
+      name: acm-appset3-{{cluster}}
+    spec:
+      destination:
+        namespace: book-import-3
+        server: '{{url}}'
+      project: default
+      source:
+        path: book-import
+        repoURL: https://gitea-with-admin-gitea.apps.ocp4.rhcnsa.com/lab-user-1/book-import
+        targetRevision: master-no-pre-post
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+
+
+
+time="2022-03-14T04:25:19Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: Destination server missing from app spec"
+time="2022-03-14T04:25:28Z" level=info msg="generated 2 applications" generator="{0xc000326000 <nil> <nil> <nil> <nil> <nil>}"
+time="2022-03-14T04:25:28Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: cluster 'https://edge-1.ocp4.rhcnsa.com:6443' has not been configured"
+
+
+报错
+$ oc logs openshift-gitops-applicationset-controller-5b684bf665-nq2b6  | tail -20 
+...
+time="2022-03-14T04:25:19Z" level=info msg="Kind.Group/Version Reference" kind.apiVersion=placementdecisions.cluster.open-cluster-management.io/v1alpha1
+time="2022-03-14T04:25:19Z" level=info msg="selection type" listOptions.LabelSelector="cluster.open-cluster-management.io/placement=gitops-openshift-clusters"
+time="2022-03-14T04:25:19Z" level=info msg="Number of decisions found: 2"
+time="2022-03-14T04:25:19Z" level=info msg="cluster: map[clusterName:edge-1 reason:]"
+time="2022-03-14T04:25:19Z" level=info msg="matched cluster in ArgoCD" clusterName=edge-1
+time="2022-03-14T04:25:19Z" level=info msg="cluster: map[clusterName:local-cluster reason:]"
+time="2022-03-14T04:25:19Z" level=info msg="matched cluster in ArgoCD" clusterName=local-cluster
+time="2022-03-14T04:25:19Z" level=info msg="generated 2 applications" generator="{<nil> <nil> <nil> <nil> <nil> 0xc00019e1a0}"
+time="2022-03-14T04:25:19Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: Destination server missing from app spec"
+time="2022-03-14T04:25:28Z" level=info msg="generated 2 applications" generator="{0xc000326000 <nil> <nil> <nil> <nil> <nil>}"
+time="2022-03-14T04:25:28Z" level=error msg="error occurred during application generation: application spec is invalid: InvalidSpecError: cluster 'https://edge-1.ocp4.rhcnsa.com:6443' has not been configured"
 
