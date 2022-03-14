@@ -8914,4 +8914,28 @@ argocd cluster add edge-1 --kubeconfig /Users/junwang/kubeconfig/edge-1/kubeconf
 
 ERRO[0005] finished unary call with code Unknown         error="cannot find pod with selector: [app.kubernetes.io/name=argocd-redis-ha-haproxy app.kubernetes.io/name=argocd-redis]" grpc.code=Unknown grpc.method=Create grpc.service=cluster.ClusterService grpc.start_time="2022-03-14T13:23:37+08:00" grpc.time_ms=120.329 span.kind=server system=grpc
 
+skopeo copy --all --authfile /root/.docker/config.json docker://gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0 docker://registry.example.com:5000/kubebuilder/kube-rbac-proxy:v0.8.0
+
+skopeo copy --all --authfile /root/.docker/config.json docker://quay.io/argoproj/argocd@sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73 docker://registry.example.com:5000/argoproj/argocd@sha256:bac1aeee8e78e64d81a633b9f64148274abfa003165544354e2ebf1335b6ee73
+
+skopeo copy --all --authfile /root/.docker/config.json docker://docker.io/redis@sha256:4be7fdb131e76a6c6231e820c60b8b12938cf1ff3d437da4871b9b2440f4e385 docker://registry.example.com:5000/redis@sha256:4be7fdb131e76a6c6231e820c60b8b12938cf1ff3d437da4871b9b2440f4e385
+
+oc patch deployment/argocd-sample-redis -n argocd --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+skopeo copy --all --authfile /root/.docker/config.json docker://ghcr.io/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8 docker://registry.example.com:5000/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8
+
+ghcr.io/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8
+oc patch deployment/argocd-sample-dex-server -n argocd --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+```
+
+### argocd
+```
+# 安装 argocd 客户端
+$ ARGO_VER=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+$ sudo curl -L https://github.com/argoproj/argo-cd/releases/download/${ARGO_VER}/argocd-linux-amd64 -o /usr/local/bin/argocd
+$ sudo chmod +x /usr/local/bin/argocd
+```
+
+
 ```
