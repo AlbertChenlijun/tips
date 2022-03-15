@@ -8935,7 +8935,10 @@ oc patch deployment/argocd-sample-dex-server -n argocd --patch "{\"spec\":{\"tem
 $ ARGO_VER=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
 $ sudo curl -L https://github.com/argoproj/argo-cd/releases/download/${ARGO_VER}/argocd-linux-amd64 -o /usr/local/bin/argocd
 $ sudo chmod +x /usr/local/bin/argocd
-```
+
+
+$ PASSWD=$(oc get secret argocd-sample-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 -d)
 
 
 ```
+
