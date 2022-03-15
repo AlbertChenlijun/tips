@@ -8924,8 +8924,10 @@ oc patch deployment/argocd-sample-redis -n argocd --patch "{\"spec\":{\"template
 
 skopeo copy --all --authfile /root/.docker/config.json docker://ghcr.io/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8 docker://registry.example.com:5000/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8
 
-ghcr.io/dexidp/dex@sha256:6b3cc1c385fbc7542244614e4432f2546c619b7850d44d2379c598309a06bed8
 oc patch deployment/argocd-sample-dex-server -n argocd --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+
+oc patch deployment/postgresql-gitea-with-admin -n gitea --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
 
 ```
 
@@ -8936,9 +8938,28 @@ $ ARGO_VER=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releas
 $ sudo curl -L https://github.com/argoproj/argo-cd/releases/download/${ARGO_VER}/argocd-linux-amd64 -o /usr/local/bin/argocd
 $ sudo chmod +x /usr/local/bin/argocd
 
-
 $ PASSWD=$(oc get secret argocd-sample-cluster -n argocd -ojsonpath='{.data.admin\.password}' | base64 -d)
+```
 
+# 创建 gitea 
+```
+cat <<EOF | oc apply -f -
+apiVersion: gpte.opentlc.com/v1
+kind: Gitea
+metadata:
+  name: gitea-without-admin
+spec:
+  giteaSsl: false
+  giteaCreateUsers: true
+  giteaGenerateUserFormat: "lab-user-%d"
+  giteaUserNumber: 2
+  giteaUserPassword: openshift
+EOF
+
+[root@ocpai1 ocp4-1]# oc logs gitea-operator-controller-manager-6c79f4746c-69t77 -c manager -n openshift-operators 
+...
+ TASK [Create Gitea admin user] ******************************** 
+fatal: [localhost]: FAILED! => {"changed": true, "rc": 1, "return_code": 1, "stderr": "", "stderr_lines": [], "stdout": "\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmodels/user/user.go:720:\u001b[32mCountUsers()\u001b[0m \u001b[1;32m[I]\u001b[0m [SQL]\u001b[1m\u001b[0m \u001b[1mSELECT count(*) FROM \"user\" WHERE (type=0)\u001b[0m \u001b[1m[]\u001b[0m - \u001b[1m15.037566ms\u001b[0m\n\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmain.go:117:\u001b[32mmain()\u001b[0m \u001b[1;41m[F]\u001b[0m Failed to run app with \u001b[1m[/home/gitea/gitea --config=/home/gitea/conf/app.ini admin user create --username admin --password 5bpNnBx3xZcPmNqeXzZWZ0RXZuWdDfUA --email jwang@redhat.com --must-change-password=false --admin]\u001b[0m: \u001b[1mCreateUser: name is reserved [name: admin]\u001b[0m\n", "stdout_lines": ["\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmodels/user/user.go:720:\u001b[32mCountUsers()\u001b[0m \u001b[1;32m[I]\u001b[0m [SQL]\u001b[1m\u001b[0m \u001b[1mSELECT count(*) FROM \"user\" WHERE (type=0)\u001b[0m \u001b[1m[]\u001b[0m - \u001b[1m15.037566ms\u001b[0m", "\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmain.go:117:\u001b[32mmain()\u001b[0m \u001b[1;41m[F]\u001b[0m Failed to run app with \u001b[1m[/home/gitea/gitea --config=/home/gitea/conf/app.ini admin user create --username admin --password 5bpNnBx3xZcPmNqeXzZWZ0RXZuWdDfUA --email jwang@redhat.com --must-change-password=false --admin]\u001b[0m: \u001b[1mCreateUser: name is reserved [name: admin]\u001b[0m"]}
 
 ```
 
