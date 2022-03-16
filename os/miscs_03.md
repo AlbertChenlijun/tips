@@ -8962,5 +8962,72 @@ EOF
 fatal: [localhost]: FAILED! => {"changed": true, "rc": 1, "return_code": 1, "stderr": "", "stderr_lines": [], "stdout": "\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmodels/user/user.go:720:\u001b[32mCountUsers()\u001b[0m \u001b[1;32m[I]\u001b[0m [SQL]\u001b[1m\u001b[0m \u001b[1mSELECT count(*) FROM \"user\" WHERE (type=0)\u001b[0m \u001b[1m[]\u001b[0m - \u001b[1m15.037566ms\u001b[0m\n\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmain.go:117:\u001b[32mmain()\u001b[0m \u001b[1;41m[F]\u001b[0m Failed to run app with \u001b[1m[/home/gitea/gitea --config=/home/gitea/conf/app.ini admin user create --username admin --password 5bpNnBx3xZcPmNqeXzZWZ0RXZuWdDfUA --email jwang@redhat.com --must-change-password=false --admin]\u001b[0m: \u001b[1mCreateUser: name is reserved [name: admin]\u001b[0m\n", "stdout_lines": ["\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmodels/user/user.go:720:\u001b[32mCountUsers()\u001b[0m \u001b[1;32m[I]\u001b[0m [SQL]\u001b[1m\u001b[0m \u001b[1mSELECT count(*) FROM \"user\" WHERE (type=0)\u001b[0m \u001b[1m[]\u001b[0m - \u001b[1m15.037566ms\u001b[0m", "\u001b[36m2022/03/15 06:26:14 \u001b[0m\u001b[32mmain.go:117:\u001b[32mmain()\u001b[0m \u001b[1;41m[F]\u001b[0m Failed to run app with \u001b[1m[/home/gitea/gitea --config=/home/gitea/conf/app.ini admin user create --username admin --password 5bpNnBx3xZcPmNqeXzZWZ0RXZuWdDfUA --email jwang@redhat.com --must-change-password=false --admin]\u001b[0m: \u001b[1mCreateUser: name is reserved [name: admin]\u001b[0m"]}
 
 
+[junwang@JundeMacBook-Pro ~/sa]$ ocl1 get pods -A                                                                                                                         
+NAMESPACE                       NAME                                            READY   STATUS    RESTARTS   AGE                                                          
+kube-system                     kube-flannel-ds-8xgdb                           1/1     Running   0          3h4m                                                         
+kubevirt-hostpath-provisioner   kubevirt-hostpath-provisioner-klgqq             1/1     Running   0          3h4m
+open-cluster-management-agent   klusterlet-b48d64b8c-jg9mk                      1/1     Running   1          2m46s
+open-cluster-management-agent   klusterlet-registration-agent-cd787bc67-2b4bw   1/1     Running   0          2m17s
+open-cluster-management-agent   klusterlet-work-agent-65765fc674-ptq5d          1/1     Running   1          2m17s
+openshift-dns                   dns-default-9g2d7                               1/2     Running   21         3h4m
+openshift-dns                   node-resolver-kxttb                             1/1     Running   0          3h4m
+openshift-ingress               router-default-6c96f6bc66-wrw4s                 1/1     Running   0          3h4m
+openshift-service-ca            service-ca-7bffb6f6bf-bs7c6                     1/1     Running   1          3h4m
+
+[junwang@JundeMacBook-Pro ~/sa]$ ocl1 describe pods dns-default-9g2d7 -n openshift-dns 
+...
+Events:
+  Type     Reason      Age                   From     Message
+  ----     ------      ----                  ----     -------
+  Warning  ProbeError  19m (x376 over 3h1m)  kubelet  Liveness probe error: Get "http://10.42.0.2:8080/health": dial tcp 10.42.0.2:8080: connect: connection refused
+body:
+  Warning  ProbeError  20s (x1770 over 3h1m)  kubelet  Readiness probe error: Get "http://10.42.0.2:8181/ready": dial tcp 10.42.0.2:8181: connect: connection refused
+body:
+
+[junwang@JundeMacBook-Pro ~/sa]$ ocl1 describe pods dns-default-9g2d7 -n openshift-dns 
+...
+8m13s       Warning   FailedScheduling    pod/klusterlet-addon-search-58fb475c9d-66hzj                                           0/1 nodes are available: 1 Insufficient memory.
+
+
+创建 ApplicationSet 
+cat <<'EOF' | ocp4.10 apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: acm-appset
+  namespace: openshift-gitops
+spec:
+  generators:
+    - clusterDecisionResource:
+        configMapRef: acm-placement
+        labelSelector:
+          matchLabels:
+            cluster.open-cluster-management.io/clusterset: gitops-openshift-clusters
+        requeueAfterSeconds: 180
+  template:
+    metadata:
+      name: 'acm-appset-{{name}}'
+    spec:
+      destination:
+        namespace: book-import-1
+        server: '{{server}}'
+      project: default
+      source:
+        path: book-import
+        repoURL: https://github.com/wangjun1974/book-import
+        targetRevision: master-no-pre-post
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+EOF
+
+查看 Mac 端口占用
+sudo lsof -iTCP:6443 -sTCP:LISTEN 
+netstat -p tcp -van | grep '^Proto\|LISTEN'
+
 ```
 
