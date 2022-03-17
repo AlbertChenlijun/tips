@@ -9031,3 +9031,68 @@ netstat -p tcp -van | grep '^Proto\|LISTEN'
 
 ```
 
+```
+报错
+Mar 17 03:20:33 microshift.edge-1.example.com microshift[74]: E0317 03:20:33.476069      74 pod_workers.go:190] "Error syncing pod, skipping" err="failed to \"StartContainer\" for \"service-ca-controller\" with CreateContainerError: \"container create failed: time=\\\"2022-03-17T03:20:33Z\\\" level=error msg=\\\"container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \\\\\\\"cgroup\\\\\\\" to rootfs at \\\\\\\"/sys/fs/cgroup\\\\\\\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-3be10ca20c069701265c5c105832373648d02a9b3c04475a9c03cb906aa42f61.scope: no such file or directory\\\"\\n\"" pod="openshift-service-ca/service-ca-7bffb6f6bf-kc2n5" podUID=5a250e21-8a48-40be-836a-2b9a4389656a
+
+Mar 17 03:21:59 microshift.edge-1.example.com microshift[74]: E0317 03:21:59.827091      74 remote_runtime.go:228] "CreateContainer in sandbox from runtime service failed" err="rpc error: code = Unknown desc = container create failed: time=\"2022-03-17T03:21:59Z\" level=error msg=\"container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \\\"cgroup\\\" to rootfs at \\\"/sys/fs/cgroup\\\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-2de5e6d3c57997f368c5a0003361adda01a4cee815eb87db53aa3c280b00dbdb.scope: no such file or directory\"\n" podSandboxID="d409e51e4ad170f6f1c621df7683b9fed25f12d64042838b15f6c81c50ffab70"
+
+
+Mar 17 03:21:59 microshift.edge-1.example.com microshift[74]: E0317 03:21:59.827199      74 kuberuntime_manager.go:864] container &Container{Name:kubevirt-hostpath-provisioner,Image:quay.io/kubevirt/hostpath-provisioner:v0.8.0,Command:[],Args:[],WorkingDir:,Ports:[]ContainerPort{},Env:[]EnvVar{EnvVar{Name:USE_NAMING_PREFIX,Value:false,ValueFrom:nil,},EnvVar{Name:NODE_NAME,Value:,ValueFrom:&EnvVarSource{FieldRef:&ObjectFieldSelector{APIVersion:v1,FieldPath:spec.nodeName,},ResourceFieldRef:nil,ConfigMapKeyRef:nil,SecretKeyRef:nil,},},EnvVar{Name:PV_DIR,Value:/var/hpvolumes,ValueFrom:nil,},},Resources:ResourceRequirements{Limits:ResourceList{},Requests:ResourceList{},},VolumeMounts:[]VolumeMount{VolumeMount{Name:pv-volume,ReadOnly:false,MountPath:/var/hpvolumes,SubPath:,MountPropagation:nil,SubPathExpr:,},VolumeMount{Name:kube-api-access-hffq6,ReadOnly:true,MountPath:/var/run/secrets/kubernetes.io/serviceaccount,SubPath:,MountPropagation:nil,SubPathExpr:,},},LivenessProbe:nil,ReadinessProbe:nil,Lifecycle:nil,TerminationMessagePath:/dev/termination-log,ImagePullPolicy:Always,SecurityContext:nil,Stdin:false,StdinOnce:false,TTY:false,EnvFrom:[]EnvFromSource{},TerminationMessagePolicy:File,VolumeDevices:[]VolumeDevice{},StartupProbe:nil,} start failed in pod kubevirt-hostpath-provisioner-7nxpn_kubevirt-hostpath-provisioner(85dbc6dd-5a33-43fa-896e-057f0ef29364): CreateContainerError: container create failed: time="2022-03-17T03:21:59Z" level=error msg="container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \"cgroup\" to rootfs at \"/sys/fs/cgroup\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-2de5e6d3c57997f368c5a0003361adda01a4cee815eb87db53aa3c280b00dbdb.scope: no such file or directory"
+
+Mar 17 03:21:59 microshift.edge-1.example.com microshift[74]: E0317 03:21:59.827269      74 pod_workers.go:190] "Error syncing pod, skipping" err="failed to \"StartContainer\" for \"kubevirt-hostpath-provisioner\" with CreateContainerError: \"container create failed: time=\\\"2022-03-17T03:21:59Z\\\" level=error msg=\\\"container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \\\\\\\"cgroup\\\\\\\" to rootfs at \\\\\\\"/sys/fs/cgroup\\\\\\\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-2de5e6d3c57997f368c5a0003361adda01a4cee815eb87db53aa3c280b00dbdb.scope: no such file or directory\\\"\\n\"" pod="kubevirt-hostpath-provisioner/kubevirt-hostpath-provisioner-7nxpn" podUID=85dbc6dd-5a33-43fa-896e-057f0ef29364
+
+CreateContainerError: container create failed: time="2022-03-17T03:20:23Z" level=error msg="container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \"cgroup\" to rootfs at \"/sys/fs/cgroup\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-85dbf6bb49fa9b29734ba9031eab4cf5baf35471794c300be728125030272584.scope: no such file or directory"
+
+Mar 17 03:46:33 microshift.edge-1.example.com crio[31]: time="2022-03-17 03:46:33.905149582Z" level=error msg="Container creation error: time=\"2022-03-17T03:46:33Z\" level=error msg=\"container_linux.go:380: starting container process caused: process_linux.go:545: container init caused: rootfs_linux.go:75: mounting \\\"cgroup\\\" to rootfs at \\\"/sys/fs/cgroup\\\" caused: stat /sys/fs/cgroup/systemd/system.slice/crio-22189fa0a7cd9d21cc2d802485328f7227826d651270db4161e1f6207345f574.scope: no such file or directory\"\n" id=f0a532c1-953e-457f-8f8f-399787224b08 name=/runtime.v1alpha2.RuntimeService/CreateContainer
+
+
+https://bugzilla.redhat.com/show_bug.cgi#id=1732957
+
+oc get subscription book-import-subscription-1 -n book-import -o yaml
+...
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  annotations:
+    apps.open-cluster-management.io/deployables: ""
+    apps.open-cluster-management.io/git-branch: master-no-pre-post
+    apps.open-cluster-management.io/git-path: book-import
+    apps.open-cluster-management.io/manual-refresh-time: "2022-03-11T02:55:41.590Z"
+    apps.open-cluster-management.io/reconcile-option: merge
+  labels:
+    app: book-import
+    app.kubernetes.io/part-of: book-import
+    apps.open-cluster-management.io/reconcile-rate: medium
+  name: book-import-subscription-1
+  namespace: book-import
+
+
+oc get subscription testapp-subscription-1 -n testapp -o yaml 
+...
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  annotations:
+    apps.open-cluster-management.io/cluster-admin: "true"
+    apps.open-cluster-management.io/deployables: testapp/testapp-subscription-1-book-import-book-import-deployment,testapp/testapp-subscription-1-book-import-book-import-route,testapp/testapp-subscription-1-book-import-book-import-service
+    apps.open-cluster-management.io/git-branch: master-no-pre-post
+    apps.open-cluster-management.io/git-current-commit: 3ebaa46e2c4bdc8c4ecc1f70cad5ab5863fb1463
+    apps.open-cluster-management.io/git-path: book-import
+    apps.open-cluster-management.io/reconcile-option: merge
+    apps.open-cluster-management.io/topo: deployable//Deployment//book-import/3,deployable//Route//book-import/0,deployable//Service//book-import/0
+    open-cluster-management.io/user-group: c3lzdGVtOmF1dGhlbnRpY2F0ZWQ6b2F1dGgsc3lzdGVtOmF1dGhlbnRpY2F0ZWQ=
+    open-cluster-management.io/user-identity: YWRtaW4=
+  creationTimestamp: "2022-03-15T14:20:27Z"
+  generation: 2
+  labels:
+    app: testapp
+    app.kubernetes.io/part-of: testapp
+    apps.open-cluster-management.io/reconcile-rate: medium
+  name: testapp-subscription-1
+  namespace: testapp
+  resourceVersion: "609598001"
+  uid: 40d2be81-33e2-4daa-930c-4bfcee39cfec
+
+
+```
