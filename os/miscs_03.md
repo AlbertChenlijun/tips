@@ -9095,4 +9095,64 @@ metadata:
   uid: 40d2be81-33e2-4daa-930c-4bfcee39cfec
 
 
+cat > /etc/systemd/system/microshift.service <<'EOF'
+[Unit]
+Description=MicroShift Containerized
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target crio.service
+After=network-online.target crio.service
+RequiresMountsFor=%t/containers
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+TimeoutStopSec=70
+ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet ; /usr/bin/mkdir -p /var/hpvolumes
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
+ExecStart=/usr/bin/podman run --cidfile=%t/%n.ctr-id --cgroups=no-conmon --rm --replace --sdnotify=container --label io.containers.autoupdate=registry --network=host --privileged -d --name microshift -v /var/hpvolumes:/var/hpvolumes:z,rw,rshared -v /var/run/crio/crio.sock:/var/run/crio/crio.sock:rw,rshared -v microshift-data:/var/lib/microshift:rw,rshared -v /var/lib/kubelet:/var/lib/kubelet:z,rw,rshared -v /var/log:/var/log -v /etc:/etc quay.io/microshift/microshift:4.8.0-0.microshift-2022-02-04-005920
+ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm -f --ignore --cidfile=%t/%n.ctr-id
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target default.target
+EOF
+
+oc patch deployment/router-default -n openshift-ingress --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+ocp4.10 new-project open-cluster-management-agent
+ocp4.10 -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+ocp4.10 -n open-cluster-management-agent create sa klusterlet
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+ocp4.10 -n open-cluster-management-agent create sa klusterlet-registration-sa
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+ocp4.10 -n open-cluster-management-agent create sa klusterlet-work-sa
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+ocp4.10 new-project open-cluster-management-agent-addon
+ocp4.10 -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+ocp4.10 -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+ocp4.10 -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+ocp4.10 project open-cluster-management-agent
+echo $CRDS | base64 -d | ocp4.10 apply -f -
+echo $IMPORT | base64 -d | ocp4.10 apply -f -
+
+ocp4.10 project open-cluster-management-agent-addon
+for sa in klusterlet-addon-appmgr klusterlet-addon-certpolicyctrl klusterlet-addon-iampolicyctrl-sa klusterlet-addon-policyctrl klusterlet-addon-search klusterlet-addon-workmgr ; do
+  ocp4.10 -n open-cluster-management-agent-addon patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+done
+ocp4.10 delete pod --all -n open-cluster-management-agent-addon
+
+$ oc -n open-cluster-management-agent get deployment klusterlet -o yaml | grep "image: " 
+        image: registry.redhat.io/rhacm2/registration-rhel8-operator@sha256:568d3b5dc4da1dd35c68d1405c274933d6129462b5873e929e25a444c50f1d6b
+$ oc -n open-cluster-management-agent get deployment klusterlet-registration-agent -o yaml | grep "image: " 
+        image: registry.redhat.io/rhacm2/registration-rhel8@sha256:574b41e19bf26043f985fcfac8e8cd9384f1b37aba4d4eb3be3901ae6a427081
+
+$ oc -n open-cluster-management-agent get deployment klusterlet-work-agent -o yaml | grep "image: " 
+        image: registry.redhat.io/rhacm2/work-rhel8@sha256:b5c1519fda361b17f90ce895de2587d0b95692660fb79988ca2f21f71267ebe1
+
+
+podman run -d --rm --name microshift --hostname microshift.edge-1.example.com --cgroup-manager=systemd --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
 ```
