@@ -9155,4 +9155,15 @@ $ oc -n open-cluster-management-agent get deployment klusterlet-work-agent -o ya
 
 
 podman run -d --rm --name microshift --hostname microshift.edge-1.example.com --cgroup-manager=systemd --privileged -v microshift-data:/var/lib -p 6443:6443 quay.io/microshift/microshift-aio:latest
+
+
+kernel path ISO11://vmlinuz-rhel-8.4
+initrd path ISO11://initrd.img-rhel-8.4
+kernel parameters  inst.ks=http://10.66.208.115/ks-helper.cfg inst.ksdevice=ens3 ip=10.66.208.125 netmask=255.255.255.0 nameserver=10.64.63.6 gateway=10.66.208.254
+
+ipa host-add --random --force jwang.users.ipa.redhat.com
+
+6Le00t3cgkMeOGjXOMYg8yu
+
+
 ```
