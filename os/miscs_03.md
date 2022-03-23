@@ -9165,5 +9165,166 @@ ipa host-add --random --force jwang.users.ipa.redhat.com
 
 6Le00t3cgkMeOGjXOMYg8yu
 
+cat <<EOF | ocp4.9 apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redhat-pull-secret
+  namespace: openshift-operators
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJjbVZrYUdGMEszRjFZWGs2VHpneFYxTklVbE5LVWpFMFZVRmFRa3MxTkVkUlNFcFRNRkF4VmpSRFRGZEJTbFl4V0RKRE5GTkVOMHRQTlRsRFVUbE9NMUpGTVRJMk1USllWVEZJVWc9PSIsCiAgICAgICJlbWFpbCI6ICIiCiAgICB9CiAgfQp9
+type: kubernetes.io/dockerconfigjson
+EOF
+
+oc -n openshift-operators create secret generic redhat-pull-secret --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+
+
+cat <<EOF | ocp4.9 apply -f -
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: example-registry
+  namespace: quay-enterprise
+spec:
+  components:
+    - managed: true
+      kind: clair
+    - managed: true
+      kind: postgres
+    - managed: false
+      kind: objectstorage
+    - managed: true
+      kind: redis
+    - managed: true
+      kind: horizontalpodautoscaler
+    - managed: true
+      kind: route
+    - managed: false
+      kind: mirror
+    - managed: false
+      kind: monitoring
+    - managed: true
+      kind: tls
+EOF
+
+报错
+QuayRegistry
+...
+      message: >-
+        required component `objectstorage` marked as unmanaged, but
+        `configBundleSecret` is missing necessary fields
+
+cat > config.yaml <<EOF
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+ default:
+ - LocalStorage
+ - {storage_path: /datastorage/registry}
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+EOF
+[junwang@JundeMacBook-Pro ~/kubeconfig/ocp4.9]$ ocp4.9 create secret generic --from-file config.yaml=./config.yaml config-bundle-secret
+
+创建用户
+ registryEndpoint: >-
+    https://example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+
+$  curl -X POST -k  https://example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/api/v1/user/initialize --header 'Content-Type: application/json' --data '{ "username": "quayadmin", "password":"quaypass123", "email": "quayadmin@example.com", "access_token": true}'
+
+curl -X POST -k  https://example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/api/v1/user/initialize --header 'Content-Type: application/json' --data '{ "username": "quayadmin", "password":"quaypass123", "email": "quayadmin@example.com", "access_token": true}'
+
+
+ALLOW_PULLS_WITHOUT_STRICT_LOGGING: false
+AUTHENTICATION_TYPE: Database
+DEFAULT_TAG_EXPIRATION: 2w
+ENTERPRISE_LOGO_URL: /static/img/RH_Logo_Quay_Black_UX-horizontal.svg
+FEATURE_BUILD_SUPPORT: false
+FEATURE_DIRECT_LOGIN: true
+FEATURE_MAILING: false
+REGISTRY_TITLE: Red Hat Quay
+REGISTRY_TITLE_SHORT: Red Hat Quay
+TAG_EXPIRATION_OPTIONS:
+- 2w
+TEAM_RESYNC_STALE_TIME: 60m
+TESTING: false
+
+ALLOW_PULLS_WITHOUT_STRICT_LOGGING: false
+AUTHENTICATION_TYPE: Database
+BUILDLOGS_REDIS:
+  host: example-registry-quay-redis
+  port: 6379
+DATABASE_SECRET_KEY: GC6m5g4wYmSgjZIs-6OBgnD1IxgP-oUG1qDA41-mxxTFjkv8ihW1Z792xn3jIwNfgAX0OX7-g1XOQ4YQ
+DB_CONNECTION_ARGS:
+  autorollback: true
+  threadlocals: true
+DB_URI: postgresql://example-registry-quay-database:VYsE-gUjMze0QvPXogNBT4e5KknT0ZG9@example-registry-quay-database:5432/example-registry-quay-database
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+  default:
+  - LocalStorage
+  - storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE:
+- default
+ENTERPRISE_LOGO_URL: /static/img/RH_Logo_Quay_Black_UX-horizontal.svg
+EXTERNAL_TLS_TERMINATION: false
+FEATURE_BUILD_SUPPORT: false
+FEATURE_DIRECT_LOGIN: true
+FEATURE_MAILING: false
+FEATURE_SECURITY_NOTIFICATIONS: true
+FEATURE_SECURITY_SCANNER: true
+PREFERRED_URL_SCHEME: https
+REGISTRY_TITLE: Red Hat Quay
+REGISTRY_TITLE_SHORT: Red Hat Quay
+SECRET_KEY: aKtDslJbZgs0Nw-eeQO1r3yYHrYdHSwlgpYr1zWuPor3yZbX4s7IWEVtFEXw4QEUZ-s-btE25uvGOATG
+SECURITY_SCANNER_INDEXING_INTERVAL: 30
+SECURITY_SCANNER_V4_ENDPOINT: http://example-registry-clair-app:80
+SECURITY_SCANNER_V4_NAMESPACE_WHITELIST:
+- admin
+SECURITY_SCANNER_V4_PSK: ZldUMXVkeUlWNzBDSS1CUzVFVk52YXA2SXlycFZCNGk=
+SERVER_HOSTNAME: example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+SETUP_COMPLETE: true
+TAG_EXPIRATION_OPTIONS:
+- 2w
+TEAM_RESYNC_STALE_TIME: 60m
+TESTING: false
+USER_EVENTS_REDIS:
+  host: example-registry-quay-redis
+  port: 6379
+
+ALLOW_PULLS_WITHOUT_STRICT_LOGGING: false
+AUTHENTICATION_TYPE: Database
+DEFAULT_TAG_EXPIRATION: 2w
+ENTERPRISE_LOGO_URL: /static/img/RH_Logo_Quay_Black_UX-horizontal.svg
+FEATURE_BUILD_SUPPORT: false
+FEATURE_DIRECT_LOGIN: true
+FEATURE_MAILING: false
+REGISTRY_TITLE: Red Hat Quay
+REGISTRY_TITLE_SHORT: Red Hat Quay
+TAG_EXPIRATION_OPTIONS:
+- 2w
+TEAM_RESYNC_STALE_TIME: 60m
+TESTING: false
+
+cat > config.yaml <<EOF
+FEATURE_USER_INITIALIZE: true
+SUPER_USERS:
+- quayadmin
+EOF
+
+
+https://docs.projectquay.io/deploy_quay_on_openshift_op_tng.html#operator-preconfigure
+
+创建用户
+$  curl -X POST -k  https://example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/api/v1/user/initialize --header 'Content-Type: application/json' --data '{ "username": "quayadmin", "password":"quaypass123", "email": "quayadmin@example.com", "access_token": true}'
+
+ocp4.9 create secret generic quay-admin \
+--from-literal=superuser-username=quayadmin \
+--from-literal=superuser-password=StrongAdminPassword \
+--from-literal=superuser-email=admin@example.com
 
 ```
