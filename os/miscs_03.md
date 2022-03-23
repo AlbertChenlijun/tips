@@ -9205,6 +9205,7 @@ spec:
       kind: monitoring
     - managed: true
       kind: tls
+  configBundleSecret: config-bundle-secret
 EOF
 
 报错
@@ -9424,4 +9425,64 @@ ocp4 -n openshift-operator-lifecycle-manager delete $(ocp4 -n openshift-operator
 
 ocp4 -n openshift-operator-lifecycle-manager logs $(ocp4 -n openshift-operator-lifecycle-manager get pod -l app=catalog-operator -o name)
 
+  configEditorCredentialsSecret: example-registry-quay-config-editor-credentials-kb869mg7bc
+  configEditorEndpoint: >-
+    https://example-registry-quay-config-editor-openshift-operators.apps.ocp4.rhcnsa.com
+  currentVersion: 3.6.4
+  lastUpdated: '2022-03-23 05:52:52.943245261 +0000 UTC'
+  registryEndpoint: 'https://example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com'
+
+skopeo copy --format v2s2 --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+
+[root@jwang ~]# podman pull docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd --authfile=./pull-secret-full.json 
+Trying to pull docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd...
+Getting image source signatures
+Copying blob e146126e9a00 skipped: already exists  
+Copying blob 510abfcdf6bc [--------------------------------------] 0.0b / 0.0b
+Copying blob 4a3604715398 [--------------------------------------] 0.0b / 0.0b
+Copying config c573a1485d done  
+Writing manifest to image destination
+Storing signatures
+c573a1485dd9c429083bf47f66b9411f9c5898150d1a8f3682fea55386548dc0
+
+skopeo copy --dest-tls-verify=false --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd
+
+
+ocp4.10 new-project open-cluster-management-agent
+ocp4.10 -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+ocp4.10 -n open-cluster-management-agent create sa klusterlet
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+ocp4.10 -n open-cluster-management-agent create sa klusterlet-registration-sa
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+ocp4.10 -n open-cluster-management-agent create sa klusterlet-work-sa
+ocp4.10 -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+ocp4.10 new-project open-cluster-management-agent-addon
+ocp4.10 -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+ocp4.10 -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+ocp4.10 -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+ocp4.10 project open-cluster-management-agent
+echo $CRDS | base64 -d | ocp4.10 apply -f -
+echo $IMPORT | base64 -d | ocp4.10 apply -f -
+
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent --patch='{"spec":{"template":{"spec":{"containers":[{"name": "klusterlet", "image":"example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:latest"}]}}}}'
+
+# 配置 image registry cert
+ocp4.10 create configmap registry-cas -n openshift-config --from-file=example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com=./example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com.crt
+
+# 配置 image config
+ocp4.10 patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge
+
+# 触发新的 deployment
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent  --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+# pull image
+podman pull example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:latest
+
+# 生成证书
+openssl s_client -host example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/a.crt  
+update-ca-trust
 ```
