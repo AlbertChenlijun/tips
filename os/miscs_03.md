@@ -9248,7 +9248,8 @@ FEATURE_USER_CREATION: true
 SUPER_USERS:
 - quayadmin
 EOF
-
+[junwang@JundeMacBook-Pro ~/kubeconfig/ocp4.9]$ ocp4 create secret generic --from-file config.yaml=./config.yaml config-bundle-secret
+https://github.com/quay/quay-operator/issues/380
 
 创建用户
  registryEndpoint: >-
