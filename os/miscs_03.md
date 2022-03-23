@@ -9229,6 +9229,27 @@ SUPER_USERS:
 EOF
 [junwang@JundeMacBook-Pro ~/kubeconfig/ocp4.9]$ ocp4.9 create secret generic --from-file config.yaml=./config.yaml config-bundle-secret
 
+cat > config.yaml <<EOF
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+  default:
+  - RadosGWStorage
+  - access_key: minio
+    secret_key: minioredhat123
+    hostname: minio-velero.apps.ocp4.rhcnsa.com
+    bucket_name: quay
+    port: 80
+    is_secure: false
+    storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+EOF
+
+
 创建用户
  registryEndpoint: >-
     https://example-registry-quay-openshift-operators.router-default.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
@@ -9326,5 +9347,80 @@ ocp4.9 create secret generic quay-admin \
 --from-literal=superuser-username=quayadmin \
 --from-literal=superuser-password=StrongAdminPassword \
 --from-literal=superuser-email=admin@example.com
+
+
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+ default:
+ - LocalStorage
+ - {storage_path: /datastorage/registry}
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+
+
+
+[root@jwang ~]# podman pull example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61
+Trying to pull example-registry-quay-openshift-operators.router-default.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:2.0.0-61...
+  Error fetching blob: invalid status code from registry 500 (Internal Server Error)
+Error: Error parsing image configuration: Error fetching blob: invalid status code from registry 500 (Internal Server Error)
+
+  configEditorCredentialsSecret: example-registry-quay-config-editor-credentials-m5f44d2f5f
+  configEditorEndpoint: >-
+    https://example-registry-quay-config-editor-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+  currentVersion: 3.6.4
+  lastUpdated: '2022-03-23 02:35:02.020377144 +0000 UTC'
+  registryEndpoint: >-
+    https://example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+
+# 生成证书信任
+openssl s_client -host example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com.crt  
+update-ca-trust
+
+# 更新 pull-secret-full.json 文件，包含新镜像仓库登录信息
+podman login example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com -u jwang --authfile=./pull-secret-full.json
+
+# 拷贝镜像
+skopeo copy --authfile ${LOCAL_SECRET_JSON} --all docker://brew.registry.redhat.io/rh-osbs/multicluster-engine/registration-operator-rhel8@sha256:ade2f1ba7379d591ba76788888721bb8e65d2c573b08ae78f38d984768725fdd docker://example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/jwang/registration-operator-rhel8:latest
+
+
+# 上传镜像
+podman push example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/jwang/registration-operator-rhel8:latest --authfile=./pull-secret-full.json 
+Error: error copying image to the remote destination: Error writing blob: Error uploading layer to https://example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/v2/jwang/registration-operator-rhel8/blobs/uploads/2169d2d6-9e83-45ab-b603-88696852a41f?digest=sha256%3A5a8b526f9779462159219be1a8944021b1b4b64e2b7231457e67669c7039a2ba: received unexpected HTTP status: 502 Bad Gateway
+
+ocp4.9 get sa 
+...
+example-registry-quay-app
+
+# 为 sa example-registry-quay-app 添加 anyuid scc 并触发重新部署
+ocp4.9 adm policy add-scc-to-user anyuid -z example-registry-quay-app -n openshift-operators
+ocp4.9 adm policy add-scc-to-user privileged -z example-registry-quay-app -n openshift-operators
+ocp4.9 patch deployment/example-registry-quay-app -n openshift-operators --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+
+oc patch deployment minio -n velero --patch='{"spec":{"template":{"spec":{"containers":[{"name": "minio", "image":"quay.ocp4.rhcnsa.com/minio/minio:latest"}]}}}}'
+
+
+报错
+Bundle unpacking failed. Reason: DeadlineExceeded, and Message: Job was active longer than specified deadline
+# 参考https://access.redhat.com/solutions/6459071
+
+# 删除 job
+oc get job -n openshift-marketplace -o json | jq -r '.items[] | select(.spec.template.spec.containers[].env[].value|contains ("quay")) | .metadata.name'
+70b8d2e2e039b98564c5c7b2324eeada9e4cbbe0a042a0a04a0469171e6f99e
+811f6ee70978558adbf1587dc18b470b24a553ef3b557ef8fe9d753904f2e45
+d30c021940e3d5db61ae62d91122a42fceeb606866fc035a4d7f65723eea42e
+d5601703e93679a04c12fd9265cadd06306f243e9efa80672aada773d28ad94
+e825b0832cd2a1f06f94667156d245d81a2cae16b98441d4726151cee09dedf
+# 删除 configmap
+# 检查 ip, subs, csv 
+# 重新创建 catalog-operator
+ocp4 -n openshift-operator-lifecycle-manager delete $(ocp4 -n openshift-operator-lifecycle-manager get pod -l app=catalog-operator -o name)
+
+ocp4 -n openshift-operator-lifecycle-manager logs $(ocp4 -n openshift-operator-lifecycle-manager get pod -l app=catalog-operator -o name)
 
 ```
