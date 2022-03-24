@@ -9485,4 +9485,85 @@ podman pull example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com/multi
 openssl s_client -host example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com -port 443 -showcerts > trace < /dev/null
 cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/a.crt  
 update-ca-trust
+
+# aws --endpoint-url http://minio-velero.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/ s3 ls
+# aws --endpoint-url http://minio-velero.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/ s3 mb s3://quay
+
+# ocp4.9 quay use local s3 service
+cat > config.yaml <<EOF
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+  default:
+  - RadosGWStorage
+  - access_key: minio
+    secret_key: minioredhat123
+    hostname: minio-velero.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+    bucket_name: quay
+    port: 80
+    is_secure: false
+    storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+EOF
+ocp4.9 create secret generic --from-file config.yaml=./config.yaml config-bundle-secret
+
+  configBundleSecret: config-bundle-secret
+
+
+podman tag example-registry-quay-openshift-operators.apps.ocp4.rhcnsa.com/multicluster-engine/registration-operator-rhel8:latest example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest
+
+podman push example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest
+
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent --patch='{"spec":{"template":{"spec":{"containers":[{"name": "klusterlet", "image":"example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest"}]}}}}'
+
+ocp4.10 -n open-cluster-management-agent delete secret rhacm
+ocp4.10 -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+ocp4.10 patch deployment klusterlet -n open-cluster-management-agent  --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+openssl s_client -host example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee /etc/pki/ca-trust/source/anchors/a.crt  
+
+# 报错
+exec /registration-operator: exec format error
+
+# https://brewweb.engineering.redhat.com/brew/archiveinfo?archiveID=6145027
+podman pull brew.registry.redhat.io/rh-osbs/multicluster-engine-registration-operator-rhel8@sha256:3d84d7341dea1764fde345d9f7723341762fd335f033dc2d8d51c04adb41a17d
+podman tag brew.registry.redhat.io/rh-osbs/multicluster-engine-registration-operator-rhel8@sha256:3d84d7341dea1764fde345d9f7723341762fd335f033dc2d8d51c04adb41a17d example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest
+podman push example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest
+
+### 在 arm-1 切换到 open-cluster-management-agent-addon namespace
+ocp4.10 project open-cluster-management-agent-addon
+for sa in klusterlet-addon-appmgr klusterlet-addon-certpolicyctrl klusterlet-addon-iampolicyctrl-sa klusterlet-addon-policyctrl klusterlet-addon-search klusterlet-addon-workmgr ; do
+  ocp4.10 -n open-cluster-management-agent-addon patch sa $sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+done
+ocp4.10 delete pod --all -n open-cluster-management-agent-addon
+
+# 日志报错
+...
+W0323 08:27:39.964781       1 builder.go:321] unable to get cluster infrastructure status, using HA cluster values for leader election: infrastructures.config.openshift.io "cluster" is forbidden: User "system:serviceaccount:open-cluster-management-agent:klusterlet" cannot get resource "infrastructures" in API group "config.openshift.io" at the cluster scope
+...
+E0323 08:21:10.024083       1 leaderelection.go:330] error retrieving resource lock open-cluster-management-agent/klusterlet-lock: leases.coordination.k8s.io "klusterlet-lock" is forbidden: User "system:serviceaccount:open-cluster-management-agent:klusterlet" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "open-cluster-management-agent"
+
+ocp4.10 adm policy add-scc-to-user anyuid -z klusterlet
+
+
+podman tag brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/multicluster-engine/registration-operator-rhel8:latest
+
+[
+    {
+      "image-name": "registration",
+      "image-version": "2.1",
+      "image-tag": "2.1-ef3d555e8720c843ab68374b396e02efc24a3f65",
+      "git-sha256": "ef3d555e8720c843ab68374b396e02efc24a3f65",
+      "git-repository": "stolostron/multiclusterhub-repo",
+      "image-remote": "quay.io/stolostron",
+      "image-digest": "sha256:9be2ca81e72e5edd9b3d1d9860a126fe4a3a389a1b2c87eefd36629aef2a62a9",
+      "image-key": "multiclusterhub_repo"
+    }
+]
+
 ```
