@@ -9566,4 +9566,47 @@ podman tag brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8@sha256:31be
     }
 ]
 
+
+oc image mirror -a ${LOCAL_SECRET_JSON} brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8:latest
+
+podman pull example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8:latest --authfile=${LOCAL_SECRET_JSON}
+
+podman pull example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8@sha256:31be20d77322ac1fc2c287f894af7b929a9ec4907dbb81dd6080233b7bdab74c --authfile=${LOCAL_SECRET_JSON}
+
+cat > ./registries.conf <<EOF
+unqualified-search-registries = ['registry.access.redhat.com', "docker.io"]
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift/okd-content"
+  mirror-by-digest-only = true
+ 
+  [[registry.mirror]]
+    location = "registry.example.com:5000/openshift/okd-content"
+EOF
+
+
+# 参考 https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.4/pdf/release_notes/red_hat_advanced_cluster_management_for_kubernetes-2.4-release_notes-en-us.pdf
+cat > work-image-override.json <<EOF
+[
+    {
+      "image-name": "rhacm2-work-rhel8",
+      "image-remote": "example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs",
+      "image-digest": "sha256:59aad37dec532c945bbe1938a04441b582bb788414afe85d9bceacfd36c111c0",
+      "image-key": "work"
+    }
+]
+EOF
+
+ocp4 -n open-cluster-management create configmap work-image-override --fromfile=./work-image-override.json
+ocp4 -n open-cluster-management annotate mch multiclusterhub --overwrite mchimageOverridesCM=work-image-override
+
+# 同步多体系结构镜像
+oc image mirror -a ${LOCAL_SECRET_JSON} --filter-by-os=.* brew.registry.redhat.io/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2 example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
+
+# 登录镜像仓库
+podman login example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com
+
+# 查看镜像 manifests
+podman manifest inspect example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
 ```
