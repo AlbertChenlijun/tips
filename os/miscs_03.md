@@ -9609,4 +9609,12 @@ podman login example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.
 
 # 查看镜像 manifests
 podman manifest inspect example-registry-quay-openshift-operators.apps.cluster-k9sh6.k9sh6.sandbox779.opentlc.com/rh-osbs/rhacm2-registration-rhel8-operator:v2.5.0-2
+
+# OpenShift GitOps 1.4.4 的问题解决
+oc project openshift-operators
+oc edit csv openshift-gitops-operator.v1.4.4
+-- vi command
+%s/ff4ad30752cf0d321cd6c2c6fd4490b716607ea2960558347440f2f370a586a8/28dfb790f234e8819c7641971956a08e8c7167d6fe8d61594bb952eb5ca84ab1/g
+
+
 ```
