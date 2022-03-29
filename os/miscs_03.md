@@ -9691,4 +9691,112 @@ EOF
 scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/remove
 
 
+# install_quay
+# create subscription
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: quay-operator
+  namespace: openshift-operators
+spec:
+  channel: stable-3.6
+  installPlanApproval: Automatic
+  name: quay-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: quay-operator.v3.6.4
+EOF
+
+while IFS= read -r line; do
+    if [[ "$line" == "Succeededd" ]]; then
+          break;
+    fi
+done < <(ocp4.6 -n openshift-operators get csv quay-operator.v3.6.4 -o jsonpath='{.status.phase}')
+
+oc -n openshift-operators get csv quay-operator.v3.6.4 -o jsonpath='{.status.phase}'
+
+
+until [ $(ocp4.6 -n openshift-operators get csv quay-operator.v3.6.4 -o jsonpath='{.status.phase}') == "Succeeded" ];
+do
+  echo "Subscription is installing......"
+  sleep 5s
+done
+
+sleep 60
+oc -n velero get route console -o jsonpath='{.spec.host}'
+
+QUAY_HOSTNAME=$(oc -n velero get route minio -o jsonpath='{.spec.host}{"\n"}')
+cat > config.yaml <<EOF
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+  default:
+  - RadosGWStorage
+  - access_key: minio
+    secret_key: minio123
+    hostname: ${QUAY_HOSTNAME}
+    bucket_name: velero
+    port: 80
+    is_secure: false
+    storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+EOF
+
+oc -n example-registry create secret generic --from-file config.yaml=./config.yaml config-bundle-secret
+
+
+
+cat <<EOF | oc apply -f -
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: example-registry
+  namespace: example-registry
+spec:
+  components:
+    - managed: false
+      kind: clair
+    - managed: true
+      kind: postgres
+    - managed: false
+      kind: objectstorage
+    - managed: true
+      kind: redis
+    - managed: true
+      kind: horizontalpodautoscaler
+    - managed: true
+      kind: route
+    - managed: false
+      kind: mirror
+    - managed: false
+      kind: monitoring
+    - managed: true
+      kind: tls
+  configBundleSecret: config-bundle-secret
+EOF
+
+
+DEFAULT_TAG_EXPIRATION: 2w
+DISTRIBUTED_STORAGE_CONFIG:
+  default:
+  - RadosGWStorage
+  - access_key: minio
+    secret_key: minio123
+    hostname: minio-velero.apps.cluster-f8t4x.f8t4x.sandbox1457.opentlc.com
+    bucket_name: velero
+    port: 80
+    is_secure: false
+    storage_path: /datastorage/registry
+DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS: []
+DISTRIBUTED_STORAGE_PREFERENCE: [default]
+FEATURE_USER_INITIALIZE: true
+FEATURE_USER_CREATION: true
+SUPER_USERS:
+- quayadmin
+
 ```
