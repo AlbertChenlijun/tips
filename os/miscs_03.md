@@ -9616,5 +9616,79 @@ oc edit csv openshift-gitops-operator.v1.4.4
 -- vi command
 %s/ff4ad30752cf0d321cd6c2c6fd4490b716607ea2960558347440f2f370a586a8/28dfb790f234e8819c7641971956a08e8c7167d6fe8d61594bb952eb5ca84ab1/g
 
+GATEWAY_IP="8.140.106.163"
+
+
+cat >> /opt/acm/clusters/remove/arm-1 <<'EOF'
+CLUSTER_NAME="arm-1"
+CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
+CLUSTER_API="api.cluster-2nkww.2nkww.sandbox406.opentlc.com"
+EOF
+
+remove_clusters
+
+
+
+if [ -d /opt/acm/clusters/add ] && [ $(ls -A /opt/acm/clusters/add | wc -m) != "0" ]; then
+  for i in /opt/acm/clusters/add/* ; do 
+    reset_env
+    source $i
+    add_cluster
+  done
+fi
+
+oc --kubeconfig=${HUBECONFIG} get managedcluster arm-1 >/dev/null 2>/dev/null
+oc --kubeconfig=${HUBECONFIG} get managedcluster arm-2 >/dev/null 2>/dev/null
+
+
+# 上传 edge-1 文件到远程主机的目录 /opt/acm/clusters/add 
+# 远程主机的程序会扫描这个目录里的文件，根据文件内容添加集群到 acm
+# 在被添加的集群执行
+add_cluster_to_acm()
+# 定义环境变量
+SSH_KEY="/root/.ssh/acm"
+CLUSTER_NAME="edge-1"
+REMOTE_HOST="8.140.106.163"
+REMOTE_PORT="6022"
+CLUSTER_API="8.130.18.107"
+
+# 生成 kubeconfig，用 CLUSTER_API 替换 127.0.0.1
+mkdir -p ~/.kube
+podman cp microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig ~/.kube/config
+sed -i "s|127.0.0.1|${CLUSTER_API}|g" ~/.kube/config
+
+# 生成配置文件
+cat > ${CLUSTER_NAME} <<'EOF'
+CLUSTER_NAME="edge-1"
+CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
+CLUSTER_API="8.130.18.107"
+EOF
+
+# 上传配置文件和 kubeconfig
+ssh -i ${SSH_KEY} -p ${REMOTE_PORT} ${REMOTE_HOST} mkdir -p /opt/acm/clusters/${CLUSTER_NAME}
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/add
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ~/.kube/config ${REMOTE_HOST}:/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig
+
+# 上传 edge-1 文件到远程主机的目录 /opt/acm/clusters/remove 
+# 远程主机的程序会扫描这个目录里的文件，根据文件内容从 acm 删除集群
+# 在被删除的集群执行
+remove_cluster_from_acm()
+# 定义环境变量
+SSH_KEY="/root/.ssh/acm"
+CLUSTER_NAME="edge-1"
+REMOTE_HOST="8.140.106.163"
+REMOTE_PORT="6022"
+CLUSTER_API="8.130.18.107"
+
+# 生成配置文件
+cat > ${CLUSTER_NAME} <<'EOF'
+CLUSTER_NAME="edge-1"
+CLUSTER_KUBECONFIG="/opt/acm/clusters/${CLUSTER_NAME}/kubeconfig"
+CLUSTER_API="8.130.18.107"
+EOF
+
+# 上传配置文件和 kubeconfig
+scp -i ${SSH_KEY} -P ${REMOTE_PORT} ${CLUSTER_NAME} ${REMOTE_HOST}:/opt/acm/clusters/remove
+
 
 ```
