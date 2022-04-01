@@ -10120,4 +10120,9 @@ $ oc --kubeconfig=/Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig create name
 $ oc --kubeconfig=/Users/junwang/kubeconfig/ocp4.6/lb-ext.kubeconfig run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
 bash-5.0# curl nginx.nginx-test.svc.clusterset.local:8080
 
+
+# yum install -y 
+
+
+https://submariner.io/getting-started/quickstart/external/
 ```
