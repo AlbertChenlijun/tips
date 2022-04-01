@@ -9799,4 +9799,68 @@ FEATURE_USER_CREATION: true
 SUPER_USERS:
 - quayadmin
 
+
+
+报错
+oc get events -w 
+...
+2m18s       Warning   FailedCreate                replicaset/example-registry-quay-redis-78b7cbf75c           (combined from similar events): Error creating: pods "example-registry-quay-redis-78b7cbf75c-pl8ds" is forbidden: [maximum memory usage per Container is 6Gi, but limit is 16Gi, maximum memory usage per Pod is 12Gi, but limit is 17179869184]
+0s          Warning   FailedCreate                job/example-registry-quay-app-upgrade                       Error creating: pods "example-registry-quay-app-upgrade-84sc8" is forbidden: maximum memory usage per Container is 6Gi, but limit is 8Gi
+
+
+报错
+main: 2022/03/30 09:45:16.092672 certs.go:65: Info: No usable certificates found, attempting to fetch certificates from sensor ...
+
+common/sensor: 2022/03/31 05:45:19.371762 sensor.go:255: Warn: Error fetching centrals TLS certs: verifying tls challenge: validating certificate chain: using a certificate bundle that was generated from a different Central installation than the one it is trying to connect to: x509: certificate signed by unknown authority
+
+common/sensor: 2022/03/31 05:46:05.419091 sensor.go:318: Error: Sensor reported an error: opening stream: rpc error: code = Unavailable desc = connection error: desc = "transport: authentication handshake failed: verifying Central certificate errors: [x509: certificate signed by unknown authority, x509: certificate signed by unknown authority]"
+
+
+# Submeriner
+# https://submariner.io/getting-started/quickstart/kind/#prerequisites
+oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-gateway
+oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-routeagent
+oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-globalnet
+oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-lighthouse-coredns
+
+# Broker
+# Broker cluster
+$ oc new-project submariner-k8s-broker 
+$ git clone --depth 1 --single-branch --branch release-0.11 https://github.com/submariner-io/submariner-operator
+$ oc apply -k submariner-operator/config/broker -n submariner-k8s-broker
+namespace/submariner-k8s-broker configured
+serviceaccount/submariner-k8s-broker-admin created
+serviceaccount/submariner-k8s-broker-client created
+role.rbac.authorization.k8s.io/submariner-k8s-broker-admin created
+role.rbac.authorization.k8s.io/submariner-k8s-broker-cluster created
+rolebinding.rbac.authorization.k8s.io/submariner-k8s-broker-admin created
+rolebinding.rbac.authorization.k8s.io/submariner-k8s-broker-client created
+
+
+# 设置 openshift 下 serviceaccount 的权限 
+# 什么时间执行这条命令呢? 
+# 在安装 operator 之前没有这些 sa
+$ oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-gateway
+$ oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-routeagent
+(optional) $ oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-globalnet
+(optional) $ oc adm policy add-scc-to-user privileged system:serviceaccount:submariner-operator:submariner-lighthouse-coredns
+
+
+# https://submariner.io/operations/deployment/
+部署 Broker
+$ subctl deploy-broker --kubeconfig /Users/junwang/kubeconfig/ocp4.9/lb-ext.kubeconfig 
+ ✓ Setting up broker RBAC                                                                                                                                   
+ ✓ Deploying the Submariner operator                                                                                                                        
+ ✓ Created Lighthouse service accounts and roles                                                                                                            
+ ✓ Deployed the operator successfully                                                                                                                       
+ ✓ Deploying the broker                                                                                                                                     
+ ✓ The broker has been deployed                                                                                                                             
+ ✓ Creating broker-info.subm file 
+ ✓ A new IPsec PSK will be generated for broker-info.subm
+
+# 加入集群
+$ subctl join --kubeconfig /Users/junwang/kubeconfig/ocp4.9/lb-ext.kubeconfig broker-info.subm --clusterid cluster1
+
+
+
 ```
