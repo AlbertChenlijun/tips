@@ -10125,4 +10125,180 @@ bash-5.0# curl nginx.nginx-test.svc.clusterset.local:8080
 
 
 https://submariner.io/getting-started/quickstart/external/
+
+# Test mysql 
+
+
+oc project test
+ocp4.9 apply -f ./mariadb-galera-persistent-template4.yml 
+oc adm policy add-scc-to-user anyuid -z default -n test
+
+报错
+220406 05:32:19 mysqld_safe Starting mariadbd daemon with databases from /var/opt/rh/rh-mariadb105/lib/mysql
+/opt/rh/rh-mariadb105/root/usr/bin/mysqld_safe_helper: Can't create/write to file '/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log' (Errcode: 13 "Permission denied")
+
+mysqld_safe --wsrep-cluster-address=gcomm:// --basedir=~ --datadir=~ --pid-file=~/mariadb.pid --skip-grant-tables --skip-networking --socket=/var/run/mysql/mysql-init.sock --wsrep_on=OFF --skip-syslog &
+
+
++ eval 'nohup /opt/rh/rh-mariadb105/root/usr/libexec/mariadbd   --basedir=/opt/rh/rh-mariadb105/root/usr --datadir=/var/opt/rh/rh-mariadb105/lib/mysql --plugin-dir=/opt/rh/rh-mariadb105/root/usr/lib64/mariadb/plugin   --wsrep_on=ON --wsrep_provider=/opt/rh/rh-mariadb105/root/usr/lib64/galera/libgalera_smm.so --wsrep-cluster-address=gcomm\:// --skip-grant-tables --skip-networking --wsrep_on=OFF --log-error=/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log --pid-file=/run/rh-mariadb105-mariadb/mariadb.pid --socket=/var/run/mysql/mysql-init.sock < /dev/null 2>&1 | /opt/rh/rh-mariadb105/root/usr/bin/mysqld_safe_helper mysql log /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log'
+++ nohup /opt/rh/rh-mariadb105/root/usr/libexec/mariadbd --basedir=/opt/rh/rh-mariadb105/root/usr --datadir=/var/opt/rh/rh-mariadb105/lib/mysql --plugin-dir=/opt/rh/rh-mariadb105/root/usr/lib64/mariadb/plugin --wsrep_on=ON --wsrep_provider=/opt/rh/rh-mariadb105/root/usr/lib64/galera/libgalera_smm.so --wsrep-cluster-address=gcomm:// --skip-grant-tables --skip-networking --wsrep_on=OFF --log-error=/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log --pid-file=/run/rh-mariadb105-mariadb/mariadb.pid --socket=/var/run/mysql/mysql-init.sock
+++ /opt/rh/rh-mariadb105/root/usr/bin/mysqld_safe_helper mysql log /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+/opt/rh/rh-mariadb105/root/usr/bin/mysqld_safe_helper: Can't create/write to file '/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log' (Errcode: 13 "Permission denied")
+
+
+nohup /opt/rh/rh-mariadb105/root/usr/libexec/mariadbd --basedir=/opt/rh/rh-mariadb105/root/usr --datadir=/var/lib/mysql --plugin-dir=/opt/rh/rh-mariadb105/root/usr/lib64/mariadb/plugin --wsrep_on=ON --wsrep_provider=/opt/rh/rh-mariadb105/root/usr/lib64/galera/libgalera_smm.so --wsrep-cluster-address=gcomm:// --skip-grant-tables --skip-networking --wsrep_on=OFF --log-error=~/mariadb.log --pid-file=/run/rh-mariadb105-mariadb/mariadb.pid --socket=/var/run/mysql/mysql-init.sock
+
+2022-04-06  5:57:53 0 [ERROR] mariadbd: Can't create/write to file '/var/opt/rh/rh-mariadb105/lib/mysql/aria_log_control' (Errcode: 13 "Per
+mission denied")
+
+
+2022-04-06  5:57:53 0 [ERROR] InnoDB: Operating system error number 13 in a file operation.
+2022-04-06  5:57:53 0 [ERROR] InnoDB: The error means mysqld does not have the access rights to the directory.
+2022-04-06  5:57:53 0 [ERROR] InnoDB: Operating system error number 13 in a file operation.
+2022-04-06  5:57:53 0 [ERROR] InnoDB: The error means mysqld does not have the access rights to the directory.
+2022-04-06  5:57:53 0 [ERROR] InnoDB: Cannot open datafile './ibdata1'
+2022-04-06  5:57:53 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man p
+age of setpriority().
+2022-04-06  5:57:53 0 [ERROR] InnoDB: Could not open or create the system tablespace. If you tried to add new data files to the system tabl
+espace, and it failed here, you should now edit innodb_data_file_path in my.cnf back to what it was, and remove the new ibdata files InnoDB
+ created in this failed attempt. InnoDB only wrote those files full of zeros, but did not yet use them in any way. But be careful: do not r
+emove old data files which contain your precious data!
+2022-04-06  5:57:53 0 [ERROR] InnoDB: Database creation was aborted with error Cannot open a file. You may need to delete the ibdata1 file 
+before trying to start up again.
+2022-04-06  5:57:53 0 [Note] InnoDB: Starting shutdown...
+2022-04-06  5:57:54 0 [ERROR] Plugin 'InnoDB' init function returned error.
+2022-04-06  5:57:54 0 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+2022-04-06  5:57:54 0 [Note] Plugin 'FEEDBACK' is disabled.
+2022-04-06  5:57:54 0 [ERROR] Failed to initialize plugins.
+2022-04-06  5:57:54 0 [ERROR] Aborting
+2022-04-06  5:59:03 0 [Warning] You need to use --log-bin to make --binlog-format work.
+
+
+      reason: ContainersNotReady
+      message: 'containers with unready status: [mariadb-galera]'
+
+7m33s       Warning   FailedToUpdateEndpointSlices   service/galera                          Error updating Endpoint Slices for Service test/galera: failed to update galera-9s597 EndpointSlice for Service test/galera: Operation cannot be fulfilled on endpointslices.discovery.k8s.io "galera-9s597": the object has been modified; please apply your changes to the latest version and try again
+
+
+
+```
+
+### DB script
+```
+/bin/bash /usr/bin/container-entrypoint.sh
+#!/bin/bash
+#
+# Adfinis SyGroup AG
+# openshift-mariadb-galera: Container entrypoint
+#
+
+set -e
+set -x
+
+# Locations
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+EXTRA_DEFAULTS_FILE="/etc/opt/rh/rh-mariadb105/my.cnf.d"
+
+# Check if the container runs in Kubernetes/OpenShift
+if [ -z "$POD_NAMESPACE" ]; then
+        # Single container runs in docker
+        echo "POD_NAMESPACE not set, spin up single node"
+else
+        # Is running in Kubernetes/OpenShift, so find all other pods
+        # belonging to the namespace
+        echo "Galera: Finding peers"
+        K8S_SVC_NAME=$(hostname -f | cut -d"." -f2)
+        echo "Using service name: ${K8S_SVC_NAME}"
+        cp ${CONTAINER_SCRIPTS_DIR}/galera.cnf ${EXTRA_DEFAULTS_FILE}
+        /usr/bin/peer-finder -on-start="${CONTAINER_SCRIPTS_DIR}/configure-galera.sh" -service=${K8S_SVC_NAME}
+fi
+
+# We assume that mysql needs to be setup if this directory is not present
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+        echo "Configure first time mysql"
+        ${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+else
+        nodelist=$(cat ${EXTRA_DEFAULTS_FILE}/galera.cnf | grep gcomm:// | awk -F 'gcomm://' '{print $2;}' | sed 's/,/ /g' )
+        if [ "$nodelist" != "" ] ; then
+           is_alive=0
+           set +e
+           for node in $nodelist ; do
+              echo $node
+              MYSQL_USER="readinessProbe"
+              MYSQL_PASS="readinessProbe"
+              MYSQL_HOST=$node
+              mysql -u${MYSQL_USER} -p${MYSQL_PASS} -h${MYSQL_HOST} -e"SHOW DATABASES;"
+              if [ $? -ne 0 ]; then
+                 continue;
+              else
+                 is_alive=1
+                 break
+              fi
+           done
+#           if [ $is_alive -eq 0 ] ; then
+#                #bootstrap database
+#                mysqld --wsrep-new-cluster
+#           fi
+        fi
+fi
+
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+
+while true;
+        do
+
+        domain=`hostname -f | awk -F\. '{for(i=2; i<NF;i++){printf $i"."}printf $NF"\n"}'`
+        addrs=""
+        for addr in $(nslookup $domain | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done
+        if [ "$PEER_DNS_IP" != "" ] ; then
+            for addr in $(nslookup $domain $PEER_DNS_IP | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done 
+        fi
+        WSREP_CLUSTER_ADDRESS=$(echo $addrs | sed s'/,$//')
+        sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+        MY_IP=`host $(hostname -f) | awk -F 'has address' '{print $2;}' | awk '{print $1}'`
+        sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_IP}|" ${CFG}
+
+        is_alive=0
+        nodelist=$(cat ${EXTRA_DEFAULTS_FILE}/galera.cnf | grep gcomm:// | awk -F 'gcomm://' '{print $2;}' | sed 's/,/ /g' )
+        if [ "$nodelist" != "" ] ; then
+           set +e
+           for node in $nodelist ; do
+              echo $node
+              MYSQL_USER="readinessProbe"
+              MYSQL_PASS="readinessProbe"
+              MYSQL_HOST=$node
+              mysql -u${MYSQL_USER} -p${MYSQL_PASS} -h${MYSQL_HOST} -e"SHOW DATABASES;"
+              if [ $? -ne 0 ]; then
+                 continue;
+              else
+                 is_alive=1
+                 break
+              fi
+           done
+        fi
+        if [ $is_alive -eq 0 ] ; then
+            for ii in $(hostname | sed 's/-/ /g') ; do nii=$ii ; done
+            if [ "$nii" != "0" ] ; then
+                sleep 60
+            else
+                mysqld --wsrep-new-cluster
+            fi
+        fi
+        # Run mysqld
+        #exec mysqld --socket=/var/run/mysql/mysql.sock --log-error=/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+        #mysqld --socket=/var/run/mysql/mysql.sock --log-error=/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+        #nodelist=$(cat ${EXTRA_DEFAULTS_FILE}/galera.cnf | grep gcomm:// | awk -F 'gcomm://' '{print $2;}')
+        #mysqld --socket=/var/run/mysql/mysql.sock --log-error=/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log --wsrep-cluster-address=gcomm://$nodelist
+        mysqld
+        sleep 1m
+done
+```
+
+
+```
+# 为模版里的 Pod 添加 
+# securityContext: 
+#  privileged: true
+https://stackoverflow.com/questions/68543425/start-pod-with-root-privilege-on-openshift
 ```
