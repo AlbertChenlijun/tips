@@ -10301,4 +10301,174 @@ done
 # securityContext: 
 #  privileged: true
 https://stackoverflow.com/questions/68543425/start-pod-with-root-privilege-on-openshift
+
+# 清理环境
+oc delete buildconfig rails-mysql-persistent 
+oc delete deploymentconfig rails-mysql-persistent
+oc delete is rails-mysql-persistent
+oc delete route rails-mysql-persistent
+oc delete service rails-mysql-persistent
+
+oc delete statefulset galera
+oc delete service galera
+
+oc delete secret rails-mysql-persistent 
+oc delete $(oc get secret -o name | grep mariadb-galera-persistent-storageclass) 
+
+oc delete pvc galera-galera-0
+oc delete pvc galera-galera-1
+oc delete pvc galera-galera-2
+
+# 编辑模版
+# 为模版里的 Pod 添加 
+# securityContext: 
+#
+#  privileged: true
+#          image: quay.io/tonyli71/mariadb-galera:latest
+#          imagePullPolicy: Always
+#          name: ${GALERA_PETSET_NAME}
+#          securityContext:
+#            privileged: true
+https://stackoverflow.com/questions/68543425/start-pod-with-root-privilege-on-openshift
+
+# 暂时未执行这一步
+# 删除 triggers 里的 securityContext: {}
+          triggers:
+          - imageChangeParams:
+              automatic: true
+              containerNames:
+              - ${GALERA_PETSET_NAME}
+              from:
+                kind: ImageStreamTag
+                name: mariadb-galera:10.5
+                namespace: ${NAMESPACE}
+            type: ImageChange
+          - dnsPolicy: ClusterFirst
+            restartPolicy: Always
+            schedulerName: default-scheduler
+            securityContext: {}
+            terminationGracePeriodSeconds: 30
+            type: ConfigChange
+
+# 为 serviceaccount default 设置 priviledged RoleBinding
+oc adm policy add-scc-to-user privileged -z default
+
+# 删除 template 里的
+    kubectl.kubernetes.io/last-applied-configuration
+
+# new-app
+coc new-app --template=test/mariadb-galera-persistent-storageclass -e STORAGE_CLASS="gp2" -e SOURCE_REPOSITORY_URL="https://github.com/sclorg/rails-ex.git"
+...
+    * With parameters: 
+        * Name=rails-mysql-persistent 
+        * Namespace=openshift 
+        * Memory Limit=512Mi
+        * Memory Limit (MYSQL)=512Mi
+        * Git Repository URL=https://github.com/tonyli71/rails-ex.git
+        * Git Reference=
+        * Context Directory=
+        * Application Hostname=
+        * GitHub Webhook Secret=Iv8M7k5WbuAwLU8rJq7c7JRbyFg7fmOVlwoVEWns # generated
+        * Rails Environment=production
+        * Database Service Name for the MariaDB service=galera
+        * GALERA_PETSET_NAME=mariadb-galera
+        * NUMBER_OF_GALERA_MEMBERS=3
+        * VOLUME_PV_NAME=datadir
+        * VOLUME_CAPACITY=5Gi
+        * DATABASE_USER=demouser
+        * MYSQL_DATABASE=userdb
+        * Volume Storage Class=ocs-storagecluster-ceph-mirror
+        * Database Password, The password for the root user=redhat
+        * DATABASE_USER_PASSWORD=redhat
+        * Application Username=openshift
+        * Application Password=secret
+        * Secret Key=qr4lq2c03lgvqkai4ca0q6jgujwlpo2qoraxdajtsga5tqkm0vqlp8li0k1mli4ggh318nt7stcprxhbejwtmf7mog1yneyfpyfty67kih7tpf3hbu1yoegvc4vid8x # generated
+        * Custom RubyGems Mirror URL=
+        * Peer DNS IP on Submariner=
+
+查询状态
+$ mysql -u demouser -p
+MariaDB [(none)]> show status like 'wsrep_cluster_size';
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| wsrep_cluster_size | 3     |
++--------------------+-------+
+
+MariaDB [(none)]> MariaDB [(none)]> show status like 'wsrep%';
++-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
+| Variable_name                 | Value                                                                                                                                          |
++-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
+| wsrep_local_state_uuid        | dde12dbd-b61d-11ec-b308-4e894382fb5d                                                                                                           |
+| wsrep_protocol_version        | 10                                                                                                                                             |
+| wsrep_last_committed          | 3                                                                                                                                              |
+| wsrep_replicated              | 0                                                                                                                                              |
+| wsrep_replicated_bytes        | 0                                                                                                                                              |
+| wsrep_repl_keys               | 0                                                                                                                                              |
+| wsrep_repl_keys_bytes         | 0                                                                                                                                              |
+| wsrep_repl_data_bytes         | 0                                                                                                                                              |
+| wsrep_repl_other_bytes        | 0                                                                                                                                              |
+| wsrep_received                | 10                                                                                                                                             |
+| wsrep_received_bytes          | 824                                                                                                                                            |
+| wsrep_local_commits           | 0                                                                                                                                              |
+| wsrep_local_cert_failures     | 0                                                                                                                                              |
+| wsrep_local_replays           | 0                                                                                                                                              |
+| wsrep_local_send_queue        | 0                                                                                                                                              |
+| wsrep_local_send_queue_max    | 2                                                                                                                                              |
+| wsrep_local_send_queue_min    | 0                                                                                                                                              |
+| wsrep_local_send_queue_avg    | 0.5                                                                                                                                            |
+| wsrep_local_recv_queue        | 0                                                                                                                                              |
+| wsrep_local_recv_queue_max    | 1                                                                                                                                              |
+| wsrep_local_recv_queue_min    | 0                                                                                                                                              |
+| wsrep_local_recv_queue_avg    | 0                                                                                                                                              |
+| wsrep_local_cached_downto     | 1                                                                                                                                              |
+| wsrep_flow_control_paused_ns  | 0                                                                                                                                              |
+| wsrep_flow_control_paused     | 0                                                                                                                                              |
+| wsrep_flow_control_sent       | 0                                                                                                                                              |
+| wsrep_flow_control_recv       | 0                                                                                                                                              |
+| wsrep_flow_control_active     | false                                                                                                                                          |
+| wsrep_flow_control_requested  | false                                                                                                                                          |
+| wsrep_cert_deps_distance      | 0                                                                                                                                              |
+| wsrep_apply_oooe              | 0                                                                                                                                              |
+| wsrep_apply_oool              | 0                                                                                                                                              |
+| wsrep_apply_window            | 0                                                                                                                                              |
+| wsrep_commit_oooe             | 0                                                                                                                                              |
+| wsrep_commit_oool             | 0                                                                                                                                              |
+| wsrep_commit_window           | 0                                                                                                                                              |
+| wsrep_local_state             | 4                                                                                                                                              |
+| wsrep_local_state_comment     | Synced                                                                                                                                         |
+| wsrep_cert_index_size         | 0                                                                                                                                              |
+| wsrep_causal_reads            | 0                                                                                                                                              |
+| wsrep_cert_interval           | 0                                                                                                                                              |
+| wsrep_open_transactions       | 0                                                                                                                                              |
+| wsrep_open_connections        | 0                                                                                                                                              |
+| wsrep_incoming_addresses      | AUTO,AUTO,AUTO                                                                                                                                 |
+| wsrep_cluster_weight          | 3                                                                                                                                              |
+| wsrep_desync_count            | 0                                                                                                                                              |
+| wsrep_evs_delayed             |                                                                                                                                                |
+| wsrep_evs_evict_list          |                                                                                                                                                |
+| wsrep_evs_repl_latency        | 0/0/0/0/0                                                                                                                                      |
+| wsrep_evs_state               | OPERATIONAL                                                                                                                                    |
+| wsrep_gcomm_uuid              | dde0b62e-b61d-11ec-82eb-af258099b9b2                                                                                                           |
+| wsrep_gmcast_segment          | 0                                                                                                                                              |
+| wsrep_applier_thread_count    | 1                                                                                                                                              |
+| wsrep_cluster_capabilities    |                                                                                                                                                |
+| wsrep_cluster_conf_id         | 3                                                                                                                                              |
+| wsrep_cluster_size            | 3                                                                                                                                              |
+| wsrep_cluster_state_uuid      | dde12dbd-b61d-11ec-b308-4e894382fb5d                                                                                                           |
+| wsrep_cluster_status          | Primary                                                                                                                                        |
+| wsrep_connected               | ON                                                                                                                                             |
+| wsrep_local_bf_aborts         | 0                                                                                                                                              |
+| wsrep_local_index             | 0                                                                                                                                              |
+| wsrep_provider_capabilities   | :MULTI_MASTER:CERTIFICATION:PARALLEL_APPLYING:TRX_REPLAY:ISOLATION:PAUSE:CAUSAL_READS:INCREMENTAL_WRITESET:UNORDERED:PREORDERED:STREAMING:NBO: |
+| wsrep_provider_name           | Galera                                                                                                                                         |
+| wsrep_provider_vendor         | Codership Oy <info@codership.com>                                                                                                              |
+| wsrep_provider_version        | 4.7(rXXXX)                                                                                                                                     |
+| wsrep_ready                   | ON                                                                                                                                             |
+| wsrep_rollbacker_thread_count | 1                                                                                                                                              |
+| wsrep_thread_count            | 2                                                                                                                                              |
++-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
 ```
