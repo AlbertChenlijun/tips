@@ -10338,7 +10338,6 @@ oc delete pvc galera-galera-2
 #          ...
 https://stackoverflow.com/questions/68543425/start-pod-with-root-privilege-on-openshift
 
-
 # 为 serviceaccount default 设置 priviledged RoleBinding
 oc adm policy add-scc-to-user privileged -z default
 
@@ -10456,5 +10455,59 @@ MariaDB [(none)]> MariaDB [(none)]> show status like 'wsrep%';
 +-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
+ocp4.7 patch statefulset/galera --type json -p='[{"op": "replace", "path": "/spec/replicas", "value":"0"}]'
+ocp4.7 patch statefulset/galera --patch '{"spec":{"replicas":3}}' --type=merge
 
+# 下载 tonyli mariadb 镜像
+podman pull quay.io/tonyli71/mariadb-galera:latest 
+
+# 本地运行 quay.io/tonyli71/mariadb-galera:latest
+podman run --name test-mariadb --rm --ti quay.io/tonyli71/mariadb-galera:latest 
+
+# copy /usr/bin/container-entrypoint.sh 
+podman cp test-mariadb:/usr/bin/container-entrypoint.sh container-entrypoint.sh.orig
+
+# 修改 container-entrypoint.sh，增加 template 参数 PEER1_DNS_IP 和 PEER2_DNS_IP
+(oc-mirror)[root@jwang ~/testdb]# diff -urN container-entrypoint.sh.orig container-entrypoint.sh 
+--- container-entrypoint.sh.orig        2021-10-15 00:03:14.000000000 +0800
++++ container-entrypoint.sh     2022-04-07 16:22:10.404834304 +0800
+@@ -63,8 +63,11 @@
+         domain=`hostname -f | awk -F\. '{for(i=2; i<NF;i++){printf $i"."}printf $NF"\n"}'`
+         addrs=""
+         for addr in $(nslookup $domain | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done
+-        if [ "$PEER_DNS_IP" != "" ] ; then
+-            for addr in $(nslookup $domain $PEER_DNS_IP | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done 
++        if [ "$PEER1_DNS_IP" != "" ] ; then
++            for addr in $(nslookup $domain $PEER1_DNS_IP | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done 
++        fi
++        if [ "$PEER2_DNS_IP" != "" ] ; then
++            for addr in $(nslookup $domain $PEER2_DNS_IP | grep Address: | grep -v \#53 | awk -F ':' '{print $2}' | awk '{print $1}') ; do addrs="$addr,$addrs"; done 
+         fi
+         WSREP_CLUSTER_ADDRESS=$(echo $addrs | sed s'/,$//')
+         sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+podman run --name test-mariadb --rm --ti quay.io/tonyli71/mariadb-galera:latest 
+
+# 生成 DockerFile 
+cat > Dockerfile << EOF
+FROM quay.io/tonyli71/mariadb-galera:latest
+
+COPY container-entrypoint.sh /usr/bin/container-entrypoint.sh
+
+USER root
+RUN chmod a+x /usr/bin/container-entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/container-entrypoint.sh"]
+EOF
+
+
+# 构建镜像
+podman build . -t mariadb-galera-3-cluster:latest
+# tag 镜像
+podman tag localhost/mariadb-galera-3-cluster:latest quay.io/jwang1/mariadb-galera-3-cluster:v1.0.1
+
+# 登录镜像服务器
+podman login -u "jwang1" quay.io
+# 上传镜像
+podman push quay.io/jwang1/mariadb-galera-3-cluster:v1.0.1
 ```
