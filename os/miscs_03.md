@@ -10320,44 +10320,30 @@ oc delete pvc galera-galera-1
 oc delete pvc galera-galera-2
 
 # 编辑模版
-# 为模版里的 Pod 添加 
+# 为模版里的 StatefulSet spec->template->spec 和 spec->template->spec->containers 添加 
 # securityContext: 
-#
 #  privileged: true
-#          image: quay.io/tonyli71/mariadb-galera:latest
-#          imagePullPolicy: Always
-#          name: ${GALERA_PETSET_NAME}
+# 
+#    template:
+#      ...
+#      spec:
+#        securityContext:
+#          privileged: true
+#        containers:
+#        - name: "${GALERA_PETSET_NAME}"
 #          securityContext:
 #            privileged: true
+#          env:                
+#            - name: POD_NAMESPACE
+#          ...
 https://stackoverflow.com/questions/68543425/start-pod-with-root-privilege-on-openshift
 
-# 暂时未执行这一步
-# 删除 triggers 里的 securityContext: {}
-          triggers:
-          - imageChangeParams:
-              automatic: true
-              containerNames:
-              - ${GALERA_PETSET_NAME}
-              from:
-                kind: ImageStreamTag
-                name: mariadb-galera:10.5
-                namespace: ${NAMESPACE}
-            type: ImageChange
-          - dnsPolicy: ClusterFirst
-            restartPolicy: Always
-            schedulerName: default-scheduler
-            securityContext: {}
-            terminationGracePeriodSeconds: 30
-            type: ConfigChange
 
 # 为 serviceaccount default 设置 priviledged RoleBinding
 oc adm policy add-scc-to-user privileged -z default
 
-# 删除 template 里的
-    kubectl.kubernetes.io/last-applied-configuration
-
 # new-app
-coc new-app --template=test/mariadb-galera-persistent-storageclass -e STORAGE_CLASS="gp2" -e SOURCE_REPOSITORY_URL="https://github.com/sclorg/rails-ex.git"
+oc new-app --template=test/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="gp2" -p SOURCE_REPOSITORY_URL="https://github.com/sclorg/rails-ex.git"
 ...
     * With parameters: 
         * Name=rails-mysql-persistent 
