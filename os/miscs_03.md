@@ -10511,3 +10511,78 @@ podman login -u "jwang1" quay.io
 # 上传镜像
 podman push quay.io/jwang1/mariadb-galera-3-cluster:v1.0.1
 ```
+
+### 检查 submariner，诊断 submariner
+```
+$ subctl show all --kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig 
+Cluster "microshift"
+ ✓ Detecting broker(s)
+
+ ✓ Showing Connections
+GATEWAY             CLUSTER   REMOTE IP      NAT  CABLE DRIVER  SUBNETS       STATUS  RTT avg.
+edge-1.example.com  cluster1  10.66.208.162  no   libreswan     242.0.0.0/16  error   0s
+edge-3.example.com  cluster3  10.66.208.164  no   libreswan     242.2.0.0/16  error   0s
+
+ ✓ Showing Endpoints
+CLUSTER ID                    ENDPOINT IP     PUBLIC IP       CABLE DRIVER        TYPE
+cluster2                      10.66.208.163   119.254.120.68  libreswan           local
+cluster1                      10.66.208.162   119.254.120.68  libreswan           remote
+cluster3                      10.66.208.164   119.254.120.68  libreswan           remote
+
+ ✓ Showing Gateways
+NODE                            HA STATUS       SUMMARY
+edge-2.example.com              active          0 connections out of 2 are established
+
+    Discovered network details via Submariner:
+ ✓ Showing Network details
+        Network plugin:  generic
+        Service CIDRs:   [10.43.0.0/16]
+        Cluster CIDRs:   [10.42.0.0/24]
+        Global CIDR:     242.1.0.0/16
+
+ ✓ Showing versions
+COMPONENT                       REPOSITORY                                            VERSION
+submariner                      quay.io/submariner                                    0.12.0
+submariner-operator             quay.io/submariner                                    0.12.0
+service-discovery               quay.io/submariner                                    0.12.0
+COMPONENT                       REPOSITORY                                            VERSION
+submariner                      quay.io/submariner                                    0.12.0
+submariner-operator             quay.io/submariner                                    0.12.0
+service-discovery               quay.io/submariner                                    0.12.0
+
+Cluster "10-66-208-163:6443"
+ ✓ Detecting broker(s)
+
+ ✓ Showing Connections
+GATEWAY             CLUSTER   REMOTE IP      NAT  CABLE DRIVER  SUBNETS       STATUS  RTT avg.
+edge-1.example.com  cluster1  10.66.208.162  no   libreswan     242.0.0.0/16  error   0s
+edge-3.example.com  cluster3  10.66.208.164  no   libreswan     242.2.0.0/16  error   0s
+
+ ✓ Showing Endpoints
+CLUSTER ID                    ENDPOINT IP     PUBLIC IP       CABLE DRIVER        TYPE
+cluster2                      10.66.208.163   119.254.120.68  libreswan           local
+cluster1                      10.66.208.162   119.254.120.68  libreswan           remote
+cluster3                      10.66.208.164   119.254.120.68  libreswan           remote
+
+ ✓ Showing Gateways
+NODE                            HA STATUS       SUMMARY
+edge-2.example.com              active          0 connections out of 2 are established
+
+    Discovered network details via Submariner:
+ ✓ Showing Network details
+        Network plugin:  generic
+        Service CIDRs:   [10.43.0.0/16]
+        Cluster CIDRs:   [10.42.0.0/24]
+        Global CIDR:     242.1.0.0/16
+
+ ✓ Showing versions
+COMPONENT                       REPOSITORY                                            VERSION
+submariner                      quay.io/submariner                                    0.12.0
+submariner-operator             quay.io/submariner                                    0.12.0
+service-discovery               quay.io/submariner                                    0.12.0
+COMPONENT                       REPOSITORY                                            VERSION
+submariner                      quay.io/submariner                                    0.12.0
+submariner-operator             quay.io/submariner                                    0.12.0
+    
+
+```
