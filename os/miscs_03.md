@@ -10584,5 +10584,6 @@ COMPONENT                       REPOSITORY                                      
 submariner                      quay.io/submariner                                    0.12.0
 submariner-operator             quay.io/submariner                                    0.12.0
     
-
+# check submariner-globalnet pod log
+oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app='submariner-globalnet' -o name)  | grep -Ev "^I0" -A2
 ```
