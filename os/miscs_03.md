@@ -10620,3 +10620,30 @@ runtime.main
 runtime.goexit
         runtime/asm_amd64.s:1371
 ```
+
+### microshift
+```
+报错
+W0412 09:45:37.563017       1 patch_genericapiserver.go:123] Request to "/apis/template.openshift.io/v1/templateinstances" (source IP 192.168.122.41:40244, user agent "microshift/v1.21.1 (linux/amd64) kubernetes/b09a9ce") before server is ready, possibly a sign for a broken load balancer setup.
+I0412 09:45:37.567927       1 templateinstance_finalizer.go:194] Starting TemplateInstanceFinalizer controller
+I0412 09:45:39.480908       1 run.go:142] Interrupt received. Stopping services
+{"level":"info","ts":"2022-04-12T09:45:39.480Z","caller":"etcdserver/server.go:1485","msg":"skipped leadership transfer for single voting member cluster","local-member-id":"f955962d30473fed","current-leader-member-id":"f955962d30473fed"}
+I0412 09:45:39.481896       1 tlsconfig.go:255] Shutting down DynamicServingCertificateController
+I0412 09:45:39.482014       1 secure_serving.go:241] Stopped listening on [::]:10251
+I0412 09:45:39.482147       1 controller.go:181] Shutting down kubernetes service endpoint reconciler
+E0412 09:45:39.482316       1 manager.go:114] service kubelet exited with error: context canceled, stopping MicroShift
+I0412 09:45:39.482389       1 dynamic_cafile_content.go:182] Shutting down client-ca-bundle::/var/lib/microshift/certs/ca-bundle/ca-bundle.crt
+E0412 09:45:39.482454       1 manager.go:114] service microshift-mdns-controller exited with error: context canceled, stopping MicroShift
+I0412 09:45:39.482593       1 configmap_cafile_content.go:223] Shutting down client-ca::kube-system::extension-apiserver-authentication::client-ca-file
+I0412 09:45:39.482640       1 requestheader_controller.go:183] Shutting down RequestHeaderAuthRequestController
+I0412 09:45:39.482666       1 configmap_cafile_content.go:223] Shutting down client-ca::kube-system::extension-apiserver-authentication::requestheader-client-ca-file
+I0412 09:45:39.482977       1 secure_serving.go:241] Stopped listening on [::]:10252
+I0412 09:45:39.483346       1 tlsconfig.go:255] Shutting down DynamicServingCertificateController
+I0412 09:45:39.483591       1 secure_serving.go:241] Stopped listening on [::]:10259
+I0412 09:45:39.491178       1 secure_serving.go:241] Stopped listening on 127.0.0.1:10257
+E0412 09:45:39.491526       1 manager.go:114] service etcd exited with error: context canceled, stopping MicroShift
+I0412 09:45:39.491621       1 run.go:148] Another interrupt received. Force terminating services
+I0412 09:45:39.491638       1 run.go:152] MicroShift stopped
+[root@edge1 ~]# 
+
+```
