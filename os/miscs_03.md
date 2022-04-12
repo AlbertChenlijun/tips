@@ -10592,4 +10592,31 @@ oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app='subm
 oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount
 oc serviceaccounts get-token grafana-serviceaccount
 
+# submariner-gateway 日志
+I0412 05:57:03.474107       1 main.go:93] Starting the submariner gateway engine
+W0412 05:57:03.474916       1 client_config.go:608] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+I0412 05:57:03.483922       1 main.go:115] Creating the cable engine
+E0412 05:57:13.513385       1 public_ip.go:81] Error resolving public IP with resolver api:api.ipify.org : retrieving public IP from https://api.ipify.org: Get "https://api.ipify.org": dial tcp: lookup api.ipify.org on 192.168.122.12:53: server misbehaving
+E0412 05:57:23.516982       1 public_ip.go:81] Error resolving public IP with resolver api:api.my-ip.io/ip : retrieving public IP from https://api.my-ip.io/ip: Get "https://api.my-ip.io/ip": dial tcp: lookup api.my-ip.io on 192.168.122.12:53: server misbehaving
+E0412 05:57:33.521753       1 public_ip.go:81] Error resolving public IP with resolver api:ip4.seeip.org : retrieving public IP from https://ip4.seeip.org: Get "https://ip4.seeip.org": dial tcp: lookup ip4.seeip.org on 192.168.122.12:53: server misbehaving
+F0412 05:57:33.522169       1 main.go:267] Error creating local endpoint object: Unable to resolve public IP by any of the resolver methods: [api:api.ipify.org api:api.my-ip.io/ip api:ip4.seeip.org]
+github.com/submariner-io/submariner/pkg/endpoint.getPublicIP
+        github.com/submariner-io/submariner/pkg/endpoint/public_ip.go:85
+github.com/submariner-io/submariner/pkg/endpoint.GetLocal
+        github.com/submariner-io/submariner/pkg/endpoint/local_endpoint.go:89
+main.main
+        command-line-arguments/main.go:125
+runtime.main
+        runtime/proc.go:225
+runtime.goexit
+        runtime/asm_amd64.s:1371
+could not determine public IP
+github.com/submariner-io/submariner/pkg/endpoint.GetLocal
+        github.com/submariner-io/submariner/pkg/endpoint/local_endpoint.go:91
+main.main
+        command-line-arguments/main.go:125
+runtime.main
+        runtime/proc.go:225
+runtime.goexit
+        runtime/asm_amd64.s:1371
 ```
