@@ -10586,4 +10586,10 @@ submariner-operator             quay.io/submariner                              
     
 # check submariner-globalnet pod log
 oc -n submariner-operator logs $(oc -n submariner-operator get pods -l app='submariner-globalnet' -o name)  | grep -Ev "^I0" -A2
+
+# 为 grafana-serviceaccount 添加 ClusterRole cluster-monitoring-view
+# 获取 bearer toke 
+oc adm policy add-cluster-role-to-user cluster-monitoring-view -z grafana-serviceaccount
+oc serviceaccounts get-token grafana-serviceaccount
+
 ```
