@@ -10647,29 +10647,42 @@ I0412 09:45:39.491638       1 run.go:152] MicroShift stopped
 [root@edge1 ~]# 
 
 
-ocedge1 new-project test1
-ocedge1 apply -f ./finalgaleratemplate.yml 
+ocedge1 new-project test
+ocedge1 apply -f ./template.yaml 
 ocedge1 adm policy add-scc-to-user privileged -z default
-ocedge1 new-app --template=test1/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig export service --namespace test1 galera
+ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera1" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig export service --namespace test galera1
 
-ocedge2 new-project test2
-ocedge2 apply -f ./finalgaleratemplate.yml 
+oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+
+ocedge2 new-project test
+ocedge2 apply -f ./template.yaml 
 ocedge2 adm policy add-scc-to-user privileged -z default
-ocedge2 new-app --template=test2/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig export service --namespace test2 galera
+ocedge2 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera2" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig export service --namespace test galera2
 
-ocedge3 new-project test3
-ocedge3 apply -f ./finalgaleratemplate.yml 
+oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+
+ocedge3 new-project test
+ocedge3 apply -f ./template.yaml 
 ocedge3 adm policy add-scc-to-user privileged -z default
-ocedge3 new-app --template=test3/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test3 galera
+ocedge3 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera3" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test galera3
+
+oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
+oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
 
 ocedge1 delete statefulset galera
-ocedge1 delete service galera
+ocedge1 delete service galera1
 ocedge1 delete secret rails-mysql-persistent 
 ocedge1 delete pvc galera-galera-0
 ocedge1 delete template mariadb-galera-persistent-storageclass-tony
+ocedge1 project default
 ocedge1 delete namespace test
 
 ocedge2 delete statefulset galera
@@ -10690,4 +10703,67 @@ ocedge3 delete namespace test
 
 # Submariner blog
 https://blog.csdn.net/weixin_29045001/article/details/112400459
+
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig create namespace nginx-test
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig run -n nginx-test tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+bash-5.0# curl nginx.nginx-test.svc.clusterset.local:8080
+
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig create namespace test1
+oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig run -n test1 tmp-shell --rm -i --tty --image quay.io/submariner/nettest -- /bin/bash
+
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+MY_NAME=10.42.0.24
+CLUSTER_NAME=galera
+WSREP_CLUSTER_ADDRESS=10.42.0.24,242.1.255.253,242.2.255.252
+
+sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+
+mysqld --wsrep-new-cluster --user=mysql 
+
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+MY_NAME=10.42.0.21
+CLUSTER_NAME=galera
+WSREP_CLUSTER_ADDRESS=10.42.0.21,242.0.255.252,242.2.255.252
+
+sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+
+mysqld --wsrep-new-cluster --user=mysql 
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+MY_NAME=10.42.0.17
+CLUSTER_NAME=galera
+WSREP_CLUSTER_ADDRESS=10.42.0.17,242.1.255.253,242.2.255.252
+
+sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+
+mysqld --wsrep-new-cluster --user=mysql 
+
+
+(oc-mirror)[root@jwang ~/db]# oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+NAME                        TYPE           IP                  AGE
+galera1-test-cluster1       ClusterSetIP   ["242.0.255.252"]   3m45s
+galera2-test-cluster2       ClusterSetIP   ["242.1.255.253"]   99s
+galera3-test-cluster3       ClusterSetIP   ["242.2.255.252"]   26s
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+EXTRA_DEFAULTS_FILE="/etc/opt/rh/rh-mariadb105/my.cnf.d"
+
+10.42.0.24
 ```
