@@ -10646,4 +10646,48 @@ I0412 09:45:39.491621       1 run.go:148] Another interrupt received. Force term
 I0412 09:45:39.491638       1 run.go:152] MicroShift stopped
 [root@edge1 ~]# 
 
+
+ocedge1 new-project test1
+ocedge1 apply -f ./finalgaleratemplate.yml 
+ocedge1 adm policy add-scc-to-user privileged -z default
+ocedge1 new-app --template=test1/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig export service --namespace test1 galera
+
+ocedge2 new-project test2
+ocedge2 apply -f ./finalgaleratemplate.yml 
+ocedge2 adm policy add-scc-to-user privileged -z default
+ocedge2 new-app --template=test2/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig export service --namespace test2 galera
+
+ocedge3 new-project test3
+ocedge3 apply -f ./finalgaleratemplate.yml 
+ocedge3 adm policy add-scc-to-user privileged -z default
+ocedge3 new-app --template=test3/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test3 galera
+
+ocedge1 delete statefulset galera
+ocedge1 delete service galera
+ocedge1 delete secret rails-mysql-persistent 
+ocedge1 delete pvc galera-galera-0
+ocedge1 delete template mariadb-galera-persistent-storageclass-tony
+ocedge1 delete namespace test
+
+ocedge2 delete statefulset galera
+ocedge2 delete service galera
+ocedge2 delete secret rails-mysql-persistent 
+ocedge2 delete pvc galera-galera-0
+ocedge2 delete template mariadb-galera-persistent-storageclass-tony
+ocedge2 project default
+ocedge2 delete namespace test
+
+ocedge3 delete statefulset galera
+ocedge3 delete service galera
+ocedge3 delete secret rails-mysql-persistent 
+ocedge3 delete pvc galera-galera-0
+ocedge3 delete template mariadb-galera-persistent-storageclass-tony
+ocedge3 project default
+ocedge3 delete namespace test
+
+# Submariner blog
+https://blog.csdn.net/weixin_29045001/article/details/112400459
 ```
