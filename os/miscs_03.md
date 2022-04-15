@@ -10937,4 +10937,54 @@ rm -rf /var/lib/containers/*
 crio wipe -f
 
 systemctl start microshift
+
+
+# edge-1
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.42.0.0/16'
+  serviceCIDR: '10.43.0.0/16'
+  dns: '10.43.0.10'
+  domain: cluster.local
+EOF
+sudo firewall-cmd --zone=trusted --add-source=10.42.0.0/16 --permanent
+sudo firewall-cmd --reload
+
+# edge-2
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.52.0.0/16'
+  serviceCIDR: '10.53.0.0/16'
+  dns: '10.53.0.10'
+  domain: cluster.local
+EOF
+sudo firewall-cmd --zone=trusted --add-source=10.52.0.0/16 --permanent
+sudo firewall-cmd --reload
+
+# edge-3
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.62.0.0/16'
+  serviceCIDR: '10.63.0.0/16'
+  dns: '10.63.0.10'
+  domain: cluster.local
+EOF
+sudo firewall-cmd --zone=trusted --add-source=10.62.0.0/16 --permanent
+sudo firewall-cmd --reload
+
+# edge-4
+cat > /etc/microshift/config.yaml <<EOF
+---
+cluster:
+  clusterCIDR: '10.72.0.0/16'
+  serviceCIDR: '10.73.0.0/16'
+  dns: '10.73.0.10'
+  domain: cluster.local
+EOF
+sudo firewall-cmd --zone=trusted --add-source=10.72.0.0/16 --permanent
+sudo firewall-cmd --reload
+
 ```
