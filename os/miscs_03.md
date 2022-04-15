@@ -10713,9 +10713,9 @@ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig run -n test1 tmp-shell -
 
 
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.24
+MY_NAME=10.42.0.26
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.42.0.24,242.1.255.253,242.2.255.252
+WSREP_CLUSTER_ADDRESS=10.66.208.162:30567,10.66.208.163:30567,10.66.208.164:30567
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
@@ -10725,26 +10725,25 @@ CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
 ${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
 
 mysqld --wsrep-new-cluster --user=mysql 
+mysqld --user=mysql 
+cat /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+> /var/opt/rh/rh-mariadb105/lib/mysql/grastate.datgrastate.dat
+cat /var/opt/rh/rh-mariadb105/lib/mysql/grastate.datgrastate.dat
 
 
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.21
+MY_NAME=10.42.0.22
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.42.0.21,242.0.255.252,242.2.255.252
+WSREP_CLUSTER_ADDRESS=10.42.0.22,242.0.255.252,242.2.255.252
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
-
-CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
-${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
-
-mysqld --wsrep-new-cluster --user=mysql 
 
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.17
+MY_NAME=10.42.0.22
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.42.0.17,242.1.255.253,242.2.255.252
+WSREP_CLUSTER_ADDRESS=10.66.208.162:30567,10.66.208.163:30567,10.66.208.164:30567
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
@@ -10754,6 +10753,25 @@ CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
 ${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
 
 mysqld --wsrep-new-cluster --user=mysql 
+
+
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+MY_NAME=10.42.0.19
+CLUSTER_NAME=galera
+WSREP_CLUSTER_ADDRESS=10.66.208.162:30567,10.66.208.163:30567,10.42.0.19
+
+sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+
+mysqld --wsrep-new-cluster --user=mysql 
+mysqld --user=mysql 
+cat /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+
 
 
 (oc-mirror)[root@jwang ~/db]# oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
@@ -10766,4 +10784,110 @@ CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
 EXTRA_DEFAULTS_FILE="/etc/opt/rh/rh-mariadb105/my.cnf.d"
 
 10.42.0.24
+cat <<EOF | ocedge1 apply -f -
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: galera1-nodeport
+  labels:
+    name: galera1-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mysql
+      nodePort: 30306
+    - port: 4444
+      targetPort: 4444
+      name: sst
+      nodePort: 30444
+    - port: 4567
+      targetPort: 4567
+      name: replication
+      nodePort: 30567
+    - port: 4568
+      targetPort: 4568
+      name: ist
+      nodePort: 30568
+  selector:
+    app: galera1
+EOF
+
+cat <<EOF | ocedge2 apply -f -
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: galera2-nodeport
+  labels:
+    name: galera2-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mysql
+      nodePort: 30306
+    - port: 4444
+      targetPort: 4444
+      name: sst
+      nodePort: 30444
+    - port: 4567
+      targetPort: 4567
+      name: replication
+      nodePort: 30567
+    - port: 4568
+      targetPort: 4568
+      name: ist
+      nodePort: 30568
+  selector:
+    app: galera2
+EOF
+
+cat <<EOF | ocedge3 apply -f -
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: galera3-nodeport
+  labels:
+    name: galera3-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mysql
+      nodePort: 30306
+    - port: 4444
+      targetPort: 4444
+      name: sst
+      nodePort: 30444
+    - port: 4567
+      targetPort: 4567
+      name: replication
+      nodePort: 30567
+    - port: 4568
+      targetPort: 4568
+      name: ist
+      nodePort: 30568
+  selector:
+    app: galera3
+EOF
+
+https://microshift.io/docs/user-documentation/networking/firewall/
+https://mariadb.com/kb/en/configuring-mariadb-galera-cluster/
+
+Log
+/var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log
+
+2022-04-14  7:24:17 2 [Note] WSREP: Prepared SST request: rsync|10.66.208.163:4444/rsync_sst
+
+2022-04-14  7:24:17 2 [Note] WSREP: IST receiver addr using tcp://10.66.208.163:4568
+2022-04-14  7:24:17 2 [ERROR] WSREP: State Transfer Request preparation failed: bind: Cannot assign requested address Can't continue, aborting.
+
+
+wsrep_provider_options="ist.recv_addr=10.66.208.163:30568"
 ```
