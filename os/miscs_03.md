@@ -10987,4 +10987,8 @@ EOF
 sudo firewall-cmd --zone=trusted --add-source=10.72.0.0/16 --permanent
 sudo firewall-cmd --reload
 
+oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=service-ca -o name)
+oc -n openshift-service-ca delete $(oc -n openshift-service-ca get pods -l app=service-ca -o name)
+
+oc -n kubevirt-hostpath-provisioner delete $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
 ```
