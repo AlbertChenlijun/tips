@@ -10991,4 +10991,6 @@ oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=ser
 oc -n openshift-service-ca delete $(oc -n openshift-service-ca get pods -l app=service-ca -o name)
 
 oc -n kubevirt-hostpath-provisioner delete $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
+
+2022-04-18T00:45:59.663Z ERR ..oller/controller.go:267 ..mariner-controller Reconciler error error="error building an authorized RestConfig for the broker: Get \"https://10.66.208.162:6443/api/v1/namespaces/submariner-k8s-broker/secrets/any\": dial tcp 10.66.208.162:6443: i/o timeout" name=submariner namespace=submariner-operator reconciler group=submariner.io reconciler kind=Submariner
 ```
