@@ -10993,6 +10993,17 @@ oc -n openshift-service-ca delete $(oc -n openshift-service-ca get pods -l app=s
 oc -n kubevirt-hostpath-provisioner delete $(oc -n kubevirt-hostpath-provisioner get pods -l k8s-app=kubevirt-hostpath-provisioner -o name)
 
 2022-04-18T00:45:59.663Z ERR ..oller/controller.go:267 ..mariner-controller Reconciler error error="error building an authorized RestConfig for the broker: Get \"https://10.66.208.162:6443/api/v1/namespaces/submariner-k8s-broker/secrets/any\": dial tcp 10.66.208.162:6443: i/o timeout" name=submariner namespace=submariner-operator reconciler group=submariner.io reconciler kind=Submariner
+
+
+subctl verify ~/ocpsitea/auth/kubeconfig ~/ocpsiteb/auth/kubeconfig --only connectivity --verbose
+subctl join --kubeconfig ocpsitea/auth/kubeconfig --clusterid ocpsitea broker-info.subm --natt=false
+kubectl annotate node $GW gateway.submariner.io/public-ip=ipv4:1.2.3.4
+subctl join --kubeconfig /root/kubeconfig/edge/edge-1/kubeconfig --clusterid cluster1 broker-info.subm --natt=false
+
+download submariner
+wget https://github.com/submariner-io/submariner-operator/releases/download/subctl-release-0.10/subctl-release-0.10-linux-amd64.tar.xz 
+
+
 ```
 
 ### 修复 Windows 10 磁盘满的问题
