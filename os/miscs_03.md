@@ -10994,3 +10994,29 @@ oc -n kubevirt-hostpath-provisioner delete $(oc -n kubevirt-hostpath-provisioner
 
 2022-04-18T00:45:59.663Z ERR ..oller/controller.go:267 ..mariner-controller Reconciler error error="error building an authorized RestConfig for the broker: Get \"https://10.66.208.162:6443/api/v1/namespaces/submariner-k8s-broker/secrets/any\": dial tcp 10.66.208.162:6443: i/o timeout" name=submariner namespace=submariner-operator reconciler group=submariner.io reconciler kind=Submariner
 ```
+
+### 修复 Windows 10 磁盘满的问题
+https://www.isunshare.com/windows-10/4-ways-to-fix-c-drive-full-in-windows-10.html
+
+### mirror and upload image commands
+```
+oc image mirror quay.io/submariner/lighthouse-agent:0.12.0           file://submariner/lighthouse-agent:0.12.0         
+oc image mirror quay.io/submariner/lighthouse-coredns:0.12.0         file://submariner/lighthouse-coredns:0.12.0
+oc image mirror quay.io/submariner/submariner-gateway:0.12.0         file://submariner/submariner-gateway:0.12.0
+oc image mirror quay.io/submariner/submariner-globalnet:0.12.0       file://submariner/submariner-globalnet:0.12.0
+oc image mirror quay.io/submariner/submariner-operator:0.12.0        file://submariner/submariner-operator:0.12.0
+oc image mirror quay.io/submariner/submariner-route-agent:0.12.0     file://submariner/submariner-route-agent:0.12.0
+oc image mirror  gcr.io/google_containers/pause:latest               file://google_containers/pause:latest
+
+tar -cf xxxx.tar  ./
+
+tar -xf xxxx.tar
+
+oc image mirror  --from-dir=./  file://submariner/lighthouse-agent:0.12.0         registry.gaolantest.greeyun.com:8443/microshift/submariner/lighthouse-agent:0.12.0      
+oc image mirror  --from-dir=./  file://submariner/lighthouse-coredns:0.12.0       registry.gaolantest.greeyun.com:8443/microshift/submariner/lighthouse-coredns:0.12.0    
+oc image mirror  --from-dir=./  file://submariner/submariner-gateway:0.12.0       registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-gateway:0.12.0    
+oc image mirror  --from-dir=./  file://submariner/submariner-globalnet:0.12.0     registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-globalnet:0.12.0  
+oc image mirror  --from-dir=./  file://submariner/submariner-operator:0.12.0      registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-operator:0.12.0   
+oc image mirror  --from-dir=./  file://submariner/submariner-route-agent:0.12.0   registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-route-agent:0.12.0
+oc image mirror  --from-dir=./  file://google_containers/pause:latest             registry.gaolantest.greeyun.com:8443/microshift/google_containers/pause:latest      
+```
