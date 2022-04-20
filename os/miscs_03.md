@@ -11029,5 +11029,15 @@ oc image mirror  --from-dir=./  file://submariner/submariner-gateway:0.12.0     
 oc image mirror  --from-dir=./  file://submariner/submariner-globalnet:0.12.0     registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-globalnet:0.12.0  
 oc image mirror  --from-dir=./  file://submariner/submariner-operator:0.12.0      registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-operator:0.12.0   
 oc image mirror  --from-dir=./  file://submariner/submariner-route-agent:0.12.0   registry.gaolantest.greeyun.com:8443/microshift/submariner/submariner-route-agent:0.12.0
-oc image mirror  --from-dir=./  file://google_containers/pause:latest             registry.gaolantest.greeyun.com:8443/microshift/google_containers/pause:latest      
+oc image mirror  --from-dir=./  file://google_containers/pause:latest             registry.gaolantest.greeyun.com:8443/microshift/google_containers/pause:latest 
+
+
+oc image mirror docker.io/nginxinc/nginx-unprivileged:stable-alpine file://nginxinc/nginx-unprivileged:stable-alpine
+oc image mirror quay.io/submariner/nettest:latest file://submariner/nettest:latest
+
+oc image mirror  --from-dir=./  file://nginxinc/nginx-unprivileged:stable-alpine         registry.gaolantest.greeyun.com:8443/microshift/nginxinc/nginx-unprivileged:stable-alpine
+oc image mirror  --from-dir=./  file://submariner/nettest:latest         registry.gaolantest.greeyun.com:8443/microshift/submariner/nettest:latest
+
+
+
 ```
