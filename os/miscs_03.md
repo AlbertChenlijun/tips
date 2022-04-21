@@ -11140,4 +11140,6 @@ oc apply -f kube-flannel-cfg.yaml
 
 oc -n kube-system delete $(oc -n kube-system get pods -l app=flannel -o name) 
 oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat /run/flannel/subnet.env 
+
+oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.baidu.com
 ```
