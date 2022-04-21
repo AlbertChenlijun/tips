@@ -11143,10 +11143,11 @@ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat /
 
 oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.baidu.com
 
-dnf -y install chrony
+dnf -y install chronych
 sed -i -e "s/^pool*/#&/g" \
 -e "s/#log measurements statistics tracking/log measurements statistics tracking/g" \
 /etc/chrony.conf
 sed -i "3a server 10.2.8.44 iburst" /etc/chrony.conf
 
+echo "$(nmcli c s eno1 | grep ipv4.address | awk '{ print $2 }' | awk -F"/" '{ print $1 }') $(hostname)" 
 ```
