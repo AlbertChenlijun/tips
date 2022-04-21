@@ -11039,5 +11039,105 @@ oc image mirror  --from-dir=./  file://nginxinc/nginx-unprivileged:stable-alpine
 oc image mirror  --from-dir=./  file://submariner/nettest:latest         registry.gaolantest.greeyun.com:8443/microshift/submariner/nettest:latest
 
 
+[BUG] Microshift does not honor /etc/microshift/config.yaml clusterCIDR
+What happened:
+Microshift does not apply the clusterCIDR in the config file defined at /etc/microshift/config.yaml 
 
+Example:
+(rhv)[root@edge-3 ~]# cat /etc/microshift/config.yaml 
+---
+cluster:
+  clusterCIDR: '10.62.0.0/16'
+  serviceCIDR: '10.63.0.0/16'
+  dns: '10.63.0.10'
+  domain: cluster.local
+
+Result:
+(rhv)[root@edge-3 ~]# oc get pods -n kube-system 
+NAME                    READY   STATUS    RESTARTS   AGE
+kube-flannel-ds-4wws5   1/1     Running   0          47h
+
+(rhv)[root@edge-3 ~]# oc -n kube-system rsh kube-flannel-ds-4wws5 cat /run/flannel/subnet.env 
+Defaulted container "kube-flannel" out of: kube-flannel, install-cni-bin (init), install-cni (init)
+FLANNEL_NETWORK=10.42.0.0/16
+FLANNEL_SUBNET=10.62.0.1/24
+FLANNEL_MTU=1450
+FLANNEL_IPMASQ=true
+
+(rhv)[root@edge-3 ~]# oc get configmaps kube-flannel-cfg -n kube-system -o jsonpath='{.data.net-conf\.json}' 
+{
+  "Network": "10.42.0.0/16",
+  "Backend": {
+    "Type": "vxlan"
+  }
+}
+
+
+How to reproduce it (as minimally and precisely as possible):
+Environment:
+Microshift version (use microshift version): latest
+Hardware configuration: Raspberry Pi 400 (aarch64, 4GB RAM)
+OS (e.g: cat /etc/os-release): Fedora CoreOS 35.20220327.3.0
+Kernel (e.g. uname -a): Linux pi-master-0 5.16.16-200.fc35.aarch64 Init #1 SMP Sat Mar 19 13:35:51 UTC 2022 aarch64 aarch64 aarch64 GNU/Linux
+
+oc new-project ${CLUSTER_NAME}
+oc label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
+
+cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  clusterNamespace: ${CLUSTER_NAME}
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  version: 2.2.0
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  hubAcceptsClient: true
+EOF
+
+IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.import\.yaml}')
+CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
+
+oc get pods -A -o wide
+NAMESPACE                       NAME                                  READY   STATUS    RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+kube-system                     kube-flannel-ds-8dgpz                 1/1     Running   0          43h     172.17.30.129   gree-glg129   <none>           <none>
+kubevirt-hostpath-provisioner   kubevirt-hostpath-provisioner-hhw4z   1/1     Running   0          43h     10.42.0.5       gree-glg129   <none>           <none>
+openshift-dns                   dns-default-wwns7                     2/2     Running   0          3h25m   10.42.0.10      gree-glg129   <none>           <none>
+openshift-dns                   node-resolver-9x6mb                   1/1     Running   0          43h     172.17.30.129   gree-glg129   <none>           <none>
+openshift-ingress               router-default-6c96f6bc66-27lzm       1/1     Running   0          43h     172.17.30.129   gree-glg129   <none>           <none>
+openshift-service-ca            service-ca-7bffb6f6bf-4lh8v           1/1     Running   0          43h     10.42.0.6       gree-glg129   <none>           <none>
+
+
+NAME          STATUS   ROLES    AGE   VERSION
+gree-glg129   Ready    <none>   44h   v1.21.0
+
+oc get configmap kube-flannel-cfg -n kube-system -o yaml | grep -Ev "creationTimestamp|resourceVersion|selfLink|uid" | tee kube-flannel-cfg.yaml
+FLANEL_NETWORK="10.62.0.0"
+sed -i "s|10.42.0.0|${FLANEL_NETWORK}|g" kube-flannel-cfg.yaml
+oc apply -f kube-flannel-cfg.yaml
+
+oc -n kube-system delete $(oc -n kube-system get pods -l app=flannel -o name) 
+oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat /run/flannel/subnet.env 
 ```
