@@ -11192,4 +11192,9 @@ $ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat
 # 测试域名解析
 $ oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig <domainname>
 $ ocl1 -n openshift-dns rsh $(ocl1 -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.bing.com
+
+# obtain service name from edge1/2/3
+nslookup galera.test.svc.cluster.local. 10.43.0.10
+nslookup galera.test.svc.cluster.local. 10.53.0.10
+nslookup galera.test.svc.cluster.local. 10.63.0.10
 ```
