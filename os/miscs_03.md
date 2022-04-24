@@ -11150,4 +11150,41 @@ sed -i -e "s/^pool*/#&/g" \
 sed -i "3a server 10.2.8.44 iburst" /etc/chrony.conf
 
 echo "$(nmcli c s eno1 | grep ipv4.address | awk '{ print $2 }' | awk -F"/" '{ print $1 }') $(hostname)" 
+
+systemctl status microshift
+systemctl status crio
+podman stats microshift
+$ kubectl top pod kube-flannel-ds-cvcnx  -n kube-system  
+error: Metrics API not available
+
+# check dns and flannel in microshift
+
+oc --kubeconfig=./kubeconfig -n openshift-dns rsh $(oc --kubeconfig=./kubeconfig -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig api.fenchang1.gaolantest.greeyun.com.
+
+oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig api.ocp4.rhcnsa.com.
+
+# 在没有 Metrics API 的情况下，可以查询 pod 里的 /sys/fs/cgroup/cpu/cpuacct.usage 和 /sys/fs/cgroup/memory/memory.usage_in_bytes 来获取 pod 的 cpu 与 memory 实际占用情况
+
+oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) cat /sys/fs/cgroup/cpu/cpuacct.usage
+
+oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) cat /sys/fs/cgroup/memory/memory.usage_in_bytes
+
+# 查看 application-manager 的日志
+oc --kubeconfig=./kubeconfig  -n open-cluster-management-agent-addon logs $(oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon get pods -l app=application-manager -o name) 
+
+# 删除 dns-default pod
+$ oc -n openshift-dns delete $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) 
+
+# 查看 dns-default pod 日志
+$ oc -n openshift-dns logs $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) -c dns
+
+# 查看 service-ca pod 日志
+$ oc -n openshift-service-ca logs $(oc -n openshift-service-ca get pods -l app=service-ca -o name) 
+
+# 查看 flannel /run/flannel/subnet.env
+$ oc -n kube-system rsh $(oc -n kube-system get pods -l app=flannel -o name) cat /run/flannel/subnet.env 
+
+# 测试域名解析
+$ oc -n openshift-dns rsh $(oc -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig <domainname>
+$ ocl1 -n openshift-dns rsh $(ocl1 -n openshift-dns get pods -l dns.operator.openshift.io/daemonset-dns=default -o name) dig www.bing.com
 ```
