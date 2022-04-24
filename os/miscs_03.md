@@ -10650,7 +10650,7 @@ I0412 09:45:39.491638       1 run.go:152] MicroShift stopped
 ocedge1 new-project test
 ocedge1 apply -f ./template.yaml 
 ocedge1 adm policy add-scc-to-user privileged -z default
-ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera1" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
 subctl --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig export service --namespace test galera1
 
 oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
@@ -10660,7 +10660,7 @@ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operat
 ocedge2 new-project test
 ocedge2 apply -f ./template.yaml 
 ocedge2 adm policy add-scc-to-user privileged -z default
-ocedge2 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera2" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+ocedge2 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
 subctl --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig export service --namespace test galera2
 
 oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
@@ -10670,7 +10670,7 @@ oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operat
 ocedge3 new-project test
 ocedge3 apply -f ./template.yaml 
 ocedge3 adm policy add-scc-to-user privileged -z default
-ocedge3 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera3" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+ocedge3 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
 subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test galera3
 
 oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
@@ -10713,9 +10713,9 @@ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig run -n test1 tmp-shell -
 
 
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.26
+MY_NAME=10.42.0.73
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.66.208.162:30567,10.66.208.163:30567,10.66.208.164:30567
+WSREP_CLUSTER_ADDRESS=10.42.0.73,10.52.0.21,10.62.0.14
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
@@ -10732,18 +10732,9 @@ cat /var/opt/rh/rh-mariadb105/lib/mysql/grastate.datgrastate.dat
 
 
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.22
+MY_NAME=10.52.0.21
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.42.0.22,242.0.255.252,242.2.255.252
-
-sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
-sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
-sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
-
-CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
-MY_NAME=10.42.0.22
-CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.66.208.162:30567,10.66.208.163:30567,10.66.208.164:30567
+WSREP_CLUSTER_ADDRESS=10.42.0.73,10.52.0.21,10.62.0.14
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
@@ -10751,8 +10742,22 @@ sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CL
 
 CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
 ${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+mysqld --user=mysql 
 
-mysqld --wsrep-new-cluster --user=mysql 
+
+CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+MY_NAME=10.62.0.14
+CLUSTER_NAME=galera
+WSREP_CLUSTER_ADDRESS=10.42.0.73,10.52.0.21,10.62.0.14
+
+sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
+sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
+
+CONTAINER_SCRIPTS_DIR="/usr/share/container-scripts/mysql"
+${CONTAINER_SCRIPTS_DIR}/configure-mysql.sh
+mysqld --user=mysql 
+
 
 
 
