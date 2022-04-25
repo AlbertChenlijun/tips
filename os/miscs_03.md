@@ -10504,12 +10504,12 @@ EOF
 # 构建镜像
 podman build . -t mariadb-galera-3-cluster:latest
 # tag 镜像
-podman tag localhost/mariadb-galera-3-cluster:latest quay.io/jwang1/mariadb-galera-3-cluster:v1.0.1
+podman tag localhost/mariadb-galera-3-cluster:latest quay.io/jwang1/mariadb-galera-3-cluster:v1.0.2
 
 # 登录镜像服务器
 podman login -u "jwang1" quay.io
 # 上传镜像
-podman push quay.io/jwang1/mariadb-galera-3-cluster:v1.0.1
+podman push quay.io/jwang1/mariadb-galera-3-cluster:v1.0.2
 ```
 
 ### 检查 submariner，诊断 submariner
@@ -10650,35 +10650,25 @@ I0412 09:45:39.491638       1 run.go:152] MicroShift stopped
 ocedge1 new-project test
 ocedge1 apply -f ./template.yaml 
 ocedge1 adm policy add-scc-to-user privileged -z default
-ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig export service --namespace test galera1
-
-oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi" -p PEER1_DNS_IP="10.53.0.10" -p PEER2_DNS_IP="10.63.0.10"
 
 ocedge2 new-project test
 ocedge2 apply -f ./template.yaml 
 ocedge2 adm policy add-scc-to-user privileged -z default
-ocedge2 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig export service --namespace test galera2
-
-oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+ocedge2 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi" -p PEER1_DNS_IP="10.43.0.10" -p PEER2_DNS_IP="10.63.0.10"
 
 ocedge3 new-project test
 ocedge3 apply -f ./template.yaml 
 ocedge3 adm policy add-scc-to-user privileged -z default
-ocedge3 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi"
-subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test galera3
+ocedge3 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1" -p VOLUME_CAPACITY="5Gi" -p PEER1_DNS_IP="10.43.0.10" -p PEER2_DNS_IP="10.53.0.10"
 
-oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
-oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
+# subctl --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig export service --namespace test galera3
+#oc --kubeconfig=/root/kubeconfig/edge/edge-1/kubeconfig get -n submariner-operator serviceimport
+#oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig get -n submariner-operator serviceimport
+#oc --kubeconfig=/root/kubeconfig/edge/edge-3/kubeconfig get -n submariner-operator serviceimport
 
 ocedge1 delete statefulset galera
-ocedge1 delete service galera1
+ocedge1 delete service galera
 ocedge1 delete secret rails-mysql-persistent 
 ocedge1 delete pvc galera-galera-0
 ocedge1 delete template mariadb-galera-persistent-storageclass-tony
@@ -10715,7 +10705,7 @@ oc --kubeconfig=/root/kubeconfig/edge/edge-2/kubeconfig run -n test1 tmp-shell -
 CFG=/etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
 MY_NAME=10.42.0.73
 CLUSTER_NAME=galera
-WSREP_CLUSTER_ADDRESS=10.42.0.73,10.52.0.21,10.62.0.14
+WSREP_CLUSTER_ADDRESS=10.43.147.171,10.53.81.152,10.63.105.71
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
@@ -11198,5 +11188,28 @@ nslookup galera.test.svc.cluster.local. 10.43.0.10
 nslookup galera.test.svc.cluster.local. 10.53.0.10
 nslookup galera.test.svc.cluster.local. 10.63.0.10
 
-# 
+# 添加到 trustzone 
+sudo firewall-cmd --zone=trusted --add-source=10.43.0.0/16 --permanent
+sudo firewall-cmd --zone=trusted --add-source=10.53.0.0/16 --permanent
+sudo firewall-cmd --zone=trusted --add-source=10.63.0.0/16 --permanent
+sudo firewall-cmd --reload
+# 从 trustzone 删除
+sudo firewall-cmd --zone=trusted --remove-source=10.43.0.0/16 --permanent
+sudo firewall-cmd --zone=trusted --remove-source=10.53.0.0/16 --permanent
+sudo firewall-cmd --zone=trusted --remove-source=10.63.0.0/16 --permanent
+sudo firewall-cmd --reload
+
+
+> /etc/yum.repos.d/rhel8.repo 
+for i in rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-appstream-rpms
+do
+cat >> /etc/yum.repos.d/rhel8.repo << EOF
+[$i]
+name=$i
+baseurl=file:///repos/rhel8/$i/
+enabled=1
+gpgcheck=0
+
+EOF
+done
 ```
