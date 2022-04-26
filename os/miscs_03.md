@@ -11212,4 +11212,14 @@ gpgcheck=0
 
 EOF
 done
+
+
+subctl diagnose tunnel inter-cluster /root/kubeconfig/edge/edge-1/kubeconfig /root/kubeconfig/edge/edge-2/kubeconfig
+
+oc -n nginx-test patch deployment/nginx --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"last-restart\":\"`date +'%s'`\"}}}}}"
+
+
+### Test ODF mirror
+# 检查 ocs-operator 日志
+ocpht -n openshift-storage logs $(ocpht -n openshift-storage get pods -l name=ocs-operator -o name)
 ```
