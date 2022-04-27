@@ -11277,4 +11277,80 @@ sudo firewall-cmd --permanent --zone=public --add-port=4444/tcp
 sudo firewall-cmd --permanent --zone=public --add-port=4567/udp
 sudo firewall-cmd --reload
 
+### galera 
+[galera]
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+#wsrep_sst_method = xtrabackup
+# This can be insecure, because the user is only available via localhost
+# We should still try to integrate it with Kubernetes secrets
+#wsrep_sst_auth=xtrabackup_sst:xtrabackup_sst
+default_storage_engine = innodb
+binlog_format = row
+innodb_autoinc_lock_mode = 2
+innodb_flush_log_at_trx_commit = 0
+query_cache_size = 0
+query_cache_type = 0
+
+# By default every node is standalone
+#wsrep_cluster_address=gcomm://10.1.16.114
+#wsrep_cluster_name=galera
+#wsrep_node_address=10.1.16.114
+
+wsrep_sst_method=mariabackup
+wsrep_slave_threads=4
+wsrep_cluster_address=gcomm://
+wsrep_cluster_name=galera
+wsrep_node_address=13.228.196.104:4567
+wsrep_sst_auth="root:"
+# Enabled for performance per https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit
+innodb_flush_log_at_trx_commit=2
+# MYISAM REPLICATION SUPPORT #
+wsrep_replicate_myisam=ON
+
+
+
+cat /var/log/audit/audit.log | audit2allow -M a.pp 
+
+2022-04-27 10:41:44 0 [Warning] WSREP: Member 1.0 (my-mariadb-galera-0) requested state transfer from '*any*', but it is impossible to select State Transfer donor: Resource temporarily unavailable
+
+
+
+yum install mariadb-server-galera
+
+SET GLOBAL wsrep_sst_auth = 'mariabackup:redhat';
+
+CREATE USER 'mariabackup'@'localhost' IDENTIFIED BY 'redhat';
+GRANT RELOAD, PROCESS, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'mariabackup'@'localhost';
+
+cat > /etc/
+[galera]
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+#wsrep_sst_method = xtrabackup
+# This can be insecure, because the user is only available via localhost
+# We should still try to integrate it with Kubernetes secrets
+#wsrep_sst_auth=xtrabackup_sst:xtrabackup_sst
+default_storage_engine = innodb
+binlog_format = row
+innodb_autoinc_lock_mode = 2
+innodb_flush_log_at_trx_commit = 0
+query_cache_size = 0
+query_cache_type = 0
+
+# By default every node is standalone
+#wsrep_cluster_address=gcomm://10.1.16.114
+#wsrep_cluster_name=galera
+#wsrep_node_address=10.1.16.114
+
+wsrep_sst_method=mariabackup
+wsrep_slave_threads=4
+wsrep_cluster_address=gcomm://
+wsrep_cluster_name=galera
+wsrep_node_address=10.66.208.165:4567
+wsrep_sst_auth="mariabackup:mypassword"
+# Enabled for performance per https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit
+innodb_flush_log_at_trx_commit=2
+# MYISAM REPLICATION SUPPORT #
+wsrep_replicate_myisam=ON
 ```
