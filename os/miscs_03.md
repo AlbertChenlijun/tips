@@ -11222,4 +11222,15 @@ oc -n nginx-test patch deployment/nginx --patch "{\"spec\":{\"template\":{\"meta
 ### Test ODF mirror
 # 检查 ocs-operator 日志
 ocpht -n openshift-storage logs $(ocpht -n openshift-storage get pods -l name=ocs-operator -o name)
+
+
+curl -L https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/helm-linux-amd64 -o /usr/local/bin/helm
+# set default storage class 
+oc patch storageclass kubevirt-hostpath-provisioner -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+
+oc -n default expose service my-release-mariadb-galera --type=NodePort --name=my-release-mariadb-galera-nodeport --generator="service/v2"
+
+
+
+4.8.0-0.microshift-2022-04-20-182108
 ```
