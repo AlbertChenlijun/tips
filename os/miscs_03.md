@@ -11261,4 +11261,20 @@ oc image mirror quay.io/submariner/submariner-operator:0.12.0        file://subm
 oc image mirror quay.io/submariner/submariner-route-agent:0.12.0     file://submariner/submariner-route-agent:0.12.0
 oc image mirror  gcr.io/google_containers/pause:latest               file://google_containers/pause:latest
 
+
+cat <<EOF | oc create -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-macvlan
+EOF
+
+# Galera 防火墙端口
+sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=4567/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=4568/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=4444/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=4567/udp
+sudo firewall-cmd --reload
+
 ```
