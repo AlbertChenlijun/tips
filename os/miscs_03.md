@@ -11353,4 +11353,9 @@ wsrep_sst_auth="mariabackup:mypassword"
 innodb_flush_log_at_trx_commit=2
 # MYISAM REPLICATION SUPPORT #
 wsrep_replicate_myisam=ON
+
+
+GRANT ALL PRIVILEGES ON *.* to mariabackup@'%' IDENTIFIED BY '4Up6i4Mttw' WITH GRANT OPTION;
+
+mariabackup:4Up6i4Mttw
 ```
