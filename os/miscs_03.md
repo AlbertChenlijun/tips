@@ -11376,5 +11376,6 @@ ocp4.10 -n openshift-machine-api scale machineset $NAME-worker-us-east-2a --repl
 ocp4.10 -n openshift-cnv logs $(ocp4.10 -n openshift-cnv get pods -l kubevirt.io=virt-operator -o name | head -1) 
 ocp4.10 -n openshift-cnv logs $(ocp4.10 -n openshift-cnv get pods -l kubevirt.io=virt-operator -o name | tail -1) 
 
-
+# Kubevirt API Resources
+ocp4.10 api-resources | grep kubevirt
 ```
