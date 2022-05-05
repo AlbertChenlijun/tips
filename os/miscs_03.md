@@ -11358,4 +11358,18 @@ wsrep_replicate_myisam=ON
 GRANT ALL PRIVILEGES ON *.* to mariabackup@'%' IDENTIFIED BY '4Up6i4Mttw' WITH GRANT OPTION;
 
 mariabackup:4Up6i4Mttw
+
+报错
+ErrMsg:Nacos Server did not start because dumpservice bean construction 
+failure :
+No DataSource set
+
+{
+  "auths": {
+    "registry.gaolantest.greeyun.com:8443": {
+      "auth": "YmFzZTpWK2lpelFGd3BFN0F3UEp1aG9OOGk0RklqZ044T1BYQUVncW9oMFluellKTkFPeEJpVFMvVmZYY0I1QjRTYlN6",
+      "email": ""
+    }
+  }
+}
 ```
