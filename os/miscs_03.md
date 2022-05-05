@@ -11378,4 +11378,8 @@ ocp4.10 -n openshift-cnv logs $(ocp4.10 -n openshift-cnv get pods -l kubevirt.io
 
 # Kubevirt API Resources
 ocp4.10 api-resources | grep kubevirt
+
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon
+
+oc secrets link default my_pull_secret --for=pull
 ```
