@@ -11364,12 +11364,17 @@ ErrMsg:Nacos Server did not start because dumpservice bean construction
 failure :
 No DataSource set
 
-{
-  "auths": {
-    "registry.gaolantest.greeyun.com:8443": {
-      "auth": "YmFzZTpWK2lpelFGd3BFN0F3UEp1aG9OOGk0RklqZ044T1BYQUVncW9oMFluellKTkFPeEJpVFMvVmZYY0I1QjRTYlN6",
-      "email": ""
-    }
-  }
-}
+# 修改 aws instance type
+cluster-c4v6l-5rb2g-worker-us-east-2a
+export NAME=cluster-c4v6l-5rb2g
+ocp4.10 -n openshift-machine-api patch machineset $NAME-worker-us-east-2a \
+    --type=json \
+    -p='[{"op": "replace", "path": "/spec/template/spec/providerSpec/value/instanceType", "value": "m5.metal"}]'
+ocp4.10 -n openshift-machine-api scale machineset $NAME-worker-us-east-2a --replicas=1
+
+# 获取日志
+ocp4.10 -n openshift-cnv logs $(ocp4.10 -n openshift-cnv get pods -l kubevirt.io=virt-operator -o name | head -1) 
+ocp4.10 -n openshift-cnv logs $(ocp4.10 -n openshift-cnv get pods -l kubevirt.io=virt-operator -o name | tail -1) 
+
+
 ```
