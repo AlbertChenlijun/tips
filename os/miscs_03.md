@@ -11382,4 +11382,19 @@ ocp4.10 api-resources | grep kubevirt
 oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon
 
 oc secrets link default my_pull_secret --for=pull
+
+# 报错
+[root@fen1unit2 ~]# crictl -D  pull registry.gaolantest.greeyun.com:8443/gaolan/dev/gaolan-gateway:latest
+DEBU[0000] get image connection                         
+DEBU[0000] connect using endpoint 'unix:///var/run/crio/crio.sock' with '2s' timeout 
+DEBU[0000] connected successfully using endpoint: unix:///var/run/crio/crio.sock 
+DEBU[0000] PullImageRequest: &PullImageRequest{Image:&ImageSpec{Image:registry.gaolantest.greeyun.com:8443/gaolan/dev/gaolan-gateway:latest,Annotations:map[string]string{},},Auth:nil,SandboxConfig:nil,} 
+DEBU[0000] PullImageResponse: nil                       
+FATA[0000] pulling image: rpc error: code = Unknown desc = Error reading manifest latest in registry.gaolantest.greeyun.com:8443/gaolan/dev/gaolan-gateway: unauthorized: access to the requested resource is not authorized 
+
+oc image mirror quay.io/microshift/microshift:4.8.0-0.microshift-2022-04-20-182108 file://microshift/microshift:4.8.0-0.microshift-2022-04-20-182108
+tar cf xxxx.tar ./
+tar xf xxxx.tar 
+oc image mirror  --from-dir=./  file://microshift/microshift:4.8.0-0.microshift-2022-04-20-182108         registry.gaolantest.greeyun.com:8443/microshift/microshift/microshift:4.8.0-0.microshift-2022-04-20-182108
+
 ```
