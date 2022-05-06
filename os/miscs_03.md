@@ -11397,4 +11397,12 @@ tar cf xxxx.tar ./
 tar xf xxxx.tar 
 oc image mirror  --from-dir=./  file://microshift/microshift:4.8.0-0.microshift-2022-04-20-182108         registry.gaolantest.greeyun.com:8443/microshift/microshift/microshift:4.8.0-0.microshift-2022-04-20-182108
 
+{
+  "auths": {
+    "registry.gaolantest.greeyun.com:8443": {
+      "auth": "YmFzZTpWK2lpelFGd3BFN0F3UEp1aG9OOGk0RklqZ044T1BYQUVncW9oMFluellKTkFPeEJpVFMvVmZYY0I1QjRTYlN6",
+      "email": ""
+    }
+  }
+}
 ```
