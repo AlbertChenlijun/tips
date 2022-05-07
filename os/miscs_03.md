@@ -11408,6 +11408,8 @@ oc image mirror  --from-dir=./  file://microshift/microshift:4.8.0-0.microshift-
 
 setsebool -P virt_use_nfs 1
 
+https://bugzilla.redhat.com/show_bug.cgi?id=2026621
+https://chat.google.com/room/AAAAgKto59A/2SW621lTx9o
 
 NNCP new in OCP 4.10.1 
 
@@ -11430,5 +11432,17 @@ NNCP new in OCP 4.10.1
             - name: eno4
               vlan: {}  ###### This is new
 
+desiredState->interfaces->bridge->port->vlan
+
+oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+
+oc -n openshift-ingress patch deployment router-default --type json -p '[{"op": "add", "path": "/spec/", "value": true}]'
+spec.template.spec.containers[0].env
+
+oc -n openshift-ingress patch deployment router-default --type='merge'  --patch='{"spec":{"template":{"spec":{"containers":{"env":[{"name": "ROUTER_SUBDOMAIN", "value":"${name}-${namespace}.apps.example.com"}]}}}}}'
+
+oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${name}-\${namespace}.apps.example.com" ROUTER_ALLOW_WILDCARD_ROUTES="true" ROUTER_OVERRIDE_HOSTNAME="true"
+
+[{"name": "minio", "image":"quay.ocp4.rhcnsa.com/minio/minio:latest"}]
 
 ```
