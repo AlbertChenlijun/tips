@@ -11445,4 +11445,32 @@ oc -n openshift-ingress set env deployment/router-default ROUTER_SUBDOMAIN="\${n
 
 [{"name": "minio", "image":"quay.ocp4.rhcnsa.com/minio/minio:latest"}]
 
+
+quay.io pull secret
+cat > auth.json <<EOF
+{
+  "auths": {
+    "quay.io": {
+      "auth": "andhbmcxOmlCTitxQVNqRDRaaU50ZEo5YVVUTHVaKy8yaGFBMWRJQjlBdGVxUjZFWGYxUWFPWnBjblRDTG1OYnB2N3htWUo=",
+      "email": ""
+    }
+  }
+}
+EOF
+
+ocedge1 new-project test
+ocedge1 apply -f ./template.yaml 
+ocedge1 new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+oc new-app --template=test/mariadb-galera-persistent-storageclass-tony -p DATABASE_SERVICE_NAME="galera" -p STORAGE_CLASS="kubevirt-hostpath-provisioner" -p NUMBER_OF_GALERA_MEMBERS="1"
+
+oc new-app --template=test/mariadb-galera-persistent-storageclass-tony -p STORAGE_CLASS="gp2" -p SOURCE_REPOSITORY_URL="https://github.com/sclorg/rails-ex.git"
+
+oc image mirror --from-dir=./ file://jwang/mariadb-galera-3-cluster quay.ocp4.rhcnsa.com/jwang/mariadb-galera-3-cluster
+
+skopeo copy dir:///./v2/jwang/mariadb-galera-3-cluster:v1.0.1 docker://quay.ocp4.rhcnsa.com/jwang/mariadb-galera-3-cluster:v1.0.1
+
+oc -n test create secret generic quay --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc -n test patch sa default -p '{"imagePullSecrets": [{"name": "quay"}]}'
+
+https://asciinema.org/a/epCfLsub63YM0S9qgEtDXb25U
 ```
