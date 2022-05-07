@@ -11405,4 +11405,30 @@ oc image mirror  --from-dir=./  file://microshift/microshift:4.8.0-0.microshift-
     }
   }
 }
+
+setsebool -P virt_use_nfs 1
+
+
+NNCP new in OCP 4.10.1 
+
+  desiredState:
+    interfaces:
+      - name: br1 
+        description: Linux bridge with eno3 as a port 
+        type: linux-bridge 
+        state: up 
+        ipv4:
+          address:
+          - ip: 164.191.1.151
+            prefix-length: 24
+          enabled: true 
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: eno4
+              vlan: {}  ###### This is new
+
+
 ```
