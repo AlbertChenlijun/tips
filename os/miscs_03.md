@@ -11479,4 +11479,33 @@ M_ROUTE="gaolan-web-wms-gaolan-dev.apps.fen1unit2.gaolantest.greeyun.com"
 openssl s_client -host ${M_ROUTE} -port 443 -showcerts > trace < /dev/null
 cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee m.crt  
 
+Edge Route Example
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: httpd-cert
+spec:
+  host: api-gateway-test.apps.domain.com
+  port:
+    targetPort: http
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      -----END CERTIFICATE-----
+    caCertificate: |
+      -----BEGIN CERTIFICATE-----
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      -----END CERTIFICATE-----
+    key: |
+      -----BEGIN RSA PRIVATE KEY-----
+      -----END RSA PRIVATE KEY-----
+  to:
+    kind: Service
+    name: httpd
+
+
 ```
