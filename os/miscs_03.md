@@ -11473,4 +11473,9 @@ oc -n test create secret generic quay --from-file=.dockerconfigjson=auth.json --
 oc -n test patch sa default -p '{"imagePullSecrets": [{"name": "quay"}]}'
 
 https://asciinema.org/a/epCfLsub63YM0S9qgEtDXb25U
+
+M_ROUTE="gaolan-web-wms-gaolan-dev.apps.fen1unit2.gaolantest.greeyun.com"
+openssl s_client -host ${M_ROUTE} -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee m.crt  
+
 ```
