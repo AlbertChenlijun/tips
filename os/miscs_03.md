@@ -11518,4 +11518,9 @@ oc image mirror  --from-dir=./  file://baseimages/bitnami/mysqld-exporter:0.14.0
 oc -n nginx-test expose service nginx --type=NodePort --name=nginx-nodeport --generator="service/v2"
 oc -n nginx-test patch svc nginx-nodeport --type json -p '[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 8080}]'
 
+oc image mirror quay.io/jaysonzhao/galera:v1 file://baseimages/jaysonzhao/galera:v1
+tar cf xxxx.tar ./
+tar xf xxxx.tar 
+oc image mirror  --from-dir=./  file://baseimages/jaysonzhao/galera:v1         registry.gaolantest.greeyun.com:8443/baseimages/jaysonzhao/galera:v1
+
 ```
