@@ -11509,4 +11509,9 @@ spec:
 
 
 https://www.worldtimebuddy.com/cst-to-china-beijing
+
+oc image mirror docker.io/bitnami/mysqld-exporter:0.14.0-debian-10-r45 file://baseimages/bitnami/mysqld-exporter:0.14.0-debian-10-r45
+tar cf xxxx.tar ./
+tar xf xxxx.tar 
+oc image mirror  --from-dir=./  file://baseimages/bitnami/mysqld-exporter:0.14.0-debian-10-r45         registry.gaolantest.greeyun.com:8443/baseimages/bitnami/mysqld-exporter:0.14.0-debian-10-r45
 ```
