@@ -11523,4 +11523,7 @@ tar cf xxxx.tar ./
 tar xf xxxx.tar 
 oc image mirror  --from-dir=./  file://baseimages/jaysonzhao/galera:v1         registry.gaolantest.greeyun.com:8443/baseimages/jaysonzhao/galera:v1
 
+Galera 集群跨多 k8s 集群
+https://github.com/jaysonzhao/mariadb-galera-okd
+
 ```
