@@ -11526,4 +11526,8 @@ oc image mirror  --from-dir=./  file://baseimages/jaysonzhao/galera:v1         r
 Galera 集群跨多 k8s 集群
 https://github.com/jaysonzhao/mariadb-galera-okd
 
+
+# 查看 OpenShift 的 Entitlement
+subscription-manager list --available --matches '*OpenShift Container Platform*' | grep -E "Pool ID|Entitlement Type" 
+
 ```
