@@ -11530,4 +11530,84 @@ https://github.com/jaysonzhao/mariadb-galera-okd
 # 查看 OpenShift 的 Entitlement
 subscription-manager list --available --matches '*OpenShift Container Platform*' | grep -E "Pool ID|Entitlement Type" 
 
+# 禁用其他软件频道，启用 rhel-8-for-x86_64-baseos-rpms, rhel-8-for-x86_64-appstream-rpms 和 rhocp-${OCP_MAJOR_VER}-for-rhel-8-x86_64-rpms
+subscription-manager repos --disable="*"
+subscription-manager repos \
+    --enable="rhel-8-for-x86_64-baseos-rpms" \
+    --enable="rhel-8-for-x86_64-appstream-rpms" \
+    --enable="rhocp-${OCP_MAJOR_VER}-for-rhel-8-x86_64-rpms" 
+
+mkdir -p ${YUM_PATH}/rhel-8-for-x86_64-baseos-rpms
+mkdir -p ${YUM_PATH}/rhel-8-for-x86_64-appstream-rpms
+mkdir -p ${YUM_PATH}/rhocp-${OCP_MAJOR_VER}-for-rhel-8-x86_64-rpms
+# 对于 rhel8 的 appstream 软件仓库来说，需要下载并且更新 modules.yaml 文件
+# 链接: https://pan.baidu.com/s/1wOR0IEW81QnMcYSE0FPWmQ?pwd=6gi7 提取码: 6gi7 复制这段内容后打开百度网盘手机App，操作更方便哦
+cd /repos/rhel8/rhel-8-for-x86_64-appstream-rpms
+拷贝这个文件到 /repos/rhel8/rhel-8-for-x86_64-appstream-rpms 下
+modifyrepo modules.yaml repodata/
+# 参见: https://bugzilla.redhat.com/show_bug.cgi?id=1795936
+
+# 批量下载 
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+yum -y install yum-utils createrepo 
+for repo in $(subscription-manager repos --list-enabled | grep "Repo ID" | awk '{print $3}'); do
+    reposync --gpgcheck -n --repoid=${repo} --download-path=${YUM_PATH} --downloadcomps --download-metadata
+    createrepo -v ${YUM_PATH}/${repo} -o ${YUM_PATH}/${repo} 
+done
+
+
+
+# 用 grpcurl 检查 index 内容
+mkdir -p redhat-operator-index/v4.10
+podman run -p50051:50051 -it registry.redhat.io/redhat/redhat-operator-index:v4.10
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > redhat-operator-index/v4.10/packages.out
+cat redhat-operator-index/v4.10/packages.out
+mkdir -p certified-operator-index/v4.10
+podman run -p50051:50051 -it registry.redhat.io/redhat/certified-operator-index:v4.10
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > certified-operator-index/v4.10/packages.out
+cat certified-operator-index/v4.10/packages.out
+mkdir -p community-operator-index/v4.10
+podman run -p50051:50051 -it registry.redhat.io/redhat/community-operator-index:v4.10
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > community-operator-index/v4.10/packages.out
+cat community-operator-index/v4.10/packages.out
+mkdir -p upstream-community-operators/latest
+podman run -p50051:50051 -it quay.io/operator-framework/upstream-community-operators:latest
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > upstream-community-operators/latest/packages.out
+cat upstream-community-operators/latest/packages.out
+mkdir -p gitea-catalog/latest
+podman run -p50051:50051 -it quay.io/gpte-devops-automation/gitea-catalog:latest
+grpcurl -plaintext localhost:50051 api.Registry/ListPackages > gitea-catalog/latest/packages.out
+cat gitea-catalog/latest/packages.out
+
+# 同步 4.9.9 和 4.9.10
+# 通过 operator-index 里的部分 operator 
+cat > image-config-realse-local.yaml <<EOF
+apiVersion: mirror.openshift.io/v1alpha1
+kind: ImageSetConfiguration
+storageConfig:
+  local:
+    path: /root/oc-workspace
+mirror:
+  ocp:
+    channels:
+      - name: fast-4.10
+        versions:
+          - '4.10.13'
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.10
+      headsOnly: false
+      packages:
+        - name: rhacs-operator
+EOF
 ```
+
+### 如何在 ACM 里使用 Git Repo 来部署 Helm subscription
+For example, if you have Git write access to a folder: https://github.com/stolostron/multicloud-operators-subscription/tree/main/examples/helmrepo-hub-channel
+then you can create a Git subscription<br>
+For example, https://github.com/stolostron/multicloud-operators-subscription/tree/main/examples/remote-git-sub<br>
+But change the "apps.open-cluster-management.io/github-path: " to "examples/helmrepo-hub-channel"
+https://github.com/stolostron/multicloud-operators-subscription/blob/main/examples/remote-git-sub/subscription.yaml#L6<br>
+So now the Git subscription is watching the Helm subscription on the Git folder: "helmrepo-hub-channel"
+
+
