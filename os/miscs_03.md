@@ -11634,3 +11634,7 @@ https://jia.je/devops/2021/04/02/k8s-fluentd-log-collect/
 ### microshift metric 
 https://github.com/openshift/microshift/issues/302<br>
 https://github.com/kubernetes-incubator/metrics-server<br>
+https://prometheus.io/blog/2021/11/16/agent/<br>
+```
+kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
+```
