@@ -11631,3 +11631,6 @@ So now the Git subscription is watching the Helm subscription on the Git folder:
 ### k8s fluentd log collect
 https://jia.je/devops/2021/04/02/k8s-fluentd-log-collect/ 
 
+### microshift metric 
+https://github.com/openshift/microshift/issues/302<br>
+https://github.com/kubernetes-incubator/metrics-server<br>
