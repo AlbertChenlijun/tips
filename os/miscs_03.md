@@ -11600,6 +11600,24 @@ mirror:
       packages:
         - name: rhacs-operator
 EOF
+
+oc -n sealed-secrets logs $(oc -n sealed-secrets get pods -l name=sealed-secrets-controller -o name)
+
+oc create secret generic test-secret --from-literal=dummykey1=supersecret --from-literal=dummykey2=topsecret --dry-run=client -o yaml >test-secret.yaml
+
+cat test-secret.yaml |kubeseal --controller-namespace sealed-secrets -o yaml --scope strict > sealedtest-secret.yaml
+oc apply -f sealedtest-secret.yaml
+
+oc describe secret/test-secret
+oc describe sealedsecret/test-secret
+
+oc create secret generic test-secret --from-literal=dummykey1=supersecret --from-literal=dummykey2=topsecret --from-literal=dummykey3=new-secret --dry-run=client -o yaml >test-secret.yaml
+
+cat test-secret.yaml |kubeseal --controller-namespace sealed-secrets -o yaml --scope strict --merge-into sealedtest-secret.yaml
+
+oc apply -f sealedtest-secret.yaml
+oc describe secret/test-secret
+oc describe sealedsecret/test-secret
 ```
 
 ### 如何在 ACM 里使用 Git Repo 来部署 Helm subscription
@@ -11610,4 +11628,6 @@ But change the "apps.open-cluster-management.io/github-path: " to "examples/helm
 https://github.com/stolostron/multicloud-operators-subscription/blob/main/examples/remote-git-sub/subscription.yaml#L6<br>
 So now the Git subscription is watching the Helm subscription on the Git folder: "helmrepo-hub-channel"
 
+### k8s fluentd log collect
+https://jia.je/devops/2021/04/02/k8s-fluentd-log-collect/ 
 
