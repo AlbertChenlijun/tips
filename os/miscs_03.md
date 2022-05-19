@@ -11651,4 +11651,24 @@ oc adm policy remove-scc-from-user anyuid -z cadvisor
 kubectl get --raw "/apis/metrics.k8s.io/v1beta1/namespaces/kube-system/pods/kube-flannel-ds-29fjh" | jq '.'
 Error from server (NotFound): podmetrics.metrics.k8s.io "kube-system/kube-flannel-ds-29fjh" not found
 
+https://access.redhat.com/solutions/3543931
+https://access.redhat.com/discussions/3404341
+
+# 获取用户 useroauthaccesstoken
+$ oc get useroauthaccesstokens
+oc login --token=sha256~erNAsn1f-Kjy-zbFAipyma651l4Vf1AvPY5hQbozBjU --server=https://api...:6443
+
+TOKEN="sha256~erNAsn1f-Kjy-zbFAipyma651l4Vf1AvPY5hQbozBjU"
+curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics
+curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
+
+$ oc login https://<api>:6443
+$ oc get useroauthaccesstoken
+$ TOKEN="<auth_token_obtained>"
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/stats/summary
+
+# 
+https://docs.openshift.com/container-platform/4.9/authentication/using-service-accounts-in-applications.html
 ```
