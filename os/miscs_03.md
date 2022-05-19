@@ -11671,4 +11671,21 @@ $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/st
 
 # 
 https://docs.openshift.com/container-platform/4.9/authentication/using-service-accounts-in-applications.html
+
+oc project kube-system
+TOKEN=$(oc serviceaccounts get-token default)
+
+
+# 查看 
+$ kubectl get rolebinding,clusterrolebinding --all-namespaces -o jsonpath='{range .items[?(@.subjects[0].name=="SERVICE_ACCOUNT_NAME")]}[{.roleRef.kind},{.roleRef.name}]{end}'
+$ oc get rolebinding,clusterrolebinding --all-namespaces -o jsonpath='{range .items[?(@.subjects[0].name=="SERVICE_ACCOUNT_NAME")]}[{.roleRef.kind},{.roleRef.name}]{end}'
+
+
+$ kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+$ oc project kube-system
+$ TOKEN=$(oc serviceaccounts get-token default)
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
+$ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/stats/summary
+
 ```
