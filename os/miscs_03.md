@@ -11635,9 +11635,15 @@ https://jia.je/devops/2021/04/02/k8s-fluentd-log-collect/
 https://github.com/openshift/microshift/issues/302<br>
 https://github.com/kubernetes-incubator/metrics-server<br>
 https://prometheus.io/blog/2021/11/16/agent/<br>
+https://jiulongzaitian.gitbooks.io/kubernetes/content/yuan-ma-fen-xi/scheduler/kubelet-cadvisor.html<br>
 ```
 kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
 
 # install kustomize
 curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+
+# try add scc to sa
+oc adm policy add-scc-to-user anyuid -z cadvisor
+oc adm policy add-scc-to-user privileges -z cadvisor
+oc adm policy remove-scc-from-user anyuid -z cadvisor
 ```
