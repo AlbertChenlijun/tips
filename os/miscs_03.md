@@ -11637,4 +11637,7 @@ https://github.com/kubernetes-incubator/metrics-server<br>
 https://prometheus.io/blog/2021/11/16/agent/<br>
 ```
 kubectl apply -f https://raw.githubusercontent.com/redhat-et/ushift-workload/master/metrics-server/metrics-components.yaml
+
+# install kustomize
+curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 ```
