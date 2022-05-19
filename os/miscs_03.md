@@ -11646,4 +11646,9 @@ curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack
 oc adm policy add-scc-to-user anyuid -z cadvisor
 oc adm policy add-scc-to-user privileges -z cadvisor
 oc adm policy remove-scc-from-user anyuid -z cadvisor
+
+# https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
+kubectl get --raw "/apis/metrics.k8s.io/v1beta1/namespaces/kube-system/pods/kube-flannel-ds-29fjh" | jq '.'
+Error from server (NotFound): podmetrics.metrics.k8s.io "kube-system/kube-flannel-ds-29fjh" not found
+
 ```
