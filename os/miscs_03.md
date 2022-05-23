@@ -11688,4 +11688,17 @@ $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/me
 $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/metrics/cadvisor
 $ curl -Ssk --header "Authorization: Bearer ${TOKEN}" https://localhost:10250/stats/summary
 
+
+# podman logs microshift has this error
+...
+E0519 10:02:02.446006       1 summary_sys_containers.go:47] "Failed to get system container stats" err="failed to get cgroup stats for \"/machine.slice/libpod-8fbd4bf44dca1c09dd59f60801b9e4bb1c52897f771c04b35408e3faaf61a7c6.scope\": failed to get container info for \"/machine.slice/libpod-8fbd4bf44dca1c09dd59f60801b9e4bb1c52897f771c04b35408e3faaf61a7c6.scope\": unknown container \"/machine.slice/libpod-8fbd4bf44dca1c09dd59f60801b9e4bb1c52897f771c04b35408e3faaf61a7c6.scope\"" containerName="/machine.slice/libpod-8fbd4bf44dca1c09dd59f60801b9e4bb1c52897f771c04b35408e3faaf61a7c6.scope"
+E0519 10:02:02.446036       1 summary_sys_containers.go:47] "Failed to get system container stats" err="failed to get cgroup stats for \"/system.slice/crio.service\": failed to get container info for \"/system.slice/crio.service\": unknown container \"/system.slice/crio.service\"" containerName="/system.slice/crio.service"
+E0519 10:02:02.446052       1 summary_sys_containers.go:47] "Failed to get system container stats" err="failed to get cgroup stats for \"/system.slice\": failed to get container info for \"/system.slice\": unknown container \"/system.slice\"" containerName="/system.slice"
+
+How to enable CgroupV2 on Red Hat Enterprise Linux 8
+https://access.redhat.com/solutions/3777261
+# grub2-editenv - list | grep kernelopts
+kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet 
+
+# grub2-editenv - set "kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap systemd.unified_cgroup_hierarchy=1"
 ```
