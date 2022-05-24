@@ -11721,7 +11721,7 @@ https://songjlg.github.io/2021/10/21/%E5%88%A9%E7%94%A8multus-cni%E5%92%8Cmacvla
 1. 定义 NetworkAttachmentDefinition
 # type 为 macvlan
 # mode 为 bridge
-# 
+# ipam type 为 host-local
 cat > macvlan.yaml <<EOF
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
@@ -11742,6 +11742,31 @@ spec:
           { "dst": "0.0.0.0/0" }
         ],
         "gateway": "192.168.174.2"
+      }
+    }'
+EOF
+
+2. 定义 NetworkAttachmentDefinition
+# type 为 macvlan
+# mode 为 bridge
+# ipam type 为 whereabout
+cat > macvlan.yaml <<EOF
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf
+spec: 
+  config: '{
+      "cniVersion": "0.3.0",
+      "type": "macvlan",
+      "master": "ens33",
+      "mode": "bridge",
+      "ipam": {
+        "type": "whereabout",
+        "subnet": "192.168.174.0/24",
+        "rangeStart": "192.168.174.200",
+        "rangeEnd": "192.168.174.216",
+        "gateway": "192.168.174.1"
       }
     }'
 EOF
