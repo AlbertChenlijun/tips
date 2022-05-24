@@ -11701,4 +11701,78 @@ https://access.redhat.com/solutions/3777261
 kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet 
 
 # grub2-editenv - set "kernelopts=root=/dev/mapper/rhel-root ro resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap systemd.unified_cgroup_hierarchy=1"
+
+args="-i ISO11 upload RHEL-8.6.0-20220420.3-x86_64-dvd1.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+```
+
+### OpenShift 下定义 macvlan 的方法
+https://www.programminghunter.com/article/98201008293/
+```
+1. 定义 NetworkAttachmentDefinition
+# type 为 macvlan
+# mode 为 bridge
+# 
+cat > macvlan.yaml <<EOF
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf
+spec: 
+  config: '{
+      "cniVersion": "0.3.0",
+      "type": "macvlan",
+      "master": "ens33",
+      "mode": "bridge",
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.174.0/24",
+        "rangeStart": "192.168.174.200",
+        "rangeEnd": "192.168.174.216",
+        "routes": [
+          { "dst": "0.0.0.0/0" }
+        ],
+        "gateway": "192.168.174.2"
+      }
+    }'
+EOF
+
+cat > macvlan.yaml <<EOF
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: cumucore-vlan432-macvlan
+  namespace: cumucore
+spec: 
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "vlan432",
+      "ipam": {
+        "type": "static",
+        "routes": [
+          { 
+            "dst": "0.0.0.0/0" ,
+            "gw": "172.16.12.1"
+          }  
+        ]
+      }
+    }'
+EOF
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-pod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[{ "name": "cumucore-vlan432-macvlan", "ips": [ "172.16.12.149/24" ] }]'
+
 ```
