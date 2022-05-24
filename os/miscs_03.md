@@ -11714,7 +11714,8 @@ EOF
 ```
 
 ### OpenShift 下定义 macvlan 的方法
-https://www.programminghunter.com/article/98201008293/
+https://www.programminghunter.com/article/98201008293/<br>
+https://docs.google.com/document/d/1el-dYhNxU-Bzin3m4y5kiLnJ3ECa0q4svM01lxb_Ixs/edit<br>
 ```
 1. 定义 NetworkAttachmentDefinition
 # type 为 macvlan
