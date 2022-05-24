@@ -11762,7 +11762,7 @@ spec:
       "master": "ens33",
       "mode": "bridge",
       "ipam": {
-        "type": "whereabout",
+        "type": "whereabouts",
         "subnet": "192.168.174.0/24",
         "rangeStart": "192.168.174.200",
         "rangeEnd": "192.168.174.216",
