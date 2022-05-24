@@ -11716,6 +11716,7 @@ EOF
 ### OpenShift 下定义 macvlan 的方法
 https://www.programminghunter.com/article/98201008293/<br>
 https://docs.google.com/document/d/1el-dYhNxU-Bzin3m4y5kiLnJ3ECa0q4svM01lxb_Ixs/edit<br>
+https://songjlg.github.io/2021/10/21/%E5%88%A9%E7%94%A8multus-cni%E5%92%8Cmacvlan%E5%AE%9E%E7%8E%B0pod%E5%A4%9A%E7%BD%91%E5%8D%A1/<br>
 ```
 1. 定义 NetworkAttachmentDefinition
 # type 为 macvlan
@@ -11775,5 +11776,7 @@ metadata:
   name: example-pod
   annotations:
     k8s.v1.cni.cncf.io/networks: '[{ "name": "cumucore-vlan432-macvlan", "ips": [ "172.16.12.149/24" ] }]'
+
+
 
 ```
