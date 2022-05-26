@@ -11758,15 +11758,15 @@ metadata:
 spec: 
   config: '{
       "cniVersion": "0.3.0",
-      "type": "macvlan",
+      "type": "ipvlan",
       "master": "ens33",
       "mode": "bridge",
       "ipam": {
         "type": "whereabouts",
-        "subnet": "192.168.174.0/24",
-        "rangeStart": "192.168.174.200",
-        "rangeEnd": "192.168.174.216",
-        "gateway": "192.168.174.1"
+        "subnet": "192.168.100.0/24",
+        "rangeStart": "192.168.100.200",
+        "rangeEnd": "192.168.100.216",
+        "gateway": "192.168.100.1"
       }
     }'
 EOF
@@ -11803,5 +11803,173 @@ metadata:
     k8s.v1.cni.cncf.io/networks: '[{ "name": "cumucore-vlan432-macvlan", "ips": [ "172.16.12.149/24" ] }]'
 
 
+oc annotate pods $(oc get pods -l app=hello -o name) k8s.v1.cni.cncf.io/networks='macvlan-conf'
 
+oc create deploy hello --image=quay.io/tasato/hello-js:latest
+oc annotate deployment hello k8s.v1.cni.cncf.io/networks='macvlan-conf'
+oc rsh $(oc get pods -l app=hello -o name)
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf
+spec:
+  containers:
+  - name: samplepod1
+    command: ["/bin/bash", "-c", "sleep 2000000000000"]
+    image: quay.io/tasato/hello-js:latest
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod4
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf
+spec:
+  containers:
+  - name: samplepod4
+    command: ["/bin/sh", "-c", "sleep 2000000000000"]
+    image: quay.io/tasato/hello-js:latest
+EOF
+
+
+cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf-1
+spec: 
+  config: '{
+      "cniVersion": "0.3.0",
+      "type": "macvlan",
+      "master": "ens5",
+      "mode": "bridge",
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.174.0/24",
+        "rangeStart": "192.168.174.200",
+        "rangeEnd": "192.168.174.216",
+        "routes": [
+          { "dst": "0.0.0.0/0" }
+        ],
+        "gateway": "192.168.174.2"
+      }
+    }'
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf-2
+spec: 
+  config: '{
+      "cniVersion": "0.3.0",
+      "type": "macvlan",
+      "master": "ens5",
+      "mode": "bridge",
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.174.0/24",
+        "rangeStart": "192.168.174.217",
+        "rangeEnd": "192.168.174.226",
+        "routes": [
+          { "dst": "0.0.0.0/0" }
+        ],
+        "gateway": "192.168.174.2"
+      }
+    }'
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod5
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf-1
+spec:
+  containers:
+  - name: samplepod5
+    command: ["/bin/sh", "-c", "sleep 2000000000000"]
+    image: quay.io/tasato/hello-js:latest
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod6
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf-1
+spec:
+  containers:
+  - name: samplepod6
+    command: ["/bin/sh", "-c", "sleep 2000000000000"]
+    image: quay.io/tasato/hello-js:latest
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod8
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf-2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: 'ip-10-0-204-200.us-east-2.compute.internal'
+  containers:
+  - name: samplepod8
+    command: ["/bin/sh", "-c", "sleep 2000000000000"]
+    image: quay.io/tasato/hello-js:latest
+EOF
+
+
+# ipvlan net-attach-def example
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ipvlanstaticip30
+  namespace: multus-demo
+spec: 
+  config: '{
+      "cniVersion": "0.3.1",
+      "name": "ipvlanstaticip30",
+      "type": "ipvlan",
+      "master": "ens5",
+      "mode": "l2",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          { "address": "172.26.168.30/20" }
+        ]
+      }
+    }'
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ipvlanstaticip31
+  namespace: multus-demo
+spec: 
+  config: '{
+      "cniVersion": "0.3.1",
+      "name": "ipvlanstaticip31",
+      "type": "ipvlan",
+      "master": "ens5",
+      "mode": "l2",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          { "address": "172.26.168.31/20" }
+        ]
+      }
+    }'
 ```
