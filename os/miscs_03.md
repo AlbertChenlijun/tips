@@ -11973,5 +11973,22 @@ spec:
       }
     }'
 
+### 阿里云为实例添加辅助私网IP
+https://www.fzxm.com/help/20210616211040000.html
+https://help.aliyun.com/document_detail/101180.htm#section-caq-n6w-xqj
 
+### 腾讯云弹性网卡辅助内网IP
+https://cloud.tencent.com/document/product/213/6514
+
+### 华为云网卡管理虚拟IP地址
+https://support.huaweicloud.com/usermanual-ecs/ecs_03_0506.html
+
+### Azure网卡配置多私网IP地址
+https://docs.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-multiple-ip-addresses-portal
+
+### AWS网卡配置多私网IP地址
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/MultipleIP.html
+
+### Google Alias IP Range 设置
+https://cloud.google.com/migrate/compute-engine/docs/4.2/how-to/networking/using-multiple-ip-addresses
 ```
