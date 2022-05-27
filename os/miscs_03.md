@@ -11999,4 +11999,5 @@ podman run -v ${PWD}:/mirror:Z --rm quay.io/openshift-release-dev/ocp-v4.0-art-d
 
 # https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/release.txt
 # oc adm release info 可以用来查看 oc-mirror 的 sha256 digest
+
 ```
