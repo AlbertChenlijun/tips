@@ -11992,3 +11992,11 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/MultipleIP.html
 ### Google Alias IP Range 设置
 https://cloud.google.com/migrate/compute-engine/docs/4.2/how-to/networking/using-multiple-ip-addresses
 ```
+
+### 在 podman 容器里运行 oc-mirror
+```
+podman run -v ${PWD}:/mirror:Z --rm quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1f88eabb65686bde3c1812fccdd17250630f1106fe26e5ced9098584c118a86c --config /mirror/cincinnati-operator.yaml file:///mirror
+
+# https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/release.txt
+# oc adm release info 可以用来查看 oc-mirror 的 sha256 digest
+```
