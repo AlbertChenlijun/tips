@@ -12000,4 +12000,9 @@ podman run -v ${PWD}:/mirror:Z --rm quay.io/openshift-release-dev/ocp-v4.0-art-d
 # https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/release.txt
 # oc adm release info 可以用来查看 oc-mirror 的 sha256 digest
 
+
+E0530 07:14:57.090065       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:kubernetes.io/kube-apiserver-client" controller failed to sync "addon-edge-4-observability-controller-m9j89", err: namespaces "open-cluster-management-addon-observability" not found
+E0530 07:15:01.322209       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:open-cluster-management.io/observability-signer" controller failed to sync "addon-edge-4-observability-controller-nz67j", err: namespaces "open-cluster-management-addon-observability" not found
+E0530 07:15:38.146712       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:kubernetes.io/kube-apiserver-client" controller failed to sync "addon-edge-4-observability-controller-m9j89", err: namespaces "open-cluster-management-addon-observability" not found
+E0530 07:15:42.353376       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:open-cluster-management.io/observability-signer" controller failed to sync "addon-edge-4-observability-controller-nz67j", err: namespaces "open-cluster-management-addon-observability" not found
 ```
