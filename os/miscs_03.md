@@ -12006,3 +12006,11 @@ E0530 07:15:01.322209       1 base_controller.go:251] "ClientCertController@addo
 E0530 07:15:38.146712       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:kubernetes.io/kube-apiserver-client" controller failed to sync "addon-edge-4-observability-controller-m9j89", err: namespaces "open-cluster-management-addon-observability" not found
 E0530 07:15:42.353376       1 base_controller.go:251] "ClientCertController@addon:observability-controller:signer:open-cluster-management.io/observability-signer" controller failed to sync "addon-edge-4-observability-controller-nz67j", err: namespaces "open-cluster-management-addon-observability" not found
 ```
+
+### 下载 Mac OS 更新
+https://www.techglobex.net/2022/05/download-macos-11.6.6-big-sur-dmg.html<br>
+```
+softwareupdate --list-full-installers
+softwareupdate --fetch-full-installer --full-installer-version 11.6.6 
+
+```
