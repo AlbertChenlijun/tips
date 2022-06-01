@@ -12016,3 +12016,7 @@ softwareupdate -i 'xxx' --verbose
 # 日志在 /var/log/installer.log
 ```
 
+### 测试某个 serviceaccount 是否具有创建某个对象
+```
+oc auth can-i --as system:serviceaccount:openshift-kube-apiserver:installer-sa create pvc --namespace openshift-kube-apiserver
+```
