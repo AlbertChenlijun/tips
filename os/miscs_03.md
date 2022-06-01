@@ -12014,14 +12014,5 @@ https://www.techglobex.net/2022/05/download-macos-11.6.6-big-sur-dmg.html<br>
 softwareupdate -l
 softwareupdate -i 'xxx' --verbose
 # 日志在 /var/log/installer.log
-
-args="-i ISO11 upload RHEL-8.5.0-20211013.2-x86_64-dvd1.iso --force"
-/usr/bin/expect <<EOF
-set timeout -1
-spawn "$prog" $args
-expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
-send "$mypass\r"
-expect eof
-exit
-EOF
 ```
+
