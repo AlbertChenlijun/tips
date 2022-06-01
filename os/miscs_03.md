@@ -12010,13 +12010,18 @@ E0530 07:15:42.353376       1 base_controller.go:251] "ClientCertController@addo
 ### 下载 Mac OS 更新
 https://www.techglobex.net/2022/05/download-macos-11.6.6-big-sur-dmg.html<br>
 ```
-softwareupdate --list-full-installers
-softwareupdate --fetch-full-installer --full-installer-version 11.6.6 
+# 进入安全模式，关机后按 Shift + 电源键开机
+softwareupdate -l
+softwareupdate -i 'xxx' --verbose
+# 日志在 /var/log/installer.log
 
-
-export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
-
-
-
-http://swcdn.apple.com/content/downloads/52/22/012-06885-A_1BIFXLHOA0/qt1cxeksj14s2sl0d0ibkz2d0zegdh6k7b/BridgeOSUpdateCustomer.pkg
+args="-i ISO11 upload RHEL-8.5.0-20211013.2-x86_64-dvd1.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
 ```
