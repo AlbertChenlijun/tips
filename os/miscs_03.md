@@ -12013,4 +12013,10 @@ https://www.techglobex.net/2022/05/download-macos-11.6.6-big-sur-dmg.html<br>
 softwareupdate --list-full-installers
 softwareupdate --fetch-full-installer --full-installer-version 11.6.6 
 
+
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
+
+
+
+http://swcdn.apple.com/content/downloads/52/22/012-06885-A_1BIFXLHOA0/qt1cxeksj14s2sl0d0ibkz2d0zegdh6k7b/BridgeOSUpdateCustomer.pkg
 ```
