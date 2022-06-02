@@ -12020,3 +12020,52 @@ softwareupdate -i 'xxx' --verbose
 ```
 oc auth can-i --as system:serviceaccount:openshift-kube-apiserver:installer-sa create pvc --namespace openshift-kube-apiserver
 ```
+
+### 下载软件包
+```
+https://access.redhat.com/solutions/10154
+
+sudo dnf copr enable -y @redhat-et/microshift
+
+yum install -y yum-utils
+
+mkdir -p /repos/cri
+cd /repos/cri
+yumdownloader crio cri-tools
+
+mkdir -p /repos/microshift
+cd /repos/microshift
+yumdownloader --resolve --alldeps microshift
+
+
+subscription-manager repos --disable=rhel-8-for-x86_64-baseos-rpms --disable=rhel-8-for-x86_64-appstream-rpms --disable=rhocp-4.10-for-rhel-8-x86_64-rpms
+
+composer-cli compose start-ostree报错
+
+Preparing packages...
+        file /etc/issue conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/issue.net conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/os-release conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/redhat-release conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/rpm/macros.dist conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /etc/system-release conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /usr/lib/os-release conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /usr/lib/systemd/system-preset/90-default.preset conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-8.5-0.8.el8.x86_64
+        file /usr/share/redhat-release/EULA conflicts between attempted installs of redhat-release-coreos-48.84-4.el8.x86_64 and redhat-release-eula-8.5-0.8.el8.x86_64
+Traceback (most recent call last):
+  File "/run/osbuild/bin/org.osbuild.rpm", line 334, in <module>
+    r = main(args["tree"], args["inputs"], args["options"])
+  File "/run/osbuild/bin/org.osbuild.rpm", line 298, in main
+    ], cwd=pkgpath, check=True)
+  File "/usr/lib64/python3.6/subprocess.py", line 438, in run
+    output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['rpm', '--verbose', '--root', '/run/osbuild/tree', '--nosignature', '--install', '/tmp/manifest.n5uufi8p']' returned non-zero exit status 254.
+
+
+GITOPS_REPO="https://github.com/wangjun1974/microshift-config"
+export UPGRADE_SERVER_IP=10.66.208.130
+
+
+```
