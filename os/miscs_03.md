@@ -12067,5 +12067,26 @@ subprocess.CalledProcessError: Command '['rpm', '--verbose', '--root', '/run/osb
 GITOPS_REPO="https://github.com/wangjun1974/microshift-config"
 export UPGRADE_SERVER_IP=10.66.208.130
 
+(oc-mirror)[root@jwang ~/rhel4edge/microshift-demos/ostree-demo]# cat c404a1b4-b9f1-4fad-8720-b9f8aab744a2-container.tar | sudo podman load 
+Getting image source signatures
+Copying blob e8da16f8020c [--------------------------------------] 0.0b / 0.0b
+Copying config c9043fdb0f done  
+Writing manifest to image destination
+Storing signatures
+Loaded image(s): @c9043fdb0f059a08199de4ca4f8020132a5e447ab888beeef44c9d65703bec39
 
+cat /tmp/test | grep -o -P '(?<=[@])[a-z0-9]*'
+
+
+(oc-mirror)[root@jwang ~/rhel4edge/microshift-demos/ostree-demo]# diff -urN build.sh.orig build.sh 
+--- build.sh.orig   2022-06-02 17:30:23.190856599 +0800
++++ build.sh    2022-06-02 15:46:45.391367540 +0800
+@@ -59,7 +59,7 @@
+         title "Serving ${parent_blueprint} v${parent_version} container locally"
+         sudo podman rm -f "${parent_blueprint}-server" 2>/dev/null || true
+         sudo podman rmi -f "localhost/${parent_blueprint}:${parent_version}" 2>/dev/null || true
+-        imageid=$(cat "./${parent_blueprint}-${parent_version}-container.tar" | sudo podman load | grep -o -P '(?<=sha256[@:])[a-z0-9]*')
++        imageid=$(cat "./${parent_blueprint}-${parent_version}-container.tar" | sudo podman load | grep -o -P '(?<=[@])[a-z0-9]*')
+         sudo podman tag "${imageid}" "localhost/${parent_blueprint}:${parent_version}"
+         sudo podman run -d --name="${parent_blueprint}-server" -p 8080:8080 "localhost/${parent_blueprint}:${parent_version}"
 ```
