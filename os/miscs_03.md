@@ -12159,6 +12159,66 @@ total 207344
 -rwxr-xr-x. 1 root root  3523284 May 26 11:44 vrf
 -rwxr-xr-x. 1 root root 43425606 May 26 11:45 whereabouts
 
+# OpenShift Node CRIO 的配置文件里定义了 crio.network cni 插件的 binary 在哪里
+sh-4.4# grep "/var/lib/cni/bin" * -ri 
+crio/crio.conf.d/00-default:    "/var/lib/cni/bin",
+grep: grub2-efi.cfg: No such file or directory
+machine-config-daemon/orig/etc/crio/crio.conf.d/00-default.mcdorig:    "/var/lib/cni/bin",
+
+sh-4.4# cat /etc/crio/crio.conf.d/00-default  
+...
+[crio.network]
+network_dir = "/etc/kubernetes/cni/net.d/"
+plugin_dirs = [
+    "/var/lib/cni/bin",
+    "/usr/libexec/cni",
+]
+
+(rhv)[root@edge-3 ~/test]# cat /etc/crio/crio.conf.d/microshift.conf 
+[crio.network]
+# cbr0 is the name configured by flannel in /etc/cni/net.d/ config file
+# by declaring this crio will wait until that network is configured.
+cni_default_network = "cbr0"
+
+# rhel8 crio is configured to only look at /usr/libexec/cni, we override that here
+plugin_dirs = [
+        "/usr/libexec/cni",
+        "/opt/cni/bin"
+]
+
 Kubevirt CNI 
 https://kubevirt.io/2020/Multiple-Network-Attachments-with-bridge-CNI.html
+https://blog.csdn.net/qq_29648159/aticle/details/119614573
+
+contid=$(crictl ps | grep sample  | awk '{print $1}') 
+pid=$(crictl inspect $contid | grep pid | head -1 | awk '{print $2}' | sed -e 's|,||' )
+netnspath=/proc/$pid/ns/net # 命名空间路径
+
+(rhv)[root@edge-3 ~/test]# cat bridge.json 
+{
+    "cniVersion": "0.3.1",
+    "name": "br0",
+    "type": "bridge",
+    "bridge": "br0",
+    "isDefaultGateway": false,
+    "forceAddress": false,
+    "ipMasq": true,
+    "hairpinMode": true,
+    "ipam": {
+        "type": "host-local",
+        "subnet": "10.10.0.0/16"
+    }
+}
+
+CNI_COMMAND=ADD CNI_CONTAINERID=$contid CNI_NETNS=$netnspath CNI_IFNAME=eth1 CNI_PATH=/opt/cni/bin /opt/cni/bin/bridge < bridge.json
+
+kubectl exec -it samplepod -- ip a
+
+oc get networks -A 
+
+
+https://cloud.redhat.com/blog/using-the-multus-cni-in-openshift
+
+
+
 ```
