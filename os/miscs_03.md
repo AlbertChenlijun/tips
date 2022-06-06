@@ -12089,4 +12089,76 @@ cat /tmp/test | grep -o -P '(?<=[@])[a-z0-9]*'
 +        imageid=$(cat "./${parent_blueprint}-${parent_version}-container.tar" | sudo podman load | grep -o -P '(?<=[@])[a-z0-9]*')
          sudo podman tag "${imageid}" "localhost/${parent_blueprint}:${parent_version}"
          sudo podman run -d --name="${parent_blueprint}-server" -p 8080:8080 "localhost/${parent_blueprint}:${parent_version}"
+
+# OpenShift 的 crio-bridge.conf
+sh-4.4# cat /etc/cni/net.d/100-crio-bridge.conf 
+{
+    "cniVersion": "0.3.1",
+    "name": "crio",
+    "type": "bridge",
+    "bridge": "cni0",
+    "isGateway": true,
+    "ipMasq": true,
+    "hairpinMode": true,
+    "ipam": {
+        "type": "host-local",
+        "routes": [
+            { "dst": "0.0.0.0/0" },
+            { "dst": "1100:200::1/24" }
+        ],
+        "ranges": [
+            [{ "subnet": "10.85.0.0/16" }],
+            [{ "subnet": "1100:200::/24" }]
+        ]
+    }
+}
+
+sh-4.4# cat /etc/kubernetes/cni/net.d/00-multus.conf | jq .  
+{
+  "cniVersion": "0.3.1",
+  "name": "multus-cni-network",
+  "type": "multus",
+  "namespaceIsolation": true,
+  "globalNamespaces": "default,openshift-multus,openshift-sriov-network-operator",
+  "logLevel": "verbose",
+  "binDir": "/opt/multus/bin",
+  "readinessindicatorfile": "/var/run/multus/cni/net.d/80-openshift-network.conf",
+  "kubeconfig": "/etc/kubernetes/cni/net.d/multus.d/multus.kubeconfig",
+  "delegates": [
+    {
+      "cniVersion": "0.3.1",
+      "name": "openshift-sdn",
+      "type": "openshift-sdn"
+    }
+  ]
+}
+
+sh-4.4# ls /var/lib/cni/bin  -l 
+total 207344
+-rwxr-xr-x. 1 root root  3784615 May 26 11:44 bandwidth
+-rwxr-xr-x. 1 root root  3946168 May 26 11:45 bond
+-rwxr-xr-x. 1 root root  4190849 May 26 11:44 bridge
+-rwxr-xr-x. 1 root root  9765102 May 26 11:44 dhcp
+-rwxr-xr-x. 1 root root 30881265 May 26 11:44 egress-router
+-rwxr-xr-x. 1 root root  4337008 May 26 11:44 firewall
+-rwxr-xr-x. 1 root root  3213601 May  1 12:13 flannel
+-rwxr-xr-x. 1 root root  3812185 May 26 11:44 host-device
+-rwxr-xr-x. 1 root root  3241068 May 26 11:44 host-local
+-rwxr-xr-x. 1 root root  3923382 May 26 11:44 ipvlan
+-rwxr-xr-x. 1 root root  3295304 May 26 11:44 loopback
+-rwxr-xr-x. 1 root root  4008374 May 26 11:44 macvlan
+-rwxr-xr-x. 1 root root 46687958 May 26 11:44 multus
+-rwxr-xr-x. 1 root root 15828177 May 26 11:44 openshift-sdn
+-rwxr-xr-x. 1 root root  3699558 May 26 11:44 portmap
+-rwxr-xr-x. 1 root root  4105117 May 26 11:44 ptp
+-rwxr-xr-x. 1 root root  2920468 May 26 11:45 route-override
+-rwxr-xr-x. 1 root root  3484013 May 26 11:44 sbr
+-rwxr-xr-x. 1 root root  2818372 May 26 11:44 static
+-rwxr-xr-x. 1 root root  3456054 May 26 11:44 tuning
+-rwxr-xr-x. 1 root root  3921593 May 26 11:44 vlan
+-rwxr-xr-x. 1 root root  3523284 May 26 11:44 vrf
+-rwxr-xr-x. 1 root root 43425606 May 26 11:45 whereabouts
+
+Kubevirt CNI 
+https://kubevirt.io/2020/Multiple-Network-Attachments-with-bridge-CNI.html
 ```
