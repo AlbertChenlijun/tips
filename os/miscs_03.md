@@ -12216,9 +12216,150 @@ kubectl exec -it samplepod -- ip a
 
 oc get networks -A 
 
-
 https://cloud.redhat.com/blog/using-the-multus-cni-in-openshift
+https://www.cnblogs.com/ericnie/p/11704041.html
+
+cat <<EOF | kubectl apply -f -
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: nadbr1
+spec:
+  config: '{"cniVersion":"0.3.1","name":"br1","plugins":[{"type":"bridge","bridge":"br1","ipam":{}},{"type":"tuning"}]}'
+EOF
+kubectl get net-attach-def nadbr1 -oyaml
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: nadbr1
+spec:
+  containers:
+  - name: samplepod1
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF
+kubectl exec -it samplepod1 -- ip a
+
+# OpenShift 下的 multus 配置
+cat /etc/cni/multus/net.d/istio-cni.conf 
+{
+  "cniVersion": "0.3.0",
+  "name": "istio-cni",
+  "type": "istio-cni",
+  "log_level": "info",
+  "kubernetes": {
+      "kubeconfig": "/etc/cni/multus/net.d/istio-cni.kubeconfig",
+      "cni_bin_dir": "/opt/multus/bin",
+      "iptables_script": "istio-iptables.sh",
+      "exclude_namespaces": [ "openshift-operators" ]
+  }
+}
+
+https://www.jianshu.com/p/1559ff808b7c
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod2
+  annotations:
+    k8s.v1.cni.cncf.io/networks: nadbr1
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF
+
+kubectl exec -it samplepod2 -- ip a
 
 
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/br10
+  name: a-bridge-network
+spec:
+  config: '{ "cniVersion": "0.3.1", "name": "a-bridge-network", "type": "cnv-bridge",
+    "bridge": "br10" }'
 
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod3
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF  
+kubectl exec -it samplepod3 -- ip a
+
+检查 multus pod 日志
+oc -n kube-system logs $(oc -n kube-system get pods -l app=multus -o name)
+oc -n kube-system delete $(oc -n kube-system get pods -l app=multus -o name)
+
+
+https://zhuanlan.zhihu.com/p/73863683
+
+cat <<EOF | kubectl create -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-bridge
+  namespace: kube-system
+EOF
+
+mkdir -p /etc/cni/multus/net.d
+cat > /etc/cni/multus/net.d/201-bridge.conf <<EOF
+{
+  "name": "net-bridge",
+  "cniVersion": "0.3.1",
+  "type": "bridge",
+  "bridge": "br1",
+  "ipam": {
+      "type": "host-local",
+      "ranges": [
+           [
+               { "subnet": "192.168.0.0/16",
+                 "rangeStart": "192.168.0.1",
+                 "rangeEnd": "192.168.0.100" }
+           ]
+      ],
+      "routes": [
+           { "dst": "0.0.0.0/0"}
+      ]
+  },
+  "policy": {
+       "type": "k8s"
+  },
+  "kubernetes": {
+       "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig"
+  }
+}
+EOF
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: net-bridge
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF
+
+# 如何使用 multus
+# https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/how-to-use.md
 ```
