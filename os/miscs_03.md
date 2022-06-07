@@ -12362,4 +12362,47 @@ EOF
 
 # 如何使用 multus
 # https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/how-to-use.md
+
+
+cat <<EOF | kubectl create -f -
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf-1
+spec:
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "ens3",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+                "ranges": [
+                    [ {
+                         "subnet": "10.10.0.0/16",
+                         "rangeStart": "10.10.1.20",
+                         "rangeEnd": "10.10.3.50",
+                         "gateway": "10.10.0.254"
+                    } ]
+                ]
+            }
+        }'
+EOF
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod4
+  annotations:
+    k8s.v1.cni.cncf.io/networks: macvlan-conf-1
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF
+
+kubectl exec -it samplepod4 -- ip a
+
 ```
