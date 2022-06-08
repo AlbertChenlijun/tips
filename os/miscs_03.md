@@ -12360,6 +12360,28 @@ spec:
     image: alpine
 EOF
 
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[{
+      "name": "macvlan-conf",
+      "default-route": ["192.168.2.1"]
+    }]'
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: samplepod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[{
+      "name": "net-bridge",
+    }]'
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: alpine
+EOF
+
 # 如何使用 multus
 # https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/how-to-use.md
 
@@ -12638,4 +12660,21 @@ WORKDIR /
 
 ADD ./images/entrypoint.sh /
 ENTRYPOINT ["/entrypoint.sh"]
+
+/host/opt/cni/bin/multus -v     
+multus-cni version:v3.8.1, commit:76c31b086136d4e0275c849bb7516446a5f4d9d9, date:2021-10-14T15:14:33+00:00
+
+
+cat << EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: redhat-operators
+  namespace: olm
+spec:
+  displayName: Red Hat Operators
+  sourceType: grpc
+  image: registry.redhat.io/redhat/redhat-operator-index:v4.8
+  publisher: RedHat
+EOF
 ```
