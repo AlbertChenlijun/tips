@@ -12405,4 +12405,237 @@ EOF
 
 kubectl exec -it samplepod4 -- ip a
 
+
+{
+	"cniVersion": "0.3.1",
+	"name": "multus-cni-network",
+	"type": "multus",
+	"namespaceIsolation": true,
+	"globalNamespaces": "default",
+	"logLevel": "verbose",
+	"binDir": "/opt/cni/bin",
+	"logFile": "/var/log/multus/multus.log",
+	"readinessindicatorfile": "/etc/cni/net.d/10-ovn.conf",
+	"kubeconfig": "/var/lib/microshift/resources/kubeadmin/kubeconfig",
+	"delegates": [{
+		"cniVersion":"0.4.0",
+		"name":"ovn-kubernetes",
+		"type":"ovn-k8s-cni-overlay",
+		"ipam":{},
+		"dns":{},
+		"logFile":"/var/log/ovn-kubernetes/ovn-k8s-cni-overlay.log",
+		"logLevel":"4",
+		"logfile-maxsize":100,
+		"logfile-maxbackups":5,
+		"logfile-maxage":5
+	}]
+}
+
+{
+  "capabilities": {
+    "portMappings": true
+  },
+  "cniVersion": "0.3.1",
+  "delegates": [
+    {
+      "cniVersion": "0.3.1",
+      "name": "cbr0",
+      "plugins": [
+        {
+          "delegate": {
+            "forceAddress": true,
+            "hairpinMode": true,
+            "isDefaultGateway": true
+          },
+          "type": "flannel"
+        },
+        {
+          "capabilities": {
+            "portMappings": true
+          },
+          "type": "portmap"
+        },
+		  "logFile":"/var/log/multus/flannel.log",
+		  "logLevel":"4",
+		  "logfile-maxsize":100,
+		  "logfile-maxbackups":5,
+		  "logfile-maxage":5        
+      ]
+    }
+  ],
+  "logLevel": "verbose",
+  "binDir": "/opt/cni/bin",
+  "logFile": "/var/log/multus/multus.log"
+  "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig",
+  "name": "multus-cni-network",
+  "type": "multus"
+}
+
+
+(rhv)[root@edge-3 ~/test]# cat /tmp/1.json | jq .
+{
+  "capabilities": {
+    "portMappings": true
+  },
+  "cniVersion": "0.3.1",
+  "delegates": [
+    {
+      "cniVersion": "0.3.1",
+      "name": "cbr0",
+      "logFile": "/var/log/multus/flannel.log",
+      "logLevel": "4",
+      "logfile-maxsize": 100,
+      "logfile-maxbackups": 5,
+      "logfile-maxage": 5,
+      "plugins": [
+        {
+          "delegate": {
+            "forceAddress": true,
+            "hairpinMode": true,
+            "isDefaultGateway": true
+          },
+          "type": "flannel"
+        },
+        {
+          "capabilities": {
+            "portMappings": true
+          },
+          "type": "portmap"
+        }
+      ]
+    }
+  ],
+  "logLevel": "verbose",
+  "binDir": "/opt/cni/bin",
+  "logFile": "/var/log/multus/multus.log",
+  "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig",
+  "name": "multus-cni-network",
+  "type": "multus"
+}
+
+(rhv)[root@edge-3 ~/test]# cat /etc/cni/net.d/10-flannel.conflist 
+{
+  "name": "cbr0",
+  "cniVersion": "0.3.1",
+  "logFile": "/var/log/multus/flannel.log",
+  "logLevel": "4",
+  "logfile-maxsize": 100,
+  "logfile-maxbackups": 5,
+  "logfile-maxage": 5,
+  "plugins": [
+    {
+      "type": "flannel",
+      "delegate": {
+        "hairpinMode": true,
+        "forceAddress": true,
+        "isDefaultGateway": true
+      }
+    },
+    {
+      "type": "portmap",
+      "capabilities": {
+        "portMappings": true
+      }
+    }
+  ]
+}
+
+https://access.redhat.com/solutions/1324843
+lvm mirror
+
+# 创建 lvm mirror 
+https://access.redhat.com/solutions/1324843
+
+sh-4.4# /usr/src/multus-cni/bin/multus-daemon --help 
+Usage of /usr/src/multus-cni/bin/multus-daemon:
+  -additional-bin-dir string
+        Additional binary directory to specify in the configurations. Used only with --multus-conf-file=auto.
+  -cni-config-dir string
+        CNI config dir (default "/etc/cni/net.d")
+  -cni-version string
+        Allows you to specify CNI spec version. Used only with --multus-conf-file=auto.
+  -global-namespaces string
+        Comma-separated list of namespaces which can be referred to globally when namespace isolation is enabled.
+  -multus-autoconfig-dir string
+        The directory path for the generated multus configuration. (default "/etc/cni/net.d")
+  -multus-conf-file string
+        The multus configuration file to use. By default, a new configuration is generated. (default "auto")
+  -multus-kubeconfig-file-host string
+        The path to the kubeconfig (default "/etc/cni/net.d/multus.d/multus.kubeconfig")
+  -multus-log-compress
+        compress determines if the rotated log files should be compressed using gzip (default true)
+  -multus-log-file string
+        Path where to multus will log. Used only with --multus-conf-file=auto.
+  -multus-log-level string
+        One of: debug/verbose/error/panic. Used only with --multus-conf-file=auto.
+  -multus-log-max-age int
+        the maximum number of days to retain old log files in their filename (default 5)
+  -multus-log-max-backups int
+        the maximum number of old log files to retain (default 5)
+  -multus-log-max-size int
+        the maximum size in megabytes of the log file before it gets rotated (default 100)
+  -multus-log-to-stderr
+        If the multus logs are also to be echoed to stderr.
+  -multus-master-cni-file string
+        The relative name of the configuration file of the cluster primary CNI.
+  -namespace-isolation
+        If the network resources are only available within their defined namespaces.
+  -override-network-name
+        Used when we need overrides the name of the multus configuration with the name of the delegated primary CNI
+  -readiness-indicator-file string
+        Which file should be used as the readiness indicator. Used only with --multus-conf-file=auto.
+  -v    Show application version
+  -version
+        Show application version
+
+      containers:
+      - args:
+        - -cni-version=0.3.1
+        - -cni-config-dir=/host/etc/cni/net.d
+        - -multus-autoconfig-dir=/host/etc/cni/net.d
+        - -multus-log-to-stderr=true
+        - -multus-log-level=verbose
+        command:
+        - /usr/src/multus-cni/bin/multus-daemon
+
+
+/usr/src/multus-cni/bin/multus-daemon --cni-version=0.3.1 --cni-config-dir=/host/etc/cni/net.d --multus-conf-file=/host/etc/cni/net.d/00-multus-1.conf --multus-log-to-stderr=true --multus-log-level=verbose
+
+oc -n kube-system logs $(oc -n kube-system get pods -l app=multus -o name)
+oc -n kube-system exec -it $(oc -n kube-system get pods -l app=multus -o name) sh
+
+sh-4.4# 
+/usr/src/multus-cni/bin/multus-daemon --cni-config-dir=/host/etc/cni/net.d --multus-conf-file="/host/etc/cni/net.d/00-multus-1.conf" 
+
+
+https://github.com/k8snetworkplumbingwg/multus-cni/issues/688
+https://gist.github.com/janeczku/ab5139791f28bfba1e0e03cfc2963ecf
+https://gist.github.com/janeczku/ab5139791f28bfba1e0e03cfc2963ecf
+
+
+journalctl -u microshift |grep cni-conf-dir
+
+
+https://github.com/k8snetworkplumbingwg/multus-cni/issues/849
+FROM golang:1.17.9 as build
+
+# Add everything
+ADD . /usr/src/multus-cni
+
+RUN  cd /usr/src/multus-cni && \
+     ./hack/build-go.sh
+
+FROM centos:centos7
+
+RUN yum update -y && \
+    yum clean all && \
+    rm -rf /var/cache/yum
+
+LABEL org.opencontainers.image.source https://github.com/k8snetworkplumbingwg/multus-cni
+COPY --from=build /usr/src/multus-cni/bin /usr/src/multus-cni/bin
+COPY --from=build /usr/src/multus-cni/LICENSE /usr/src/multus-cni/LICENSE
+WORKDIR /
+
+ADD ./images/entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
 ```
