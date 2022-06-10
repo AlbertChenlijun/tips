@@ -12677,4 +12677,27 @@ spec:
   image: registry.redhat.io/redhat/redhat-operator-index:v4.8
   publisher: RedHat
 EOF
+
+
+sh-4.4# ps awwwx 
+    PID TTY      STAT   TIME COMMAND
+      1 ?        Ss     0:02 /bin/bash /entrypoint.sh --multus-conf-file=auto --multus-autoconfig-dir=/host/var/run/multus/cni/net.d --multus-kubeconfig-file-host=/etc/kubernetes/cni/net.d/multus.d/multus.kubeconfig --readiness-indicator-file=/var/run/multus/cni/net.d/80-openshift-network.conf --cleanup-config-on-exit=true --namespace-isolation=true --multus-log-level=verbose --cni-version=0.3.1 --additional-bin-dir=/opt/multus/bin --skip-multus-binary-copy=true - --global-namespaces=default,openshift-multus,openshift-sriov-network-operator
+
+
+https://gist.github.com/janeczku/ab5139791f28bfba1e0e03cfc2963ecf
+
+
+      - name: kube-multus
+        # crio support requires multus:latest for now. support 3.3 or later.
+        # image: ghcr.io/k8snetworkplumbingwg/multus-cni:v3.7.1
+        image: docker.io/nfvpe/multus:v3.4.1
+        command: ["/entrypoint.sh"]
+        args:
+        - "--cni-bin-dir=/host/usr/libexec/cni"
+        - "--multus-conf-file=/tmp/multus-conf/70-multus.conf"
+        - "--skip-multus-binary-copy=true"
+        - "--multus-kubeconfig-file-host=/host/etc/cni/net.d/multus.d/multus.kubeconfig"
+
+        
+
 ```
