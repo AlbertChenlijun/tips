@@ -12698,6 +12698,24 @@ https://gist.github.com/janeczku/ab5139791f28bfba1e0e03cfc2963ecf
         - "--skip-multus-binary-copy=true"
         - "--multus-kubeconfig-file-host=/host/etc/cni/net.d/multus.d/multus.kubeconfig"
 
-        
 
+
+```
+
+
+### 如何利用 oval feed 检查 ubi 镜像对已知 cve 的安全情况
+```
+$ curl -O https://www.redhat.com/security/data/oval/v2/RHEL8/rhel-8-including-unpatched.oval.xml.bz2
+
+$ podman pull registry.access.redhat.com/ubi8/ubi:latest
+
+$ oscap-podman registry.access.redhat.com/ubi8/ubi oval eval --results ubi8.xml --report
+ubi8.html rhel-8-including-unpatched.oval.xml.bz2 >pass_fail.txt
+
+$ ls -l ubi8.* pass_fail.txt
+-rw-r--r--. 1 root root   258265 Dec  8 10:40 pass_fail.txt
+-rw-r--r--. 1 root root  2836629 Dec  8 10:39 ubi8.html
+-rw-r--r--. 1 root root 77758631 Dec  8 10:39 ubi8.xml
+
+The OVAL feed is updated whenever known CVEs change state.
 ```
