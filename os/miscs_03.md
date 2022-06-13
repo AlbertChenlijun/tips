@@ -12713,6 +12713,23 @@ oc patch applicationmanagers.agent.open-cluster-management.io klusterlet-addon-a
 
 oc get appliedmanifestworks.work.open-cluster-management.io -A -o name | while read i ; do echo oc delete $i ; done 
 
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-object-storage
+  namespace: open-cluster-management-observability
+type: Opaque
+stringData:
+  thanos.yaml: |
+    type: s3
+    config:
+      bucket: observability
+      endpoint: minio-velero.apps.cluster-mgqtt.mgqtt.sandbox1777.opentlc.com
+      insecure: true
+      access_key: minio
+      secret_key: minio123
+EOF
 ```
 
 
