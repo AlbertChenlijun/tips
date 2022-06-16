@@ -12892,4 +12892,10 @@ oc --kubeconfig=./kubeconfig -n edge-1 patch clusterClaims product.open-cluster-
 
 
 for i in {1..240}; do oc --kubeconfig=./kubeconfig -n submariner-operator delete pods --all; sleep 1; done
+
+### ACM console
+oc -n open-cluster-management get route multicloud-console -o jsonpath='{"https://"}{.spec.host}'
+### ACM grafana console
+oc -n open-cluster-management get route multicloud-console -o jsonpath='{"https://"}{.spec.host}{"/grafana"}'
+
 ```
