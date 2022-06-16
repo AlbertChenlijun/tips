@@ -12790,5 +12790,106 @@ IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.
 CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
 
 
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-object-storage
+  namespace: open-cluster-management-observability
+type: Opaque
+stringData:
+  thanos.yaml: |
+    type: s3
+    config:
+      bucket: observability
+      endpoint: minio-velero.apps.cluster-ll6wq.ll6wq.sandbox824.opentlc.com
+      insecure: true
+      access_key: minio
+      secret_key: minio123
+EOF
 
+
+
+
+
+================
+cd /root/kubeconfig/edge/edge-1
+export CLUSTER_NAME=edge-1
+oc new-project ${CLUSTER_NAME}
+oc label namespace ${CLUSTER_NAME} cluster.open-cluster-management.io/managedCluster=${CLUSTER_NAME}
+
+cat <<EOF | oc apply -f -
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${CLUSTER_NAME}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  clusterNamespace: ${CLUSTER_NAME}
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+  version: 2.2.0
+EOF
+
+cat <<EOF | oc apply -f -
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  hubAcceptsClient: true
+EOF
+
+IMPORT=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.import\.yaml}')
+CRDS=$(oc get -n ${CLUSTER_NAME} secret ${CLUSTER_NAME}-import -o jsonpath='{.data.crds\.yaml}')
+
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-registration-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-registration-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent create sa klusterlet-work-sa
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent patch sa klusterlet-work-sa -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig new-project open-cluster-management-agent-addon
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create secret generic rhacm --from-file=.dockerconfigjson=auth.json --type=kubernetes.io/dockerconfigjson
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon create sa klusterlet-addon-operator
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent-addon patch sa klusterlet-addon-operator -p '{"imagePullSecrets": [{"name": "rhacm"}]}'
+
+oc --kubeconfig=./kubeconfig project open-cluster-management-agent
+echo $CRDS | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+echo $IMPORT | base64 -d | oc --kubeconfig=./kubeconfig apply -f -
+
+oc label managedcluster edge-1 openshiftVersion-
+cd /root/kubeconfig/edge/edge-1
+oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability delete $(oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability get pods -l name='endpoint-observability-operator' -o name)
+
+oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability logs $(oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability get pods -l name='endpoint-observability-operator' -o name)
+
+cd /root/kubeconfig/edge/edge-1
+oc --kubeconfig=./kubeconfig get clusterClaims product.open-cluster-management.io
+oc --kubeconfig=./kubeconfig -n edge-1 delete clusterClaims version.openshift.io
+oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability delete $(oc --kubeconfig=./kubeconfig -n open-cluster-management-addon-observability get pods -l name='endpoint-observability-operator' -o name)
+
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent delete $(oc --kubeconfig=./kubeconfig -n open-cluster-management-agent get pods -l app=klusterlet -o name)
+
+oc --kubeconfig=./kubeconfig -n open-cluster-management-agent delete $(oc --kubeconfig=./kubeconfig -n open-cluster-management-agent get pods -l app=klusterlet-registration-agent -o name)
+
+oc --kubeconfig=./kubeconfig -n edge-1 patch clusterClaims product.open-cluster-management.io --type json -p '[{"op": "replace", "path": "/spec/value", "value": "microshift"}]'
+
+
+for i in {1..240}; do oc --kubeconfig=./kubeconfig -n submariner-operator delete pods --all; sleep 1; done
 ```
