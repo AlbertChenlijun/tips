@@ -12899,3 +12899,26 @@ oc -n open-cluster-management get route multicloud-console -o jsonpath='{"https:
 oc -n open-cluster-management get route multicloud-console -o jsonpath='{"https://"}{.spec.host}{"/grafana"}'
 
 ```
+
+### upload image to rhv
+```
+args="-i ISO11 upload rhel-8.2-discovery.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+
+args="-i ISO11 upload CentOS-7-x86_64-DVD-2009.iso --force"
+/usr/bin/expect <<EOF
+set timeout -1
+spawn "$prog" $args
+expect "Please provide the REST API password for the admin@internal oVirt Engine user (CTRL+D to abort): "
+send "$mypass\r"
+expect eof
+exit
+EOF
+```
