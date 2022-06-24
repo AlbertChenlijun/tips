@@ -12928,4 +12928,32 @@ https://blog.csdn.net/weixin_43902588/article/details/105303056<br>
 https://bugzilla.redhat.com/show_bug.cgi?id=1951812<br> 
 ```
 # 不要用 default namespace 安装 rhsso
+https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/master
+
+Add Client
+  
+Setting
+  Access Type -> confendial
+  Valid Redirect URs -> https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/*
+Credentials
+  Secret -> 332c9b88-4151-4c38-abb1-1ac7aff65deb
+
+openshift-ingress-operator namespace
+  Workloads -> Secrets -> router_ca -> Data -> tls.crt -> 保存为 route.ca.crt
+
+Administration
+  Cluster Setting -> Configuration -> OAuth -> Add -> OpenID Connect
+  Add Indentity Provider：OpenID Connect -> Client ID -> openshift-demo 
+
+# 查询 identityProviders
+oc get oauth/cluster -o yaml | yq eval '.spec.identityProviders[].name' -
+
+# 查看 openshift-authentication-operator 日志
+oc -n openshift-authentication-operator logs $(oc -n openshift-authentication-operator get pods -l app=authentication-operator -o name | head -1 )
+...
+E0624 04:57:51.866824       1 base_controller.go:272] ConfigObserver reconciliation failed: failed to apply IDP openid config: x509: certificate signed by unknown authority
+
+$ oc get cm/router-ca -n openshift-config-managed -o jsonpath='{.data.ca\-bundle\.crt}'
+
+
 ```
