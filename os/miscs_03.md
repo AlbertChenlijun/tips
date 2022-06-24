@@ -12922,3 +12922,10 @@ expect eof
 exit
 EOF
 ```
+
+### 集成 RHSSO 与 OpenShift 4
+https://blog.csdn.net/weixin_43902588/article/details/105303056<br>
+https://bugzilla.redhat.com/show_bug.cgi?id=1951812<br> 
+```
+# 不要用 default namespace 安装 rhsso
+```
