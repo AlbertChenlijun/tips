@@ -12928,14 +12928,13 @@ https://blog.csdn.net/weixin_43902588/article/details/105303056<br>
 https://bugzilla.redhat.com/show_bug.cgi?id=1951812<br> 
 ```
 # 不要用 default namespace 安装 rhsso
-https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/master
 https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/openshift
 
 Add Client
   
 Setting
   Access Type -> confendial
-  Valid Redirect URs -> https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/*
+  Valid Redirect URs -> https://console-openshift-console.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/*
 Credentials
   Secret -> b2f3f4e1-d6c1-4f68-a393-0ff735d33d16
 
@@ -12961,6 +12960,11 @@ $ openssl x509 -in ca.crt  -noout -subject -issuer
 
 # 检查 certs 的 subject 与 issuer
 $ echo | openssl s_client -connect keycloak-keycloak.apps.cluster-jw9b2.jw9b2.sandbox840.opentlc.com:443 -showcerts
+$ echo | openssl s_client -connect $(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}{":443"}') -showcerts
 
-
+# 获取 keycloak 证书
+M_ROUTE=$(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}')
+openssl s_client -host ${M_ROUTE} -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee m.crt  
+# 配置 idp 指定证书时用 m.crt 作为 CA 证书
 ```
