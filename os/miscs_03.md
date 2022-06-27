@@ -12980,8 +12980,8 @@ NAME                                          IDP NAME            IDP USER NAME 
 htpasswd_provider:opentlc-mgr                 htpasswd_provider   opentlc-mgr                            opentlc-mgr   6307e6b0-6a31-48fe-ae46-0e530a6def14
 openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6   openid              d7264511-5b7d-4b4b-b3b1-7ad23e9519a6   testuser      083a4068-223b-43ff-b12e-3f30bc7f2c48
 
-# 为 idp 用户 openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6 提供 cluster-admin clusterrole
-$ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6
+# 为 idp 用户 testuser 设置 cluster-admin clusterrole
+$ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=testuser
 clusterrolebinding.rbac.authorization.k8s.io/add-cluster-admin-to-openid-testuser created
 
 ```
