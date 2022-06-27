@@ -12967,4 +12967,21 @@ M_ROUTE=$(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}')
 openssl s_client -host ${M_ROUTE} -port 443 -showcerts > trace < /dev/null
 cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee m.crt  
 # 配置 idp 指定证书时用 m.crt 作为 CA 证书
+
+https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/oauth2callback/openid
+
+Usage:
+  oc create clusterrolebinding NAME --clusterrole=NAME [--user=username] [--group=groupname]
+[--serviceaccount=namespace:serviceaccountname] [--dry-run=server|client|none] [flags]
+
+# 获取 idp user 信息
+$ oc get identity
+NAME                                          IDP NAME            IDP USER NAME                          USER NAME     USER UID
+htpasswd_provider:opentlc-mgr                 htpasswd_provider   opentlc-mgr                            opentlc-mgr   6307e6b0-6a31-48fe-ae46-0e530a6def14
+openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6   openid              d7264511-5b7d-4b4b-b3b1-7ad23e9519a6   testuser      083a4068-223b-43ff-b12e-3f30bc7f2c48
+
+# 为 idp 用户 openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6 提供 cluster-admin clusterrole
+$ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6
+clusterrolebinding.rbac.authorization.k8s.io/add-cluster-admin-to-openid-testuser created
+
 ```
