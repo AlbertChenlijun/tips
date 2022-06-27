@@ -12929,6 +12929,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1951812<br>
 ```
 # 不要用 default namespace 安装 rhsso
 https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/master
+https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/openshift
 
 Add Client
   
@@ -12936,7 +12937,7 @@ Setting
   Access Type -> confendial
   Valid Redirect URs -> https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/*
 Credentials
-  Secret -> 332c9b88-4151-4c38-abb1-1ac7aff65deb
+  Secret -> b2f3f4e1-d6c1-4f68-a393-0ff735d33d16
 
 openshift-ingress-operator namespace
   Workloads -> Secrets -> router_ca -> Data -> tls.crt -> 保存为 route.ca.crt
@@ -12954,6 +12955,12 @@ oc -n openshift-authentication-operator logs $(oc -n openshift-authentication-op
 E0624 04:57:51.866824       1 base_controller.go:272] ConfigObserver reconciliation failed: failed to apply IDP openid config: x509: certificate signed by unknown authority
 
 $ oc get cm/router-ca -n openshift-config-managed -o jsonpath='{.data.ca\-bundle\.crt}'
+
+# 检查 ca.crt 的 issuer 信息
+$ openssl x509 -in ca.crt  -noout -subject -issuer 
+
+# 检查 certs 的 subject 与 issuer
+$ echo | openssl s_client -connect keycloak-keycloak.apps.cluster-jw9b2.jw9b2.sandbox840.opentlc.com:443 -showcerts
 
 
 ```
