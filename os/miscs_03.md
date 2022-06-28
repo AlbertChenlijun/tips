@@ -12999,3 +12999,32 @@ clusterrolebinding.rbac.authorization.k8s.io/add-cluster-admin-to-openid-testuse
 $ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=admin1
 
 ```
+
+### Identity configuration management for Kubernetes
+https://identitatem.github.io/idp-mgmt-docs/quick_start.html
+```
+# Creating your AuthRealm
+
+apiVersion: identityconfig.identitatem.io/v1alpha1
+kind: AuthRealm
+metadata:
+  name: identity-config-developers
+  namespace: identity-config-authrealm
+spec:
+  identityProviders:
+  - github:
+      clientID: <Github OAuth client ID>
+      clientSecret:
+        name: identitatem-github-client-secret
+      organizations:
+      - identitatem
+    mappingMethod: claim
+    name: identitatem-developers
+    type: GitHub
+  placementRef:
+    name: dev-clusters-placement
+  routeSubDomain: identitatem-devs
+  type: dex
+
+
+```
