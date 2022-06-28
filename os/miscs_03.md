@@ -13030,3 +13030,249 @@ spec:
 ```
 ### Configure GitLab as an OAuth 2.0 authentication identity provider
 https://docs.gitlab.com/ee/integration/oauth_provider.html
+
+### SSO and Ansible Automation Platform 
+```
+# 创建 KeycloakRealm 
+kind: KeycloakRealm
+apiVersion: keycloak.org/v1alpha1
+metadata:
+  name: ansible-automation-platform-keycloakrealm
+  namespace: rh-sso
+  labels:
+    app: sso
+    realm: ansible-automation-platform
+spec:
+  realm:
+    id: ansible-automation-platform
+    realm: ansible-automation-platform
+    enabled: true
+    displayName: Ansible Automation Platform
+  instanceSelector:
+    matchLabels:
+      app: sso
+
+# Create KeycloakClient for Automation Hub
+kind: KeycloakClient
+apiVersion: keycloak.org/v1alpha1
+metadata:
+  name: automation-hub-client-secret
+  labels:
+    app: sso
+    realm: ansible-automation-platform
+  namespace: rhsso
+spec:
+  realmSelector:
+    matchLabels:
+      app: sso
+      realm: ansible-automation-platform
+  client:
+    name: Automation Hub
+    clientId: automation-hub
+    secret: client-secret
+    clientAuthenticatorType: client-secret
+    description: Client for Automation Hub
+    attributes:
+      user.info.response.signature.alg: RS256
+      request.object.signature.alg: RS256
+    directAccessGrantsEnabled: true
+    publicClient: true
+    protocol: openid-connect
+    standardFlowEnabled: true
+    protocolMappers:
+      - config:
+          access.token.claim: "true"
+          claim.name: "family_name"
+          id.token.claim: "true"
+          jsonType.label: String
+          user.attribute: lastName
+          userinfo.token.claim: "true"
+        consentRequired: false
+        name: family name
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-property-mapper
+      - config:
+          userinfo.token.claim: "true"
+          user.attribute: email
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: email
+          jsonType.label: String
+        name: email
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-property-mapper
+        consentRequired: false
+      - config:
+          multivalued: "true"
+          access.token.claim: "true"
+          claim.name: "resource_access.${client_id}.roles"
+          jsonType.label: String
+        name: client roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-client-role-mapper
+        consentRequired: false
+      - config:
+          userinfo.token.claim: "true"
+          user.attribute: firstName
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: given_name
+          jsonType.label: String
+        name: given name
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-property-mapper
+        consentRequired: false
+      - config:
+          id.token.claim: "true"
+          access.token.claim: "true"
+          userinfo.token.claim: "true"
+        name: full name
+        protocol: openid-connect
+        protocolMapper: oidc-full-name-mapper
+        consentRequired: false
+      - config:
+          userinfo.token.claim: "true"
+          user.attribute: username
+          id.token.claim: "true"
+          access.token.claim: "true"
+          claim.name: preferred_username
+          jsonType.label: String
+        name: username
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-property-mapper
+        consentRequired: false
+      - config:
+          access.token.claim: "true"
+          claim.name: "group"
+          full.path: "true"
+          id.token.claim: "true"
+          userinfo.token.claim: "true"
+        consentRequired: false
+        name: group
+        protocol: openid-connect
+        protocolMapper: oidc-group-membership-mapper
+      - config:
+          multivalued: 'true'
+          id.token.claim: 'true'
+          access.token.claim: 'true'
+          userinfo.token.claim: 'true'
+          usermodel.clientRoleMapping.clientId:  'automation-hub'
+          claim.name: client_roles
+          jsonType.label: String
+        name: client_roles
+        protocolMapper: oidc-usermodel-client-role-mapper
+        protocol: openid-connect
+      - config:
+          id.token.claim: "true"
+          access.token.claim: "true"
+          included.client.audience: 'automation-hub'
+        protocol: openid-connect
+        name: audience mapper
+        protocolMapper: oidc-audience-mapper
+  roles:
+    - name: "hubadmin"
+      description: "An administrator role for Automation Hub"
+
+# Create KeycloakUser
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: hubadmin-user
+  labels:
+    app: sso
+    realm: ansible-automation-platform
+  namespace: rhsso
+spec:
+  realmSelector:
+    matchLabels:
+      app: sso
+      realm: ansible-automation-platform
+  user:
+    username: hub_admin
+    firstName: Hub
+    lastName: Admin
+    email: hub_admin@example.com
+    enabled: true
+    emailVerified: false
+    credentials:
+      - type: password
+        value: ch8ngeme
+    clientRoles:
+      automation-hub:
+        - hubadmin
+
+# 浏览 https://<sso_host>/auth/realms/ansible-automation-platform
+# 获取 public_key
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoUuPjZuuq1n3xMiBQXtCNFzDzImyfTOCB/qEhxBZwjuy1W78hZB0x93o5ylFJXldWK4Z3eREpd/6YZgX4GlljNo3La3NFICKFfagzrIy1F/SRabZbNpop9ae4Q+9Vyp+kj9NdJF300PMASeDsAq2xIWOLWkOKi1TDXDnPzceEvMnz1jNkD+41NvP406RuHGZaJGXj+GjiACqk1YHkyh4jAJuuzQOcw9Scjl6EvTAxh+5ze6Wag3QucN06gG4IGuC313tpXkecaQbV0IoXShOwqxbWgskLox3sEzfdDRmuftlZF1d0v+/5H5c03nljqjGR2Fdao2Vgh+npAJpw0aVpwIDAQAB
+
+# 在 ansible-automation-platform namespace 下创建 Secret 'automation-hub-sso'
+apiVersion: v1
+kind: Secret
+metadata:
+  name: automation-hub-sso
+  namespace: ansible-automation-platform
+type: Opaque
+stringData:
+  keycloak_host: "keycloak-rhsso.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com"
+  keycloak_port: "443"
+  keycloak_protocol: "https"
+  keycloak_realm: "ansible-automation-platform"
+  keycloak_admin_role: "hubadmin"
+  social_auth_keycloak_key: "automation-hub"
+  social_auth_keycloak_secret: "client-secret"
+  social_auth_keycloak_public_key: >-
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoUuPjZuuq1n3xMiBQXtCNFzDzImyfTOCB/qEhxBZwjuy1W78hZB0x93o5ylFJXldWK4Z3eREpd/6YZgX4GlljNo3La3NFICKFfagzrIy1F/SRabZbNpop9ae4Q+9Vyp+kj9NdJF300PMASeDsAq2xIWOLWkOKi1TDXDnPzceEvMnz1jNkD+41NvP406RuHGZaJGXj+GjiACqk1YHkyh4jAJuuzQOcw9Scjl6EvTAxh+5ze6Wag3QucN06gG4IGuC313tpXkecaQbV0IoXShOwqxbWgskLox3sEzfdDRmuftlZF1d0v+/5H5c03nljqjGR2Fdao2Vgh+npAJpw0aVpwIDAQAB
+
+# 创建 AutomationHub
+apiVersion: automationhub.ansible.com/v1beta1
+kind: AutomationHub
+metadata:
+  name: private-ah
+  namespace: ansible-automation-platform
+spec:
+  sso_secret: automation-hub-sso
+  pulp_settings:
+    verify_ssl: false
+  route_tls_termination_mechanism: Edge
+  ingress_type: Route
+  loadbalancer_port: 80
+  file_storage_size: 100Gi
+  image_pull_policy: IfNotPresent
+  web:
+    replicas: 1
+  file_storage_access_mode: ReadWriteMany
+  content:
+    log_level: INFO
+    replicas: 2
+  postgres_storage_requirements:
+    limits:
+      storage: 50Gi
+    requests:
+      storage: 8Gi
+  api:
+    log_level: INFO
+    replicas: 1
+  postgres_resource_requirements:
+    limits:
+      cpu: 1000m
+      memory: 8Gi
+    requests:
+      cpu: 500m
+      memory: 2Gi
+  loadbalancer_protocol: http
+  resource_manager:
+    replicas: 1
+  worker:
+    replicas: 2
+
+# 更新 KeyClient YAML 添加 Valid Redirect URIs 和 Web Origins settings
+    redirectUris:
+      - 'https://private-ah-ansible-automation-platform.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com/*'
+    webOrigins:
+      - 'https://private-ah-ansible-automation-platform.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com'
+
+
+# 创建默认的 ansible controller
+
+
+```
