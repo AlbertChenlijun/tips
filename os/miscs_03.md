@@ -13000,7 +13000,7 @@ $ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrol
 
 ```
 
-### Identity configuration management for Kubernetes
+### Identity configuration management for Kubernetesid
 https://identitatem.github.io/idp-mgmt-docs/quick_start.html
 ```
 # Creating your AuthRealm
