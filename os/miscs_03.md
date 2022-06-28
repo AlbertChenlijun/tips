@@ -12928,23 +12928,36 @@ https://blog.csdn.net/weixin_43902588/article/details/105303056<br>
 https://bugzilla.redhat.com/show_bug.cgi?id=1951812<br> 
 ```
 # 不要用 default namespace 安装 rhsso
+Issuer URL
 https://keycloak-rhsso.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/auth/realms/openshift
+https://keycloak-rhsso.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com/auth/realms/openshift
 
-Add Client
+Add Client -> openshift
   
-Setting
+Client Setting
   Access Type -> confendial
-  Valid Redirect URs -> https://console-openshift-console.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/*
-Credentials
-  Secret -> b2f3f4e1-d6c1-4f68-a393-0ff735d33d16
+  Valid Redirect URs -> https://*
+  Valid Redirect URs -> https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/oauth2callback/rhsso
+  Valid Redirect URs -> https://oauth-openshift.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com/oauth2callback/rhsso
 
-openshift-ingress-operator namespace
-  Workloads -> Secrets -> router_ca -> Data -> tls.crt -> 保存为 route.ca.crt
+Client Credentials
+  Secret -> b2f3f4e1-d6c1-4f68-a393-0ff735d33d16
+  Secret -> ae76648f-273e-4edf-8f1d-daf27a6d8661
+
+# 获取 keycloak 证书
+K_ROUTE=$(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}')
+openssl s_client -host ${K_ROUTE} -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee k.crt 
 
 Administration
   Cluster Setting -> Configuration -> OAuth -> Add -> OpenID Connect
-  Add Indentity Provider：OpenID Connect -> Client ID -> openshift-demo 
-
+  Add Indentity Provider：OpenID Connect -> 
+  Name -> rhsso
+  Client ID -> openshift
+  Client Secret -> ae76648f-273e-4edf-8f1d-daf27a6d8661
+  Issuer URL -> https://keycloak-rhsso.apps.cluster-htm2s.htm2s.sandbox1062.opentlc.com/auth/realms/openshift
+  CA File -> k.crt
+ 
 # 查询 identityProviders
 oc get oauth/cluster -o yaml | yq eval '.spec.identityProviders[].name' -
 
@@ -12963,9 +12976,9 @@ $ echo | openssl s_client -connect keycloak-keycloak.apps.cluster-jw9b2.jw9b2.sa
 $ echo | openssl s_client -connect $(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}{":443"}') -showcerts
 
 # 获取 keycloak 证书
-M_ROUTE=$(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}')
-openssl s_client -host ${M_ROUTE} -port 443 -showcerts > trace < /dev/null
-cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee m.crt  
+K_ROUTE=$(oc -n rhsso get route keycloak -o jsonpath='{.spec.host}')
+openssl s_client -host ${K_ROUTE} -port 443 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee k.crt  
 # 配置 idp 指定证书时用 m.crt 作为 CA 证书
 
 https://oauth-openshift.apps.cluster-n7bsm.n7bsm.sandbox1648.opentlc.com/oauth2callback/openid
@@ -12983,5 +12996,6 @@ openid:d7264511-5b7d-4b4b-b3b1-7ad23e9519a6   openid              d7264511-5b7d-
 # 为 idp 用户 testuser 设置 cluster-admin clusterrole
 $ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=testuser
 clusterrolebinding.rbac.authorization.k8s.io/add-cluster-admin-to-openid-testuser created
+$ oc create clusterrolebinding add-cluster-admin-to-openid-testuser --clusterrole=cluster-admin --user=admin1
 
 ```
