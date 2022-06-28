@@ -13028,3 +13028,5 @@ spec:
 
 
 ```
+### Configure GitLab as an OAuth 2.0 authentication identity provider
+https://docs.gitlab.com/ee/integration/oauth_provider.html
