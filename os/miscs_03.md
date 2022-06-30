@@ -13285,34 +13285,104 @@ spec:
 
 ### RHEL8.5 上构建 Image Builder
 ```
-# mount /dev/sr0 /mnt
-# 生成 DNF Repo 文件
-cat > /etc/yum.repos.d/r.repo <<EOF
-[rhel-8-for-x86_64-baseos-rpms]
-name=rhel-8-for-x86_64-baseos-rpms
-baseurl=file:///mnt/BaseOS/
-enabled=1
-gpgcheck=0
-
-[rhel-8-for-x86_64-appstream-rpms]
-name=rhel-8-for-x86_64-appstream-rpms
-baseurl=file:///mnt/AppStream/
-enabled=1
-gpgcheck=0
-EOF
+subscription-manager register
+### 查看可用 Red Hat OpenShift Container Platform 的 pool
+subscription-manager list --available --matches 'Red Hat OpenShift Container Platform' | grep -E "Pool ID|Entitlement Type"
+### 绑定合适的 pool
+subscription-manager attach --pool=xxxxxxxx
+### 启用软件仓库
+### 问题：Image Builder 理论上应该不依赖于 subscription
+subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhocp-4.8-for-rhel-8-x86_64-rpms
 
 ### 安装 cockpit cockpit-composer osbuild-composer composer-cli 与 bash-completion
-dnf install -y cockpit cockpit-composer osbuild-composer composer-cli bash-completion
+dnf install -y git cockpit cockpit-composer osbuild-composer composer-cli bash-completion podman genisoimage syslinux 
 
 ### 启用 cockpit 和 osbuild-composer 服务
 systemctl enable --now cockpit.socket
 systemctl enable --now osbuild-composer.socket
-firewall-cmd --add-service=cockpit --permanent
-firewall-cmd --reload
 
 ### 配置 composer-cli bash 补齐
 source  /etc/bash_completion.d/composer-cli
 
+### 创建 composer repo 文件，拷贝系统默认 repo 文件
+### osbuild-composer 使用的 repo 文件与 dnf 的 repo 文件不同
+### 是 json 格式的文件
+mkdir -p /etc/osbuild-composer/repositories
+cp /usr/share/osbuild-composer//repositories/rhel*.json /etc/osbuild-composer/repositories/ 
+
+### 删除默认 sources
+composer-cli sources list
+composer-cli sources delete baseos
+composer-cli sources delete appstream
+
+### 添加
+
+cat > /etc/osbuild-composer/repositories/rhel-85.json <<EOF
+{
+  "x86_64": [
+    {
+      "name": "baseos",
+      "baseurl": "https://cdn.redhat.com/content/dist/rhel8/8.5/x86_64/baseos/os",
+      "check_gpg": false
+      "rhsm": true
+    },
+    {
+      "name": "appstream",
+      "baseurl": "https://cdn.redhat.com/content/dist/rhel8/8.5/x86_64/appstream/os",
+      "check_gpg": false
+      "rhsm": true
+    },  
+  ]
+}
+EOF
+
+### 创建 microshift 的 osbuild-composer 的 repo source
+cat >microshift.toml<<EOF
+id = "microshift"
+name = "microshift"
+type = "yum-baseurl"
+url = "https://download.copr.fedorainfracloud.org/results/@redhat-et/microshift/epel-8-x86_64"
+check_gpg = true
+check_ssl = false
+system = false
+EOF
+### 添加 osbuild-composer 的 repo source
+composer-cli sources add microshift.toml
+composer-cli sources list
+
+### 创建 openshift-cli 的 osbuild-composer 的 repo source
+cat >openshiftcli.toml<<EOF
+id = "oc-cli-tools"
+name = "openshift-cli"
+type = "yum-baseurl"
+url = "https://cdn.redhat.com/content/dist/layered/rhel8/x86_64/rhocp/4.8/source/SRPMS"
+check_gpg = true
+check_ssl = true
+system = true
+rhsm = true
+EOF
+composer-cli sources add openshiftcli.toml
+composer-cli sources list
+
+### 创建 openshift-tools 的 osbuild-composer 的 repo source
+cat >openshiftools.toml<<EOF
+id = "oc-tools"
+name = "openshift-tools"
+type = "yum-baseurl"
+url = "https://cdn.redhat.com/content/dist/layered/rhel8/x86_64/rhocp/4.8/os"
+check_gpg = true
+check_ssl = true
+system = true
+rhsm = true
+EOF
+composer-cli sources add openshiftools.toml
+composer-cli sources list
+
+### 下载 microshift blueprint
+curl -OL https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
+
+### 
+composer-cli blueprints push blueprint.toml
 
 
 ```
