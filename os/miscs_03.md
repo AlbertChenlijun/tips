@@ -13274,3 +13274,11 @@ spec:
 
 # 创建默认的 ansible controller
 ```
+
+### RHEL for Edge and FIDO
+```
+讨论内容 - Jerimiah
+4. I didn't understand the workflows for why you would choose certain types of ostree-builds, I am continuing to work on that. I thought you could do edge-container -> edge-installer, then install the vm from the edge-installer iso [note: no special kickstart file at this point], and then do an upgrade (a new edge-container) and have the installed vm notice the new upgrade and upgrade itself. That is not how that particular workflow works. 
+4.a. What does work, and what Rich mentioned here ( https://www.osbuild.org/guides/user-guide/building-ostree-images.html ) and Matthew shows in his instruqt ( https://play.instruqt.com/rhel/invite/fxihyp66atdo ) ,  is something different. (This note is not for you Ben, but in case anyone else has made it this far) What works is do an edge-container build, then host that container, with a specialized kickstart.ks file with an ostree instruction it to find the rpm-ostree from the container. Then launch a regular rhel-9.iso install, but have inst.ks point to the http://container:/kickstart.ks file, then the newly create vm will have rpm-ostree setup that is looking back to the http://container location for updates.
+4.b. I was trying to do it without a special kickstart editing step, because I thought that would be neat, and I thought it would be built automatically. It's not, no big deal. The instructions talk about what is recommended, but not why the recommendations shouldn't be deviated from. So, I found that out in one case.
+```
