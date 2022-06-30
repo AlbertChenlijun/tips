@@ -13282,3 +13282,37 @@ spec:
 4.a. What does work, and what Rich mentioned here ( https://www.osbuild.org/guides/user-guide/building-ostree-images.html ) and Matthew shows in his instruqt ( https://play.instruqt.com/rhel/invite/fxihyp66atdo ) ,  is something different. (This note is not for you Ben, but in case anyone else has made it this far) What works is do an edge-container build, then host that container, with a specialized kickstart.ks file with an ostree instruction it to find the rpm-ostree from the container. Then launch a regular rhel-9.iso install, but have inst.ks point to the http://container:/kickstart.ks file, then the newly create vm will have rpm-ostree setup that is looking back to the http://container location for updates.
 4.b. I was trying to do it without a special kickstart editing step, because I thought that would be neat, and I thought it would be built automatically. It's not, no big deal. The instructions talk about what is recommended, but not why the recommendations shouldn't be deviated from. So, I found that out in one case.
 ```
+
+### RHEL8.5 上构建 Image Builder
+```
+# mount /dev/sr0 /mnt
+# 生成 DNF Repo 文件
+cat > /etc/yum.repos.d/r.repo <<EOF
+[rhel-8-for-x86_64-baseos-rpms]
+name=rhel-8-for-x86_64-baseos-rpms
+baseurl=file:///mnt/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhel-8-for-x86_64-appstream-rpms]
+name=rhel-8-for-x86_64-appstream-rpms
+baseurl=file:///mnt/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+
+### 安装 cockpit cockpit-composer osbuild-composer composer-cli 与 bash-completion
+dnf install -y cockpit cockpit-composer osbuild-composer composer-cli bash-completion
+
+### 启用 cockpit 和 osbuild-composer 服务
+systemctl enable --now cockpit.socket
+systemctl enable --now osbuild-composer.socket
+firewall-cmd --add-service=cockpit --permanent
+firewall-cmd --reload
+
+### 配置 composer-cli bash 补齐
+source  /etc/bash_completion.d/composer-cli
+
+
+
+```
