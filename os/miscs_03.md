@@ -13273,6 +13273,4 @@ spec:
 
 
 # 创建默认的 ansible controller
-
-
 ```
