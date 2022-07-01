@@ -13299,7 +13299,7 @@ subscription-manager attach --pool=xxxxxxxx
 subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=rhocp-4.8-for-rhel-8-x86_64-rpms
 
 ### 安装 cockpit cockpit-composer osbuild-composer composer-cli 与 bash-completion
-dnf install -y git cockpit cockpit-composer osbuild-composer composer-cli bash-completion podman genisoimage syslinux 
+dnf install -y git cockpit cockpit-composer osbuild-composer composer-cli bash-completion podman genisoimage syslinux skopeo
 
 ### 启用 cockpit 和 osbuild-composer 服务
 systemctl enable --now osbuild-composer.socket
@@ -13406,6 +13406,9 @@ total 1.1G
 
 ### 加载 container 镜像
 imageid=$(cat "./2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar" | sudo podman load | grep -o -P '(?<=[@:])[a-z0-9]*')
+### 另外一种加载镜像的方法
+skopeo copy oci-archive:2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar containers-storage:localhost/microshift:0.0.1
+
 ### 为镜像打 tag
 podman tag "${imageid}" "localhost/microshift:0.0.1"
 ### 启动镜像 - edge-container 镜像运行起来是个 nginx 服务
@@ -13445,4 +13448,153 @@ composer-cli compose start-ostree --ref "rhel/edge/example" --url http://localho
 composer-cli compose status
 ### 然后通过 compose id 获取 edge-installer iso
 composer-cli compose iso a0cea186-a5a7-47bc-be4f-693df0410683
+
+### 用 iso 启动虚拟机
+### 启动报错: virt-manager/QEMU: Could not read from CDROM (code 0009) on booting image
+### https://github.com/symmetryinvestments/zfs-on-root-installer/issues/1
+### https://ostechnix.com/enable-uefi-support-for-kvm-virtual-machines-in-linux/
+### https://fedoraproject.org/wiki/Using_UEFI_with_QEMU
+### https://www.kraxel.org/repos/
+### http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt
+### https://www.server-world.info/en/note?os=CentOS_7&p=kvm&f=11
+
+### 生成 kickstart 文件
+# pwd
+/root/microshift-demo
+cat > edge.ks << EOF
+lang en_US
+keyboard us
+timezone America/Vancouver --isUtc
+rootpw --lock
+#platform x86_64
+reboot
+text
+ostreesetup --osname=rhel --url=http://192.168.122.203:8080/repo --ref=rhel/edge/example --nogpg
+bootloader --append="rhgb quiet crashkernel=auto"
+zerombr
+clearpart --all --initlabel
+autopart
+firstboot --disable
+EOF
+### 重新创建 edge-container，包含 edge.ks 
+podman stop microshift-server
+podman rm microshift-server
+podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.ks:z --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.1"
+
+### 用 bootiso 启动虚拟机
+### 添加启动参数 ip=192.168.122.204::192.168.122.1:255.255.255.0:edge1.example.com:ens3:none nameserver=192.168.122.1 inst.ks=http://192.168.122.203:8080/edge.ks
+
+### 创建更新的 rpm-ostree 
+### 添加新用户 'jwang'
+cat > blueprint_0.0.2.toml <<'EOF'
+name = "microshift"
+
+description = ""
+version = "0.0.2"
+modules = []
+groups = []
+
+# Force correct redhat-release
+
+[[packages]]
+name = "redhat-release"
+version = "*"
+
+# MicroShift dependencies
+
+[[packages]]
+name = "cri-o"
+version = "*"
+
+[[packages]]
+name = "cri-tools"
+version = "*"
+
+[[packages]]
+name = "podman"
+version = "*"
+
+[[packages]]
+name = "firewalld"
+version = "*"
+
+[[packages]]
+name = "conntrack-tools"
+version = "*"
+
+# MicroShift
+
+[[packages]]
+name = "microshift"
+version = "*"
+
+# configuration management
+
+[[packages]]
+name = "git"
+version = "*"
+
+# troubleshooting tools
+
+[[packages]]
+name = "iputils"
+version = "*"
+
+[[packages]]
+name = "bind-utils"
+version = "*"
+
+[[packages]]
+name = "net-tools"
+version = "*"
+
+[[packages]]
+name = "iotop"
+version = "*"
+
+
+[customizations]
+[customizations.services]
+enabled = ["crio", "microshift"]
+
+[[customizations.user]]
+name = "redhat"
+description = "Initial User"
+password = "$6$6ar/G7QAAOC/Z810$cuYU.TowiTQDSoGdv23oDSp54WgsPjxB4HP8oxIrl3dMDWcLL7/JiQgmPnYdQHyHtDoK2K0ejuRWj80YKuZaa/"
+groups = ["wheel"]
+
+[[customizations.user]]
+name = "jwang"
+description = "2nd User"
+password = "$6$6ar/G7QAAOC/Z810$cuYU.TowiTQDSoGdv23oDSp54WgsPjxB4HP8oxIrl3dMDWcLL7/JiQgmPnYdQHyHtDoK2K0ejuRWj80YKuZaa/"
+groups = ["wheel"]
+EOF
+
+### 更新 micrishift blueprints
+composer-cli blueprints push blueprint_0.0.2.toml
+composer-cli blueprints show microshift
+
+### 重新发布 microshift 0.0.2 edge-container
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
+systemctl restart osbuild-composer.service 
+
+composer-cli sources add microshift.toml
+composer-cli sources add openshiftcli.toml
+composer-cli sources add openshiftools.toml
+
+### 启动 edge-container 0.0.2 compose
+composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
+
+### 下载镜像
+composer-cli compose status
+composer-cli compose image xxx
+
+### 更新镜像
+skopeo copy oci-archive:xxx-container.tar containers-storage:localhost/microshift:0.0.2
+
+### 重新启动 0.0.2 edge-container 
+podman stop microshift-server
+podman rm microshift-server
+podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.ks:z --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.2"
 ```
