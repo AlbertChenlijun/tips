@@ -13284,6 +13284,7 @@ spec:
 ```
 
 ### RHEL8.5 上构建 Image Builder
+https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo
 ```
 subscription-manager register
 ### 查看可用 Red Hat OpenShift Container Platform 的 pool
@@ -13298,8 +13299,10 @@ subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-
 dnf install -y git cockpit cockpit-composer osbuild-composer composer-cli bash-completion podman genisoimage syslinux 
 
 ### 启用 cockpit 和 osbuild-composer 服务
-systemctl enable --now cockpit.socket
 systemctl enable --now osbuild-composer.socket
+systemctl enable --now cockpit.socket
+### firewall-cmd -q --add-service=cockpit
+### firewall-cmd -q --add-service=cockpit --permanent
 
 ### 配置 composer-cli bash 补齐
 source  /etc/bash_completion.d/composer-cli
@@ -13308,35 +13311,15 @@ source  /etc/bash_completion.d/composer-cli
 ### osbuild-composer 使用的 repo 文件与 dnf 的 repo 文件不同
 ### 是 json 格式的文件
 mkdir -p /etc/osbuild-composer/repositories
-cp /usr/share/osbuild-composer//repositories/rhel*.json /etc/osbuild-composer/repositories/ 
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
+curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
 
-### 删除默认 sources
-composer-cli sources list
-composer-cli sources delete baseos
-composer-cli sources delete appstream
-
-### 添加
-
-cat > /etc/osbuild-composer/repositories/rhel-85.json <<EOF
-{
-  "x86_64": [
-    {
-      "name": "baseos",
-      "baseurl": "https://cdn.redhat.com/content/dist/rhel8/8.5/x86_64/baseos/os",
-      "check_gpg": false
-      "rhsm": true
-    },
-    {
-      "name": "appstream",
-      "baseurl": "https://cdn.redhat.com/content/dist/rhel8/8.5/x86_64/appstream/os",
-      "check_gpg": false
-      "rhsm": true
-    },  
-  ]
-}
-EOF
+### 重启 osbuild-composer.service 服务
+systemctl restart osbuild-composer.service
 
 ### 创建 microshift 的 osbuild-composer 的 repo source
+mkdir -p microshift-demo
+cd microshift-demo
 cat >microshift.toml<<EOF
 id = "microshift"
 name = "microshift"
@@ -13381,8 +13364,55 @@ composer-cli sources list
 ### 下载 microshift blueprint
 curl -OL https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
 
-### 
+### 添加 blueprints 
 composer-cli blueprints push blueprint.toml
+composer-cli blueprints list
+composer-cli blueprints show microshift
 
+### 查看状态
+composer-cli status show
+
+### 查看 compose types
+composer-cli compose types
+
+### 触发类型为 edge-container 的 compose 
+composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" microshift edge-container
+
+### 用 journalctl 观察 compose 是否完成
+journalctl -f
+### 等到消息出现
+Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022-06-30T22:31:49-04:00" level=info msg="Job '56665cb3-7c68-4668-83fb-9342d07d6566' (osbuild) finished"
+
+composer-cli compose status 
+composer-cli compose log 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8
+
+### 获取 compose results 文件
+composer-cli compose results 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8
+[root@jwang-imagebuilder microshift-demo]# ls -lh
+total 1.1G
+-rw-------. 1 root root 1.1G Jun 30 21:57 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8.tar
+-rw-r--r--. 1 root root 1.1K Jun 30 21:24 blueprint.toml
+-rw-r--r--. 1 root root  204 Jun 30 21:22 microshift.toml
+-rw-r--r--. 1 root root  212 Jun 30 21:23 openshiftcli.toml
+-rw-r--r--. 1 root root  200 Jun 30 21:24 openshiftools.toml
+
+### 创建 installer.toml 
+cat > installer.toml <<EOF
+name = "installer"
+
+description = ""
+version = "0.0.0"
+modules = []
+groups = []
+packages = []
+EOF
+
+### 删除自定义 repos
+rm -f /etc/osbuild-composer/repositories/rhel-8*.json
+systemctl restart osbuild-composer.service
+
+### 触发类型为 edge-installer 的 compose 
+### 这个新的 compose 基于前面的 microshift 0.0.1 compose
+composer-cli compose start installer edge-installer 
 
 ```
