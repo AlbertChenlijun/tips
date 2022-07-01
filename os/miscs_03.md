@@ -13387,19 +13387,19 @@ Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022
 
 composer-cli compose status 
 composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+### 保存日志
+### 解压缩后日志文件为 logs/osbuild.log
+composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
-### 获取 compose results 文件
-composer-cli compose results 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8
+### 获取 compose image 文件
+composer-cli compose image 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 [root@jwang-imagebuilder microshift-demo]# ls -lh
 total 1.1G
--rw-------. 1 root root 1.1G Jun 30 21:57 2a6ac0ca-1237-4d45-be8b-db51879b9ff0.tar
+-rw-------. 1 root root 1.1G Jun 30 21:57 2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar
 -rw-r--r--. 1 root root 1.1K Jun 30 21:24 blueprint.toml
 -rw-r--r--. 1 root root  204 Jun 30 21:22 microshift.toml
 -rw-r--r--. 1 root root  212 Jun 30 21:23 openshiftcli.toml
 -rw-r--r--. 1 root root  200 Jun 30 21:24 openshiftools.toml
-
-### 解压缩 compose results 
-tar xf 2a6ac0ca-1237-4d45-be8b-db51879b9ff0.tar 
 
 ### 加载 container 镜像
 imageid=$(cat "./2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar" | sudo podman load | grep -o -P '(?<=[@:])[a-z0-9]*')
@@ -13431,5 +13431,5 @@ systemctl restart osbuild-composer.service
 ### 这个新的 compose 基于前面的 microshift 0.0.1 compose
 ### microshift-server pod 的 nginx 服务运行中
 composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" --url http://localhost:8080/repo/  installer edge-installer
-
+composer-cli compose start-ostree --ref "rhel/edge/example" --url http://localhost:8080/repo/ installer edge-installer
 ```
