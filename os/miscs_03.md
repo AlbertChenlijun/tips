@@ -13431,9 +13431,14 @@ composer-cli blueprints list
 rm -f /etc/osbuild-composer/repositories/rhel-8*.json
 systemctl restart osbuild-composer.service
 
+### 删除自定义 sources
+composer-cli sources delete oc-cli-tools
+composer-cli sources delete oc-tools
+composer-cli sources delete microshift
+
 ### 触发类型为 edge-installer 的 compose 
-### 这个新的 compose 基于前面的 microshift 0.0.1 compose
-### microshift-server pod 的 nginx 服务运行中
+### 这个新的 compose 基于前面的 edge-container 的 rpm-ostree
+### rpm-ostree 通过 podman 运行在容器里，并通过 http://localhost:8080/repo 可访问
 composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" --url http://localhost:8080/repo/  installer edge-installer
 composer-cli compose start-ostree --ref "rhel/edge/example" --url http://localhost:8080/repo/ installer edge-installer
 ```
