@@ -13284,7 +13284,9 @@ spec:
 ```
 
 ### RHEL8.5 上构建 Image Builder
-https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo
+https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo<br>
+https://www.osbuild.org/guides/user-guide/edge-container+installer.html<br>
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/composing_installing_and_managing_rhel_for_edge_images/composing-a-rhel-for-edge-image-using-image-builder-command-line_composing-installing-managing-rhel-for-edge-images<br>
 ```
 subscription-manager register
 ### 查看可用 Red Hat OpenShift Container Platform 的 pool
@@ -13377,24 +13379,34 @@ composer-cli compose types
 
 ### 触发类型为 edge-container 的 compose 
 composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" microshift edge-container
-
+composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
 ### 用 journalctl 观察 compose 是否完成
 journalctl -f
 ### 等到消息出现
 Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022-06-30T22:31:49-04:00" level=info msg="Job '56665cb3-7c68-4668-83fb-9342d07d6566' (osbuild) finished"
 
 composer-cli compose status 
-composer-cli compose log 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8
+composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
 ### 获取 compose results 文件
 composer-cli compose results 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8
 [root@jwang-imagebuilder microshift-demo]# ls -lh
 total 1.1G
--rw-------. 1 root root 1.1G Jun 30 21:57 3ae0019a-b33b-459f-8f68-73eb9f2b7bb8.tar
+-rw-------. 1 root root 1.1G Jun 30 21:57 2a6ac0ca-1237-4d45-be8b-db51879b9ff0.tar
 -rw-r--r--. 1 root root 1.1K Jun 30 21:24 blueprint.toml
 -rw-r--r--. 1 root root  204 Jun 30 21:22 microshift.toml
 -rw-r--r--. 1 root root  212 Jun 30 21:23 openshiftcli.toml
 -rw-r--r--. 1 root root  200 Jun 30 21:24 openshiftools.toml
+
+### 解压缩 compose results 
+tar xf 2a6ac0ca-1237-4d45-be8b-db51879b9ff0.tar 
+
+### 加载 container 镜像
+imageid=$(cat "./2a6ac0ca-1237-4d45-be8b-db51879b9ff0-container.tar" | sudo podman load | grep -o -P '(?<=[@:])[a-z0-9]*')
+### 为镜像打 tag
+podman tag "${imageid}" "localhost/microshift:0.0.1"
+### 启动镜像 - edge-container 镜像运行起来是个 nginx 服务
+podman run -d --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.1"
 
 ### 创建 installer.toml 
 cat > installer.toml <<EOF
@@ -13407,12 +13419,17 @@ groups = []
 packages = []
 EOF
 
+### 添加 blueprint 
+composer-cli blueprints push installer.toml
+composer-cli blueprints list
+
 ### 删除自定义 repos
 rm -f /etc/osbuild-composer/repositories/rhel-8*.json
 systemctl restart osbuild-composer.service
 
 ### 触发类型为 edge-installer 的 compose 
 ### 这个新的 compose 基于前面的 microshift 0.0.1 compose
-composer-cli compose start installer edge-installer 
+### microshift-server pod 的 nginx 服务运行中
+composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" --url http://localhost:8080/repo/  installer edge-installer
 
 ```
