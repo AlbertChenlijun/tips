@@ -13287,6 +13287,7 @@ spec:
 https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo<br>
 https://www.osbuild.org/guides/user-guide/edge-container+installer.html<br>
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/composing_installing_and_managing_rhel_for_edge_images/composing-a-rhel-for-edge-image-using-image-builder-command-line_composing-installing-managing-rhel-for-edge-images<br>
+https://bugzilla.redhat.com/show_bug.cgi?id=2033192<br>
 ```
 subscription-manager register
 ### 查看可用 Red Hat OpenShift Container Platform 的 pool
@@ -13381,6 +13382,7 @@ composer-cli compose types
 composer-cli compose start-ostree --ref "rhel/8/$(uname -i)/edge" microshift edge-container
 composer-cli compose start-ostree --ref "rhel/edge/example" microshift edge-container
 ### 用 journalctl 观察 compose 是否完成
+### 创建时间大概15分钟
 journalctl -f
 ### 等到消息出现
 Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022-06-30T22:31:49-04:00" level=info msg="Job '56665cb3-7c68-4668-83fb-9342d07d6566' (osbuild) finished"
@@ -13388,6 +13390,8 @@ Jun 30 22:31:49 jwang-imagebuilder.example.com osbuild-worker[16129]: time="2022
 composer-cli compose status 
 composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 ### 保存日志
+composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+
 ### 解压缩后日志文件为 logs/osbuild.log
 composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
