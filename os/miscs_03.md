@@ -13564,3 +13564,9 @@ update the flavor used for the master, or create a new one and change the Machin
 redeploy the masters following this manual https://docs.openshift.com/container-platform/4.10/backup_and_restore/control_plane_backup_and_restore/replacing-unhealthy-etcd-member.html
 2. For workers, the easiest is to create a new flavor and deploy the new workers and remove the old ones
 ```
+
+### OCP on OSP 的问题
+```
+Q: OSP 没有 Octavia 是否可以安装 OCP
+A: 可以，安装可以正常执行；安装后的 OCP 应该不能创建 LoadBalancer 类型的 Service
+```
