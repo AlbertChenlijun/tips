@@ -13399,6 +13399,9 @@ composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
 ### 获取 compose image 文件
+### 在获取前建议获取 compose 对应的 log 和 metadata
+composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
+composer-cli compose metadata 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose image 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 [root@jwang-imagebuilder microshift-demo]# ls -lh
 total 1.1G
