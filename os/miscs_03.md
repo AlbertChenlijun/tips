@@ -13399,7 +13399,7 @@ composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose logs 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 
 ### 获取 compose image 文件
-### 在获取前建议获取 compose 对应的 log 和 metadata
+### 在获取前建议获取 compose 对应的 logs 和 metadata
 composer-cli compose log 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose metadata 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
 composer-cli compose image 2a6ac0ca-1237-4d45-be8b-db51879b9ff0
@@ -13492,90 +13492,11 @@ podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.k
 ### 添加启动参数 ip=192.168.122.204::192.168.122.1:255.255.255.0:edge1.example.com:ens3:none nameserver=192.168.122.1 inst.ks=http://192.168.122.203:8080/edge.ks
 
 ### 创建更新的 rpm-ostree 
-### 添加新用户 'jwang'
-cat > blueprint_0.0.2.toml <<'EOF'
-name = "microshift"
+### blueprint 文件内容参考
+### https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
+### https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo
+### https://www.osbuild.org/guides/user-guide/edge-container+installer.html
 
-description = ""
-version = "0.0.2"
-modules = []
-groups = []
-
-# Force correct redhat-release
-
-[[packages]]
-name = "redhat-release"
-version = "*"
-
-# MicroShift dependencies
-
-[[packages]]
-name = "cri-o"
-version = "*"
-
-[[packages]]
-name = "cri-tools"
-version = "*"
-
-[[packages]]
-name = "podman"
-version = "*"
-
-[[packages]]
-name = "firewalld"
-version = "*"
-
-[[packages]]
-name = "conntrack-tools"
-version = "*"
-
-# MicroShift
-
-[[packages]]
-name = "microshift"
-version = "*"
-
-# configuration management
-
-[[packages]]
-name = "git"
-version = "*"
-
-# troubleshooting tools
-
-[[packages]]
-name = "iputils"
-version = "*"
-
-[[packages]]
-name = "bind-utils"
-version = "*"
-
-[[packages]]
-name = "net-tools"
-version = "*"
-
-[[packages]]
-name = "iotop"
-version = "*"
-
-
-[customizations]
-[customizations.services]
-enabled = ["crio", "microshift"]
-
-[[customizations.user]]
-name = "redhat"
-description = "Initial User"
-password = "$6$6ar/G7QAAOC/Z810$cuYU.TowiTQDSoGdv23oDSp54WgsPjxB4HP8oxIrl3dMDWcLL7/JiQgmPnYdQHyHtDoK2K0ejuRWj80YKuZaa/"
-groups = ["wheel"]
-
-[[customizations.user]]
-name = "jwang"
-description = "2nd User"
-password = "$6$6ar/G7QAAOC/Z810$cuYU.TowiTQDSoGdv23oDSp54WgsPjxB4HP8oxIrl3dMDWcLL7/JiQgmPnYdQHyHtDoK2K0ejuRWj80YKuZaa/"
-groups = ["wheel"]
-EOF
 
 ### 更新 microshift blueprints
 ### 解决 microshift blueprints 的依赖关系
