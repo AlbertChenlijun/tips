@@ -13500,9 +13500,8 @@ podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.k
 
 ### 更新 microshift blueprints
 ### 解决 microshift blueprints 的依赖关系
-composer-cli blueprints push blueprint_0.0.2.toml
 composer-cli blueprints show microshift
-composer-cli blueprints depresolv microshift
+composer-cli blueprints depsolve microshift
 
 ### 重新发布 microshift 0.0.2 edge-container
 curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
