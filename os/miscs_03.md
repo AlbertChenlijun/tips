@@ -13288,6 +13288,7 @@ https://github.com/redhat-et/microshift-demos/tree/main/ostree-demo<br>
 https://www.osbuild.org/guides/user-guide/edge-container+installer.html<br>
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/composing_installing_and_managing_rhel_for_edge_images/composing-a-rhel-for-edge-image-using-image-builder-command-line_composing-installing-managing-rhel-for-edge-images<br>
 https://bugzilla.redhat.com/show_bug.cgi?id=2033192<br>
+https://toml.io/en/<br>
 ```
 subscription-manager register
 ### 查看可用 Red Hat OpenShift Container Platform 的 pool
@@ -13597,4 +13598,19 @@ skopeo copy oci-archive:xxx-container.tar containers-storage:localhost/microshif
 podman stop microshift-server
 podman rm microshift-server
 podman run -d --rm -v /root/microshift-demo/edge.ks:/usr/share/nginx/html/edge.ks:z --name="microshift-server" -p 8080:8080 "localhost/microshift:0.0.2"
+
+### 登陆 rhel-for-edge 服务器检查更新，下载更新，安装更新
+ssh redhat@192.168.122.204
+rpm-ostree upgrade check
+
+### 检查 rpm-ostree 状态
+rpm-ostree status
+
+### 重启系统
+systemctl reboot
+
+### 登陆 rhel-for-edge 服务器，检查 rpm-ostree 状态
+ssh redhat@192.168.122.204
+rpm-ostree status
+
 ```
