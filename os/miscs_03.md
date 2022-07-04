@@ -13511,6 +13511,7 @@ composer-cli blueprints depsolve microshift
 ### microshift
 ### oc-cli-tools
 ### oc-tools
+### 不需要以下的 sources
 ### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
 ### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
 systemctl restart osbuild-composer.service 
