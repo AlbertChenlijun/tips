@@ -13504,8 +13504,15 @@ composer-cli blueprints show microshift
 composer-cli blueprints depsolve microshift
 
 ### 重新发布 microshift 0.0.2 edge-container
-curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
-curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
+### 按照目前的测试情况
+### 需要以下 sources 
+### appstream
+### baseos
+### microshift
+### oc-cli-tools
+### oc-tools
+### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
+### curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-8.json -o /etc/osbuild-composer/repositories/rhel-8.json
 systemctl restart osbuild-composer.service 
 
 composer-cli sources add microshift.toml
