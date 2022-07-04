@@ -13369,9 +13369,12 @@ composer-cli sources list
 curl -OL https://raw.githubusercontent.com/redhat-cop/rhel-edge-automation-arch/blueprints/microshift/blueprint.toml
 
 ### 添加 blueprints 
+### 解决 blueprints 的依赖关系
 composer-cli blueprints push blueprint.toml
 composer-cli blueprints list
 composer-cli blueprints show microshift
+composer-cli blueprints depresolv microshift
+
 
 ### 查看状态
 composer-cli status show
@@ -13571,9 +13574,11 @@ password = "$6$6ar/G7QAAOC/Z810$cuYU.TowiTQDSoGdv23oDSp54WgsPjxB4HP8oxIrl3dMDWcL
 groups = ["wheel"]
 EOF
 
-### 更新 micrishift blueprints
+### 更新 microshift blueprints
+### 解决 microshift blueprints 的依赖关系
 composer-cli blueprints push blueprint_0.0.2.toml
 composer-cli blueprints show microshift
+composer-cli blueprints depresolv microshift
 
 ### 重新发布 microshift 0.0.2 edge-container
 curl -L https://raw.githubusercontent.com/wangjun1974/tips/master/ocp/edge/microshift/demo/rhel-86.json -o /etc/osbuild-composer/repositories/rhel-86.json
