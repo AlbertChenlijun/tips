@@ -13549,4 +13549,18 @@ systemctl reboot
 ssh redhat@192.168.122.204
 rpm-ostree status
 
+### 在安装好的 RHEL Edge 系统里记录着在什么位置查看更新
+[root@edge1 etc]# cat /etc/ostree/remotes.d/rhel.conf
+[remote "rhel"]
+url=http://192.168.122.203:8080/repo
+gpg-verify=false
+
+```
+
+### 改变 Controller 与 Worker 的资源(flavor) 的方法 - OSP
+```
+1. for masters, you'll need to:
+update the flavor used for the master, or create a new one and change the MachineSet
+redeploy the masters following this manual https://docs.openshift.com/container-platform/4.10/backup_and_restore/control_plane_backup_and_restore/replacing-unhealthy-etcd-member.html
+2. For workers, the easiest is to create a new flavor and deploy the new workers and remove the old ones
 ```
