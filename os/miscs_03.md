@@ -13570,3 +13570,14 @@ redeploy the masters following this manual https://docs.openshift.com/container-
 Q: OSP 没有 Octavia 是否可以安装 OCP
 A: 可以，安装可以正常执行；安装后的 OCP 应该不能创建 LoadBalancer 类型的 Service
 ```
+ 
+### 术语解释
+```
+### 在 OpenShift 4 上下文里
+the index image - 包含 operator 列表以及列表里每个 operator 包含的 image 的 metadata
+the bundle image - 每个 operator 对应的 image
+
+### the index image lists all the operators and metadata about the images for each operator. The bundle image is one of the images that's part of each operator.
+
+
+```
