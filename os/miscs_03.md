@@ -13578,6 +13578,108 @@ the index image - 包含 operator 列表以及列表里每个 operator 包含的
 the bundle image - 每个 operator 对应的 image
 
 ### the index image lists all the operators and metadata about the images for each operator. The bundle image is one of the images that's part of each operator.
+```
+
+### 设置 alertmanager.yaml 
+```
+### 设置 acm observability alertmanager 的 yaml 文件
+### alertmanager.yaml 
+global:
+  resolve_timeout: 10m
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'ops'
+receivers:
+- name: 'ops'
+  email_configs:
+  - to: wjqhd@hotmail.com
+    from: wjqhd@hotmail.com
+    smarthost: smtp-mail.outlook.com:587
+    auth_username: "wjqhd@hotmail.com"
+    auth_identity: "wjqhd@hotmail.com"
+    auth_password: "$HOTMAIL_AUTH_TOKEN"
+    send_resolved: "true" 
+
+### 设置 thanos 自定义告警规则
+### 在 namespace open-cluster-management-observability 下
+### 定义 configmap thanos-ruler-custom-rules
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: thanos-ruler-custom-rules
+data:
+  custom_rules.yaml: |
+    groups:
+      - name: cluster-health
+        rules:
+        - alert: ManagedClusterMissing
+          annotations:
+            description: Managed cluster missing from ACM Hub for longer than 10 minutes
+            summary: Managed cluster missing from ACM Hub
+          expr: sum(kube_namespace_labels{label_cluster_open_cluster_management_io_managed_cluster!=""}) != sum(acm_managed_cluster_info{managed_cluster_id!=""})
+          for: 10m
+          labels:
+            severity: critical
+            service: managedcluster
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: thanos-ruler-custom-rules
+data:
+  custom_rules.yaml: |
+    groups:
+      - name: cluster-health
+        rules:
+        - alert: ManagedClusterMissing 
+          annotations:
+            description: Managed cluster missing from ACM Hub for longer than 10 minutes
+            summary: Managed cluster missing from ACM Hub
+          expr: absent(up{job="node-exporter",cluster="edge-2"}) >0
+          for: 5s
+          labels:
+            severity: critical
+            service: managedcluster
+
+### 查看 thanos-rule pod 日志
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -1 ) -c thanos-rule
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -2 ) -c thanos-rule
+oc -n open-cluster-management-observability logs $(oc -n open-cluster-management-observability get pods -l app.kubernetes.io/name='thanos-rule' -o name | head -3 ) -c thanos-rule
+
+observability-metrics-allowlist 
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: observability-metrics-custom-allowlist
+  namespace: open-cluster-management-observability
+data:
+  metrics_list.yaml: |
+    names:
+      - acm_managed_cluster_info
+      - kube_namespace_labels
+      - policy_governance_info
+      - kube_state_metrics_list_total
+      - kube_pod_status_phase
+      - kube_pod_status_ready
+      - kube_pod_container_status_waiting
+      - kube_pod_container_status_waiting_reason
+      - kube_pod_container_status_running
+      - kube_pod_container_status_terminated
+      - kube_pod_container_status_terminated_reason
+      - kube_pod_container_status_ready
+      - kube_pod_container_status_restarts_total
+      - kube_pod_container_resource_limits_cpu_cores
+      - kube_pod_container_resource_limits_memory_bytes
+      - kube_pod_container_resource_requests_cpu_cores
+      - kube_pod_container_resource_requests_memory_bytes
+      - kube_deployment_status_replicas_available
+      - kube_deployment_spec_replicas
+      - kube_statefulset_status_replicas_available
+      - kube_statefulset_replicas
 
 
 ```
