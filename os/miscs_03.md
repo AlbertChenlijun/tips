@@ -13683,3 +13683,21 @@ data:
 
 
 ```
+
+### Hive 删除 clusterdeployment 时检查的顺序
+```
+1. 检查 deprovision pod 日志
+2. 检查 hive controller pod 日志
+```
+
+### OpenStack API certificate 
+```
+$HOME/.config/openstack/clouds.yaml
+O_ROUTE="api.osp01.prod.dal10.ibm.infra.opentlc.com"
+openssl s_client -host ${O_ROUTE} -port 13000 -showcerts > trace < /dev/null
+cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee o.crt
+
+添加 additionalTrustBundle
+additionalTrustBundle: |
+$(cat o.crt | sed 's/^/  /g')
+```
