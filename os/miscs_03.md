@@ -13700,4 +13700,86 @@ cat trace | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee o.crt
 添加 additionalTrustBundle
 additionalTrustBundle: |
 $(cat o.crt | sed 's/^/  /g')
+
+
+# 查看日志
+ocp4.10 -n testosp logs $(ocp4.10 -n testosp get pods -l hive.openshift.io/cluster-deployment-name='testosp' -o name) -c installer
+ocp4.10 -n testosp logs $(ocp4.10 -n testosp get pods -l hive.openshift.io/cluster-deployment-name='testosp' -o name) -c cli
+ocp4.10 -n testosp logs $(ocp4.10 -n testosp get pods -l hive.openshift.io/cluster-deployment-name='testosp' -o name) -c hive
+...
+time="2022-07-06T08:43:17Z" level=debug msg="Using legacy API to upload RHCOS to the image \"testosp-5mwxw-rhcos\" with ID \"dfa35169-c83f-45aa-b35c-beee56ccd15f\""
+
+
+[lab-user@bastion ~]$ openstack image list
+...
+| dfa35169-c83f-45aa-b35c-beee56ccd15f | testosp-5mwxw-rhcos                                                         | saving |
+
+
+time="2022-07-06T14:41:57Z" level=debug msg="Still waiting for the Kubernetes API: Get \"https://api.testosp.dynamic.opentlc.com:6443/version\": dial tcp: lookup api.testosp.dynamic.opentlc.com on 172.30.0.10:53: no such host"
+
+应该使用 cluster-jng2p 作为 install-config.yaml 里的字段
+sh-4.4# dig api.cluster-jng2p.dynamic.opentlc.com 
+
+; <<>> DiG 9.11.26-RedHat-9.11.26-4.el8_4 <<>> api.cluster-jng2p.dynamic.opentlc.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15476
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;api.cluster-jng2p.dynamic.opentlc.com. IN A
+
+;; ANSWER SECTION:
+api.cluster-jng2p.dynamic.opentlc.com. 5 IN A   150.240.95.207
+
+;; Query time: 12 msec
+;; SERVER: 10.0.0.2#53(10.0.0.2)
+;; WHEN: Wed Jul 06 14:41:30 UTC 2022
+;; MSG SIZE  rcvd: 82
+
+报错
+time="2022-07-06T14:54:03Z" level=debug msg="installer console log: level=info msg=Credentials loaded from file \"/etc/openstack/clouds.yaml\"\nlevel=info msg=Consuming Install Config from target directory\nlevel=warning msg=Certificate 49C52D13DE4CEC5633A788B549D8C9E3C9F from additionalTrustBundle is x509 v3 but not a certificate authority\nlevel=warning msg=Certificate 49C52D13DE4CEC5633A788B549D8C9E3C9F from additionalTrustBundle is x509 v3 but not a certificate authority\nlevel=info msg=Manifests created in: manifests and openshift\nlevel=warning msg=Found override for release image. Please be warned, this is not advised\nlevel=info msg=Consuming Common Manifests from target directory\nlevel=info msg=Consuming OpenShift Install (Manifests) from target directory\nlevel=info msg=Consuming Master Machines from target directory\nlevel=info msg=Consuming Worker Machines from target directory\nlevel=info msg=Consuming Openshift Manifests from target directory\nlevel=info msg=Ignition-Configs created in: . and auth\nlevel=info msg=Consuming Bootstrap Ignition Config from target directory\nlevel=info msg=Consuming Master Ignition Config from target directory\nlevel=info msg=Consuming Worker Ignition Config from target directory\nlevel=info msg=Credentials loaded from file \"/etc/openstack/clouds.yaml\"\nlevel=info msg=Obtaining RHCOS image file from 'https://rhcos-redirector.apps.art.xq1c.p1.openshiftapps.com/art/storage/releases/rhcos-4.10/410.84.202205191234-0/x86_64/rhcos-410.84.202205191234-0-openstack.x86_64.qcow2.gz?sha256=15380a3debd92ccf466d98084938229133078c5634e4f926ed150a0c9f699375'\nlevel=warning msg=Following quotas Subnet, Network, Router are available but will be completely used pretty soon.\nlevel=info msg=Creating infrastructure resources...\nlevel=info msg=Waiting up to 20m0s (until 2:51PM) for the Kubernetes API at https://api.testosp.dynamic.opentlc.com:6443...\nlevel=error msg=Attempted to gather ClusterOperator status after installation failure: listing ClusterOperator objects: Get \"https://api.testosp.dynamic.opentlc.com:6443/apis/config.openshift.io/v1/clusteroperators\": dial tcp: lookup api.testosp.dynamic.opentlc.com on 172.30.0.10:53: no such host\nlevel=info msg=Pulling debug logs from the bootstrap machine\nlevel=error msg=Attempted to gather debug logs after installation failure: failed to create SSH client: dial tcp 150.240.95.148:22: connect: connection timed out\nlevel=error msg=Bootstrap failed to complete: Get \"https://api.testosp.dynamic.opentlc.com:6443/version\": dial tcp: lookup api.testosp.dynamic.opentlc.com on 172.30.0.10:53: no such host\nlevel=error msg=Failed waiting for Kubernetes API. This error usually happens when there is a problem on the bootstrap host that prevents creating a temporary control plane.\nlevel=error msg=Attempted to analyze the debug logs after installation failure: could not open the gather bundle: open : no such file or directory\nlevel=fatal msg=Bootstrap failed to complete\n" installID=kgnncj5s
+
+ocp4.10 -n testosp logs $(ocp4.10 -n testosp get pods -l hive.openshift.io/cluster-deployment-name='testosp' -o name) -c hive
+
+
+# 查看日志
+ocp4.10 -n cluster-jng2p logs $(ocp4.10 -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c installer
+ocp4.10 -n cluster-jng2p logs $(ocp4.10 -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c cli
+ocp4.10 -n cluster-jng2p logs $(ocp4.10 -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c hive
+
+...
+time="2022-07-07T00:35:29Z" level=debug msg="bootstrap_ip = \"150.240.95.66\""
+time="2022-07-07T00:35:29Z" level=debug msg="OpenShift Installer v4.10.0"
+time="2022-07-07T00:35:29Z" level=debug msg="Built from commit 25b4d09c94dc4bdc0c79d8668369aeb4026b52a4"
+time="2022-07-07T00:35:29Z" level=info msg="Waiting up to 20m0s (until 12:55AM) for the Kubernetes API at https://api.cluster-jng2p.dynamic.opentlc.com:6443..."
+time="2022-07-07T00:35:59Z" level=debug msg="Still waiting for the Kubernetes API: Get \"https://api.cluster-jng2p.dynamic.opentlc.com:6443/version\": dial tcp 150.240.95.207:6443: i/o timeout"
+time="2022-07-07T00:37:05Z" level=info msg="API v1.23.5+3afdacb up"
+time="2022-07-07T00:37:05Z" level=info msg="Waiting up to 30m0s (until 1:07AM) for bootstrapping to complete..."
+
+REDACTED LINE OF OUTPUT
+time="2022-07-07T01:04:06Z" level=debug msg="Time elapsed per stage:"
+time="2022-07-07T01:04:06Z" level=debug msg="           masters: 3m1s"
+time="2022-07-07T01:04:06Z" level=debug msg="         bootstrap: 40s"
+time="2022-07-07T01:04:06Z" level=debug msg="Bootstrap Complete: 9m52s"
+time="2022-07-07T01:04:06Z" level=debug msg="               API: 1m36s"
+time="2022-07-07T01:04:06Z" level=debug msg=" Bootstrap Destroy: 33s"
+time="2022-07-07T01:04:06Z" level=debug msg=" Cluster Operators: 18m12s"
+time="2022-07-07T01:04:06Z" level=info msg="Time elapsed: 34m12s"
+time="2022-07-07T01:04:07Z" level=info msg="command completed successfully" installID=ltzrngkf
+time="2022-07-07T01:04:07Z" level=info msg="saving installer output" installID=ltzrngkf
+time="2022-07-07T01:04:07Z" level=debug msg="installer console log: level=info msg=Credentials loaded from file \"/etc/openstack/clouds.yaml\"\nlevel=info msg=Consuming Install Config from target directory\nlevel=info msg=Manifests created in: manifests and openshift\nlevel=warning msg=Found override for release image. Please be warned, this is not advised\nlevel=info msg=Consuming Master Machines from target directory\nlevel=info msg=Consuming Common Manifests from target directory\nlevel=info msg=Consuming Openshift Manifests from target directory\nlevel=info msg=Consuming Worker Machines from target directory\nlevel=info msg=Consuming OpenShift Install (Manifests) from target directory\nlevel=info msg=Ignition-Configs created in: . and auth\nlevel=info msg=Consuming Worker Ignition Config from target directory\nlevel=info msg=Consuming Bootstrap Ignition Config from target directory\nlevel=info msg=Consuming Master Ignition Config from target directory\nlevel=info msg=Credentials loaded from file \"/etc/openstack/clouds.yaml\"\nlevel=info msg=Obtaining RHCOS image file from 'https://rhcos-redirector.apps.art.xq1c.p1.openshiftapps.com/art/storage/releases/rhcos-4.10/410.84.202205191234-0/x86_64/rhcos-410.84.202205191234-0-openstack.x86_64.qcow2.gz?sha256=15380a3debd92ccf466d98084938229133078c5634e4f926ed150a0c9f699375'\nlevel=warning msg=Following quotas Subnet, Network, Router are available but will be completely used pretty soon.\nlevel=info msg=Creating infrastructure resources...\nlevel=info msg=Waiting up to 20m0s (until 12:55AM) for the Kubernetes API at https://api.cluster-jng2p.dynamic.opentlc.com:6443...\nlevel=info msg=API v1.23.5+3afdacb up\nlevel=info msg=Waiting up to 30m0s (until 1:07AM) for bootstrapping to complete...\nlevel=info msg=Destroying the bootstrap resources...\nlevel=info msg=Waiting up to 40m0s (until 1:25AM) for the cluster at https://api.cluster-jng2p.dynamic.opentlc.com:6443 to initialize...\nlevel=info msg=Waiting up to 10m0s (until 1:14AM) for the openshift-console route to be created...\nlevel=info msg=Install complete!\nlevel=info msg=To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=/output/auth/kubeconfig'\nlevel=info msg=Access the OpenShift web-console here: https://console-openshift-console.apps.cluster-jng2p.dynamic.opentlc.com\nREDACTED LINE OF OUTPUT\nlevel=info msg=Time elapsed: 34m12s\n" installID=ltzrngkf
+time="2022-07-07T01:04:07Z" level=info msg="install completed successfully" installID=ltzrngkf
+
+
+### 增加 quota 
+$ sudo openstack quota set --secgroups 250 --secgroup-rules 1000 --ports 1500 --subnets 250 --networks 250 <project>
+
+
+# 查看日志
+oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c installer
+oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c cli
+oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c hive
 ```
