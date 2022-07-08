@@ -13782,4 +13782,24 @@ $ sudo openstack quota set --secgroups 250 --secgroup-rules 1000 --ports 1500 --
 oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c installer
 oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c cli
 oc -n cluster-jng2p logs $(oc -n cluster-jng2p get pods -l hive.openshift.io/cluster-deployment-name='cluster-jng2p' -o name) -c hive
+
+### 添加 ssh security group rule 
+CLUSTERNAME="cluster-jng2p"
+SGID=$(openstack security group list | grep ${CLUSTERNAME} | grep master | awk '{print $2}')
+openstack security group rule create --dst-port 22 --proto tcp ${SGID}
+
+### 查看 security group 里的 security group rules 
+openstack security group show cluster-jng2p-5kmcx-master 
+...
+| rules           | created_at='2022-07-08T08:37:17Z', direction='ingress', ethertype='IPv4', id='0d0fa305-dc49-4920-95ce-c14e4e29f2c9', port_r
+ange_max='22', port_range_min='22', protocol='tcp', remote_ip_prefix='0.0.0.0/0', updated_at='2022-07-08T08:37:17Z'                            
+                           |
+
+### 删除 security group rules
+openstack security group rule delete 0d0fa305-dc49-4920-95ce-c14e4e29f2c9 
+
+### 离线设置 install-config.yaml
+platform:
+  openstack:
+      clusterOSImage: http://mirror.example.com/images/rhcos-43.81.201912131630.0-openstack.x86_64.qcow2.gz?sha256=ffebbd68e8a1f2a245ca19522c16c86f67f9ac8e4e0c1f0a812b068b16f7265d
 ```
